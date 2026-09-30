@@ -168,7 +168,8 @@ export class Game {
     this.state = 'play';
     this.ui.showHUD(true);
     this.input.requestLock();
-    await this.story.begin(opts);
+    this.story.begin(opts);
+    await this.story.setupDone;
   }
 
   applyDebugParams() {
@@ -184,6 +185,24 @@ export class Game {
     if (p.has('weapon')) this.player.setWeapon(p.get('weapon'));
     if (p.has('armor')) { this.player.equip.body = p.get('armor'); this.player.buildModel(); }
     if (p.has('drawn')) this.player.draw(true);
+    if (p.has('foes')) {
+      // debug skirmish: spawn enemies in front of the player
+      const n = +p.get('foes') || 2;
+      const kind = p.get('foeKind') || 'bandit';
+      const pl = this.player;
+      for (let i = 0; i < n; i++) {
+        const a = pl.yaw + (i - (n - 1) / 2) * 0.5;
+        const d = 2.6 + (i % 2) * 1.2;
+        const c = this.spawnNPC({ name: `Foe ${i + 1}`, faction: kind, role: kind, look: kind, x: pl.pos.x + Math.sin(a) * d, z: pl.pos.z + Math.cos(a) * d, weapon: p.get('foeWeapon') || 'dao', brain: { archetype: kind === 'yellowTurban' ? 'rebel' : 'bandit', fighter: true, mode: 'idle', aggroRange: 20 } });
+        c.yaw = a + Math.PI;
+      }
+      pl.draw(true);
+      this.playerCtl.lockTarget = this.playerCtl.pickLock();
+    }
+    if (p.has('attackAt')) {
+      const [frame, dir] = p.get('attackAt').split(':');
+      this.debugAttack = { frame: +frame, dir: dir || 'right' };
+    }
   }
 
   // ------------------------------------------------------------------ main loop
@@ -225,6 +244,7 @@ export class Game {
     }
     if (paused) { this.ui.update(0); return; }
 
+    if (this.debugAttack && this.frames === this.debugAttack.frame) this.player.startAttack(this.debugAttack.dir);
     this.time.advance(dt * (this.timeWarp || 1));
     if (this.dialogue.active || this.cutscene?.lockPlayer) { this.player.stop(); this.player.setBlocking(false); }
     else this.playerCtl.update(dt);

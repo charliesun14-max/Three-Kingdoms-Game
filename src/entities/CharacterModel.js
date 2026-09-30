@@ -4,6 +4,9 @@ import { buildHumanoid } from './Humanoid.js';
 import { Animator } from './Animator.js';
 import { buildWeaponMesh, WEAPONS } from '../combat/Weapons.js';
 
+const _a = new THREE.Vector3(), _b = new THREE.Vector3(), _dir = new THREE.Vector3(), _up = new THREE.Vector3(0, 1, 0);
+const _qw = new THREE.Quaternion(), _qh = new THREE.Quaternion();
+
 export class CharacterModel {
   constructor(appearance = {}) {
     this.appearance = appearance;
@@ -100,6 +103,21 @@ export class CharacterModel {
 
   update(dt, state) {
     this.anim.update(dt, state);
+    // Two-handed polearms: lay the shaft through both hands so thrusts and sweeps read correctly.
+    const cls = WEAPONS[this.weaponId]?.cls;
+    if (this.weaponMesh && !this.sheathed && cls === 'polearm') {
+      this.root.updateMatrixWorld(true);
+      const hr = this.bones.handR, hl = this.bones.handL;
+      hr.getWorldPosition(_a);
+      hl.getWorldPosition(_b);
+      _dir.subVectors(_b, _a);
+      if (_dir.lengthSq() < 1e-4) return;
+      _dir.normalize();
+      _qw.setFromUnitVectors(_up, _dir);
+      hr.getWorldQuaternion(_qh);
+      this.weaponMesh.quaternion.copy(_qh.invert().multiply(_qw));
+      this.weaponMesh.position.set(0, -0.07, 0.02);
+    }
   }
 
   dispose() {

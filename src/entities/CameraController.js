@@ -19,7 +19,33 @@ export class CameraController {
   }
 
   cinematic(pos, look, speed = 2.5) {
-    this.cine = { pos: pos.clone(), look: look.clone(), speed };
+    const p = this.unblock(pos, look);
+    this.cine = { pos: p, look: look.clone(), speed };
+  }
+
+  // True if the XZ segment a->b crosses a tall static collider (walls, buildings).
+  blockedLine(ax, az, bx, bz) {
+    const col = this.game.world.colliders;
+    const L = Math.hypot(bx - ax, bz - az);
+    const n = Math.ceil(L / 0.25);
+    for (let k = 1; k <= n; k++) {
+      const x = ax + ((bx - ax) * k) / n, z = az + ((bz - az) * k) / n;
+      for (const c of col.query(x, z, 0.3)) {
+        if (c.kind === 'tree' || c.kind === 'prop' || c.kind === 'pole' || c.kind === 'fire' || c.type !== 'box') continue;
+        const dx = x - c.x, dz = z - c.z;
+        const lx = dx * c.c - dz * c.s, lz = dx * c.s + dz * c.c;
+        if (Math.abs(lx) < c.hw + 0.25 && Math.abs(lz) < c.hd + 0.25) return true;
+      }
+    }
+    return false;
+  }
+  // Pull a camera position toward its look target until the view is unobstructed.
+  unblock(pos, look) {
+    const p = pos.clone();
+    for (let i = 0; i < 20 && this.blockedLine(look.x, look.z, p.x, p.z); i++) p.lerp(look, 0.12);
+    const gy = this.game.world.groundHeight(p.x, p.z) + 0.4;
+    if (p.y < gy) p.y = gy;
+    return p;
   }
   release() { this.cine = null; }
 

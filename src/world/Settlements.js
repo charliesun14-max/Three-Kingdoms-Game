@@ -123,7 +123,7 @@ export class Settlements {
     const light = new THREE.PointLight(0xff8a3a, 0, big ? 22 : 16, 1.6);
     light.position.set(x, y + 1.2, z);
     this.group.add(light);
-    this.fires.push({ mesh: fire, light, x, z, base: big ? 26 : 18 });
+    this.fires.push({ mesh: fire, light, x, z, base: big ? 10 : 7 });
     this.world.colliders.addCircle(x, z, 0.8, { kind: 'fire' });
     this.interact({ id: `fire_${x | 0}_${z | 0}`, x, z, r: 2.2, label: 'Rest by the fire', verb: 'rest', kind: 'fire' });
   }
@@ -137,7 +137,7 @@ export class Settlements {
     const light = new THREE.PointLight(0xff7a2a, 0, 26 * scale, 1.6);
     light.position.set(x, gy + 1.5 * scale, z);
     this.group.add(light);
-    const f = { mesh: fire, light, x, z, base: 30 * scale, dynamic: true };
+    const f = { mesh: fire, light, x, z, base: 9 * scale, dynamic: true };
     this.fires.push(f);
     f.remove = () => { this.group.remove(fire, light); this.fires.splice(this.fires.indexOf(f), 1); };
     return f;

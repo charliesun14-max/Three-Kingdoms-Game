@@ -26,19 +26,21 @@ export class Dialogue {
     const c = typeof id === 'string' ? g.entities.get(id) : null;
     const p = g.player;
     if (!c || !p || c === p) return;
-    const mid = new THREE.Vector3().addVectors(p.pos, c.pos).multiplyScalar(0.5);
     const dx = c.pos.x - p.pos.x, dz = c.pos.z - p.pos.z, L = Math.hypot(dx, dz) || 1;
-    // over the player's shoulder toward the speaker
-    const side = new THREE.Vector3(-dz / L, 0, dx / L);
-    const camPos = new THREE.Vector3(p.pos.x - (dx / L) * 1.6, p.pos.y + 1.75, p.pos.z - (dz / L) * 1.6).addScaledVector(side, 0.7);
-    const gy = g.world.groundHeight(camPos.x, camPos.z) + 0.5;
-    if (camPos.y < gy) camPos.y = gy;
+    // over-the-shoulder shot of the speaker; try both shoulders and a side angle, keep the clearest
     const look = new THREE.Vector3(c.pos.x, c.pos.y + 1.5 - c.model.anim.drop * 0.9, c.pos.z);
-    g.cameraCtl.cinematic(camPos, look, 3.5);
+    const cands = [];
+    for (const [back, sideOff] of [[1.6, 0.7], [1.6, -0.7], [0.4, 2.2], [0.4, -2.2]]) {
+      const side = new THREE.Vector3(-dz / L, 0, dx / L);
+      const cp = new THREE.Vector3(p.pos.x - (dx / L) * back, p.pos.y + 1.75, p.pos.z - (dz / L) * back).addScaledVector(side, sideOff);
+      const blocked = g.cameraCtl.blockedLine(look.x, look.z, cp.x, cp.z);
+      cands.push({ cp, blocked });
+    }
+    const pick = cands.find((k) => !k.blocked) || cands[0];
+    g.cameraCtl.cinematic(pick.cp, look, 3.5);
     // turn to face each other
     if (!c.combat.drawn && !c.ai?.script) c.facePoint(p.pos.x, p.pos.z);
     p.facePoint(c.pos.x, c.pos.z);
-    void mid;
   }
 
   begin() {

@@ -202,7 +202,7 @@ export const CHAPTER1 = {
       const S = st.S;
       st.setTime(23.4);
       const home = S.playerHome;
-      st.teleportPlayer(home.x, home.z + 0.8, 0);
+      st.teleportPlayer(home.x + 0.5, home.z + 2.6, 0);
       g.player.setWeapon('fists');
       family(st, g);
       const father = spawnFather(st, g, home.x + 6, home.z + 6);

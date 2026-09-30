@@ -18,6 +18,7 @@ export class Story {
     this.objHandlers = new Map();
     this.cast = {};
     this.runId = 0;
+    this.setupDone = new Promise((r) => { this._setupRes = r; });
   }
 
   // ---------------------------------------------------------------- utilities
@@ -114,6 +115,7 @@ export class Story {
     this.mission = id;
     g.setFlag('mission', id);
     if (m.setup) await m.setup(this, g, o);
+    this._setupRes?.();
     g.save(true);
     const run = this.runId;
     try {
