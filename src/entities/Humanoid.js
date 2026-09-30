@@ -20,7 +20,7 @@ export const PARENT = {
 
 // Rest-pose joint positions in model space (metres) for a 1.72 m adult.
 export function jointPositions(p) {
-  const sw = 0.19 * p.shoulders, hw = 0.095 * p.hipsW;
+  const sw = 0.178 * p.shoulders, hw = 0.095 * p.hipsW;
   return {
     root: [0, 0, 0], hips: [0, 0.95, 0], spine: [0, 1.05, 0], chest: [0, 1.25, 0], neck: [0, 1.47, 0], head: [0, 1.55, 0],
     shoulderL: [sw, 1.42, 0], elbowL: [sw + 0.01, 1.13, 0], handL: [sw + 0.015, 0.88, 0.01],
@@ -149,7 +149,12 @@ export function buildHumanoid(ap = {}) {
   S.add(sphereAt([0, 1.615, 0.005], 0.1, 0.9, 1.12, 1.0, 14), 'head', skin); // back of head / skull (face mesh overlays front)
   for (const s of [-1, 1]) S.add(sphereAt([s * 0.093, 1.6, -0.005], 0.022, 0.5, 1.2, 0.9, 6), 'head', ap.bigEars ? shade(skin, 1.0) : skin); // ears
   if (ap.bigEars) for (const s of [-1, 1]) S.add(sphereAt([s * 0.1, 1.58, -0.005], 0.026, 0.5, 1.7, 0.9, 6), 'head', skin);
-  S.add(boxAt([0, 1.595, 0.103], 0.022, 0.045, 0.03), 'head', shade(skin, 0.95)); // nose
+  { // nose: a small tapered wedge that reads from the side as well as the front
+    const nose = new THREE.ConeGeometry(0.017, 0.05, 4);
+    nose.rotateY(Math.PI / 4); nose.scale(1, 1, 0.9); nose.rotateX(-0.25);
+    nose.translate(0, 1.598, 0.1);
+    S.add(nose, 'head', shade(skin, 0.97));
+  }
 
   // --- torso (under-robe / skin shape)
   const torsoCol = ap.bare ? skin : robe;
@@ -210,12 +215,12 @@ export function buildHumanoid(ap = {}) {
   for (const s of ['L', 'R']) {
     const sh = J['shoulder' + s], el = J['elbow' + s], hd = J['hand' + s];
     const sign = s === 'L' ? 1 : -1;
-    S.add(sphereAt([sh[0] - sign * 0.012, sh[1] - 0.012, sh[2]], 0.06 * g, 1, 0.95, 0.9, 10), 'shoulder' + s, ap.bare ? skin : robe);
+    S.add(sphereAt([sh[0] - sign * 0.014, sh[1] - 0.014, sh[2]], 0.052 * g, 1, 0.9, 0.9, 10), 'shoulder' + s, ap.bare ? skin : robe);
     if (ap.bare) {
       S.add(limbGeo(sh, el, 0.055 * g, 0.042 * g, 9), 'shoulder' + s, skin);
       S.add(limbGeo(el, hd, 0.042 * g, 0.032, 9), 'elbow' + s, skin);
     } else {
-      S.add(limbGeo(sh, el, 0.056 * g, 0.05 * g, 9), 'shoulder' + s, robe);
+      S.add(limbGeo(sh, el, 0.048 * g, 0.045 * g, 9), 'shoulder' + s, robe);
       if (sleeveWide) {
         // wide hanging sleeve (袂)
         const sl = lathe([[0.05, 0], [0.06, 0.05], [0.1, 0.18], [0.125, 0.25], [0.12, 0.27], [0.02, 0.28]], 10, 0.8, 1.15);
@@ -339,7 +344,13 @@ export function buildHumanoid(ap = {}) {
   // beard
   const bc = ap.beardColor ?? hair;
   switch (ap.beard) {
-    case 'goatee': S.add(sphereAt([0, 1.525, 0.085], 0.025, 1, 1.6, 0.8, 6), 'head', bc, 2); break;
+    case 'goatee': {
+      const tuft = new THREE.ConeGeometry(0.018, 0.09, 6);
+      tuft.rotateX(Math.PI + 0.25); tuft.translate(0, 1.5, 0.088);
+      S.add(tuft, 'head', bc, 2);
+      for (const s2 of [-1, 1]) { const m = boxAt([0, 0, 0], 0.04, 0.008, 0.01); m.rotateZ(s2 * 0.35); m.translate(s2 * 0.022, 1.552, 0.098); S.add(m, 'head', bc, 2); }
+      break;
+    }
     case 'short':
       S.add(sphereAt([0, 1.53, 0.07], 0.07, 1.05, 0.7, 0.55, 10), 'head', bc, 2);
       break;
@@ -393,6 +404,7 @@ export function buildHumanoid(ap = {}) {
   mesh.castShadow = true;
   mesh.receiveShadow = true;
   mesh.frustumCulled = false;
+  byName.head.scale.setScalar(ap.female ? 1.04 : 1.08);
 
   // face overlay (separate mesh with its own texture, parented to head bone)
   const faceOpts = {

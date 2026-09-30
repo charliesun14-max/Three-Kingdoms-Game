@@ -168,7 +168,11 @@ export class UI {
     let html = '';
     if (q) {
       html = `<div class="qt-title">${q.title}<span class="cn">${q.cn || ''}</span></div>`;
-      for (const o of q.objectives()) html += `<div class="qt-obj ${o.done ? 'done' : ''}">${o.text}</div>`;
+      const objs = q.objectives();
+      const open = objs.filter((o) => !o.done), fin = objs.length - open.length;
+      for (const o of open.slice(0, 3)) html += `<div class="qt-obj">${o.text}</div>`;
+      if (open.length > 3) html += `<div class="qt-obj" style="opacity:.6">…and ${open.length - 3} more (J)</div>`;
+      if (fin) html += `<div class="qt-obj done" style="font-size:13px">${fin} completed</div>`;
     }
     if (html !== this._qt) { el.innerHTML = html; this._qt = html; }
   }

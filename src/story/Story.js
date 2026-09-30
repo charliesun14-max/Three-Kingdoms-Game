@@ -9,6 +9,7 @@ import { CHAPTER4 } from './chapters/ch4.js';
 import { CHAPTER5 } from './chapters/ch5.js';
 import { CHAPTER7 } from './chapters/ch7.js';
 import { SMALLTALK } from './smalltalk.js';
+import { SideQuests } from './SideQuests.js';
 import { itemDef } from '../rpg/Items.js';
 
 export const MISSIONS = { ...CHAPTER1, ...CHAPTER2, ...CHAPTER3, ...CHAPTER4, ...CHAPTER5, ...CHAPTER7 };
@@ -23,6 +24,7 @@ export class Story {
     this.objHandlers = new Map();
     this.cast = {};
     this.runId = 0;
+    this.side = new SideQuests(this);
     this.setupDone = new Promise((r) => { this._setupRes = r; });
   }
 
@@ -157,6 +159,7 @@ export class Story {
     if (h && (await h(c)) !== false) return;
     const m = MISSIONS[this.mission];
     if (m?.talk && (await m.talk(this, this.g, c)) === true) return;
+    if (await this.side.talk(c)) return;
     await this.smalltalk(c);
   }
 
@@ -224,8 +227,8 @@ export class Story {
 
   async interact(it) {
     const h = this.objHandlers.get(it.id);
-    if (h) { const r = await h(it); return r !== false; }
-    return false;
+    if (h) { const r = await h(it); if (r !== false) return true; }
+    return this.side.interact(it);
   }
 
   // ---------------------------------------------------------------- save/restore

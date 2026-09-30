@@ -675,7 +675,7 @@ export class Game {
     const cz = +(this.params.get('cd') || 5.2), cy = +(this.params.get('ch') || 1.35), cx = +(this.params.get('cx') || 0);
     const cam = this.engine.camera;
     cam.position.set(px + cx, this.world.hf.getHeight(px, pz + cz) + cy, pz + cz);
-    cam.lookAt(px, this.world.hf.getHeight(px, pz) + 1.0, pz);
+    cam.lookAt(px + cx * 0.3, this.world.hf.getHeight(px, pz) + +(this.params.get('ly') || 1.0), pz);
     this.state = 'showcase';
     const horses = (this.params.get('horses') || '').split(',').filter(Boolean).map((coat, i) => {
       const h = new Horse(this, { coat, x: px - 3 + i * 3, z: pz - 2.5, yaw: Math.PI / 2 });

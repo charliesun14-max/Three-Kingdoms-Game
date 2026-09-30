@@ -334,6 +334,14 @@ export function faceTexture(opts = {}) {
     // Sphere UV: u=0.75 is +Z front for three.js SphereGeometry? we place features at u=0.25*W (rotated in mesh)
     const cx = W * 0.25, cy = H * 0.5;
     const s = opts.fierce ? 1.25 : 1;
+    // soft modelling: eye sockets, jaw and temples darker, forehead/nose bridge lighter
+    const shadeBlob = (x, y, rx, ry, col) => { const gr = g.createRadialGradient(x, y, 0, x, y, Math.max(rx, ry)); gr.addColorStop(0, col); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.save(); g.translate(x, y); g.scale(rx / Math.max(rx, ry), ry / Math.max(rx, ry)); g.translate(-x, -y); g.fillStyle = gr; g.beginPath(); g.arc(x, y, Math.max(rx, ry), 0, 7); g.fill(); g.restore(); };
+    shadeBlob(W * 0.25 - 11, H * 0.5 - 4, 10, 6, 'rgba(70,35,20,0.22)');
+    shadeBlob(W * 0.25 + 11, H * 0.5 - 4, 10, 6, 'rgba(70,35,20,0.22)');
+    shadeBlob(W * 0.25, H * 0.5 - 20, 26, 10, 'rgba(255,230,200,0.12)');
+    shadeBlob(W * 0.25, H * 0.5 + 34, 30, 12, 'rgba(60,30,15,0.18)');
+    shadeBlob(W * 0.25 - 34, H * 0.5 + 6, 10, 26, 'rgba(60,30,15,0.16)');
+    shadeBlob(W * 0.25 + 34, H * 0.5 + 6, 10, 26, 'rgba(60,30,15,0.16)');
     // cheeks
     if (opts.redFace) { g.fillStyle = 'rgba(150,30,20,0.85)'; g.fillRect(0, 0, W, H); }
     g.fillStyle = 'rgba(200,90,70,0.18)';
