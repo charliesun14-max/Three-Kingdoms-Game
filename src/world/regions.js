@@ -1,0 +1,110 @@
+// Region definitions. Coordinates are metres; x east, z south. Each region is a
+// self-contained playable map generated procedurally from this data.
+
+export const REGIONS = {
+  zhuo: {
+    id: 'zhuo',
+    name: 'Zhuo Commandery',
+    cn: '涿郡',
+    province: 'You Province (幽州)',
+    size: 1600,
+    seed: 184,
+    baseHeight: 18,
+    // Bounding mountains: Yan Mountains to the north, Taihang foothills west.
+    edges: { n: 170, w: 120, e: 60, s: 50 },
+    mountains: [
+      { x: 440, z: -480, r: 190, h: 95, name: 'Daxing Mountain 大興山' },
+      { x: -620, z: -560, r: 220, h: 80 },
+      { x: 260, z: 640, r: 170, h: 38 },
+      { x: -700, z: 200, r: 150, h: 45 },
+      { x: 700, z: -150, r: 140, h: 40 },
+    ],
+    river: {
+      name: 'Juma River 拒馬河',
+      width: 20,
+      depth: 2.6,
+      points: [[-830, -150], [-640, -190], [-470, -160], [-300, -95], [-140, -118], [60, -130], [250, -70], [470, 30], [640, 170], [830, 250]],
+    },
+    ponds: [{ x: -270, z: 330, r: 16, depth: 1.6 }],
+    settlements: [
+      { id: 'lousang', type: 'village', name: 'Lousang Village', cn: '樓桑村', x: -340, z: 250, w: 150, d: 130 },
+      { id: 'zhuo', type: 'walledTown', name: 'Zhuo County', cn: '涿縣', x: 60, z: 70, w: 200, d: 180 },
+      { id: 'taoyuan', type: 'estate', name: "Zhang Fei's Estate & Peach Garden", cn: '桃園', x: 345, z: 170, w: 110, d: 100 },
+      { id: 'militia', type: 'armyCamp', name: 'Volunteer Army Camp', cn: '義軍營', x: 60, z: 270, w: 110, d: 80 },
+      { id: 'ytcamp', type: 'rebelCamp', name: 'Yellow Turban Camp', cn: '黃巾營', x: 400, z: -300, w: 120, d: 100 },
+      { id: 'banditWest', type: 'banditCamp', name: 'Bandit Hideout (West Woods)', cn: '賊寨', x: -520, z: -330, w: 50, d: 44 },
+      { id: 'banditSouth', type: 'banditCamp', name: 'Bandit Hideout (South Hills)', cn: '山賊', x: 150, z: 540, w: 50, d: 44 },
+      { id: 'hamlet', type: 'hamlet', name: 'Xiaoli Hamlet', cn: '小里', x: -120, z: 560, w: 70, d: 60 },
+    ],
+    roads: [
+      { w: 4.5, pts: [[-340, 250], [-250, 205], [-150, 140], [-78, 88], [-40, 70]] },
+      { w: 5, pts: [[160, 70], [230, 100], [300, 150], [330, 165]] },
+      { w: 3.5, pts: [[345, 120], [400, 80], [470, 30], [480, -60], [450, -170], [410, -250]] },
+      { w: 5, pts: [[60, -20], [60, -80], [60, -130], [55, -200], [30, -330], [15, -560], [10, -800]] },
+      { w: 5, pts: [[60, 160], [60, 230], [70, 330], [100, 450], [110, 620], [120, 800]] },
+      { w: 3.5, pts: [[-340, 250], [-430, 330], [-560, 420], [-800, 460]] },
+      { w: 3, pts: [[70, 330], [-20, 420], [-120, 560]] },
+      { w: 3, pts: [[-150, 140], [-300, 20], [-420, -130], [-480, -250], [-510, -310]] },
+      { w: 2.5, pts: [[100, 450], [140, 520]] },
+    ],
+    bridges: [
+      { x: 60, z: -130, len: 34, w: 6, rot: 0 },
+      { x: 474, z: 34, len: 32, w: 5, rot: -0.5 },
+      { x: -335, z: -85, len: 32, w: 4.5, rot: 0.5 },
+    ],
+    fields: [
+      // millet & wheat plots (x,z,w,d,rot, crop)
+      { x: -420, z: 175, w: 60, d: 40, rot: 0.05, crop: 'millet' },
+      { x: -250, z: 300, w: 70, d: 36, rot: -0.1, crop: 'millet' },
+      { x: -430, z: 305, w: 50, d: 34, rot: 0.1, crop: 'wheat' },
+      { x: -240, z: 360, w: 50, d: 28, rot: -0.05, crop: 'wheat' },
+      { x: -200, z: 230, w: 38, d: 48, rot: 0.3, crop: 'millet' },
+      { x: -60, z: 200, w: 70, d: 40, rot: 0.1, crop: 'wheat' },
+      { x: 180, z: 220, w: 60, d: 50, rot: -0.05, crop: 'millet' },
+      { x: -70, z: 260, w: 50, d: 30, rot: 0.1, crop: 'millet' },
+      { x: 250, z: 20, w: 50, d: 44, rot: 0.2, crop: 'wheat' },
+      { x: 420, z: 220, w: 60, d: 40, rot: 0.0, crop: 'millet' },
+      { x: -110, z: 490, w: 60, d: 40, rot: 0.1, crop: 'millet' },
+      { x: -40, z: 540, w: 40, d: 40, rot: 0.1, crop: 'wheat' },
+      { x: 200, z: 330, w: 60, d: 36, rot: 0.15, crop: 'wheat' },
+    ],
+    forests: [
+      { x: -540, z: -300, r: 190, density: 0.9, mix: ['pine', 'elm', 'pine', 'poplar'] },
+      { x: 420, z: -420, r: 230, density: 0.8, mix: ['pine', 'pine', 'elm'] },
+      { x: 250, z: 580, r: 170, density: 0.7, mix: ['elm', 'pine', 'jujube'] },
+      { x: -660, z: 60, r: 170, density: 0.6, mix: ['pine', 'elm'] },
+      { x: 660, z: -40, r: 150, density: 0.5, mix: ['poplar', 'elm', 'pine'] },
+      { x: -220, z: -380, r: 140, density: 0.5, mix: ['elm', 'poplar'] },
+      { x: -380, z: 560, r: 150, density: 0.45, mix: ['elm', 'jujube', 'poplar'] },
+    ],
+    // Spawn/respawn points and scripted places referenced by quests.
+    places: {
+      start: { x: -352, z: 262 },
+      lousangMulberry: { x: -330, z: 236 },
+      zhuoNotice: { x: 60, z: 132 },
+      zhuoMarket: { x: 80, z: 90 },
+      zhuoTavern: { x: 20, z: 45 },
+      peachGarden: { x: 365, z: 195 },
+      militiaYard: { x: 60, z: 270 },
+      daxingField: { x: 470, z: -120 },
+    },
+  },
+};
+
+// Strategic map of Han China (13 provinces) for the late game.
+export const PROVINCES = [
+  { id: 'you', name: 'You', cn: '幽州', x: 0.73, y: 0.14, seat: 'Ji 薊' },
+  { id: 'ji', name: 'Ji', cn: '冀州', x: 0.62, y: 0.26, seat: 'Ye 鄴' },
+  { id: 'bing', name: 'Bing', cn: '并州', x: 0.46, y: 0.22, seat: 'Jinyang 晉陽' },
+  { id: 'qing', name: 'Qing', cn: '青州', x: 0.78, y: 0.31, seat: 'Linzi 臨淄' },
+  { id: 'yan', name: 'Yan', cn: '兗州', x: 0.66, y: 0.38, seat: 'Puyang 濮陽' },
+  { id: 'xu', name: 'Xu', cn: '徐州', x: 0.77, y: 0.45, seat: 'Xiapi 下邳' },
+  { id: 'si', name: 'Sili', cn: '司隸', x: 0.5, y: 0.37, seat: 'Luoyang 洛陽' },
+  { id: 'yu', name: 'Yu', cn: '豫州', x: 0.64, y: 0.47, seat: 'Xuchang 許昌' },
+  { id: 'liang', name: 'Liang', cn: '涼州', x: 0.2, y: 0.3, seat: 'Wuwei 武威' },
+  { id: 'yong', name: 'Yong', cn: '雍州', x: 0.36, y: 0.4, seat: "Chang'an 長安" },
+  { id: 'jing', name: 'Jing', cn: '荊州', x: 0.54, y: 0.6, seat: 'Xiangyang 襄陽' },
+  { id: 'yang', name: 'Yang', cn: '揚州', x: 0.74, y: 0.62, seat: 'Jianye 建業' },
+  { id: 'yi', name: 'Yi', cn: '益州', x: 0.3, y: 0.6, seat: 'Chengdu 成都' },
+  { id: 'jiao', name: 'Jiao', cn: '交州', x: 0.5, y: 0.86, seat: 'Panyu 番禺' },
+];

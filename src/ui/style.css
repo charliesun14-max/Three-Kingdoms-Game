@@ -1,0 +1,20 @@
+:root {
+  --ink: #1b140e;
+  --paper: #efe3c8;
+  --paper-2: #e2d2ae;
+  --gold: #c9a45a;
+  --red: #8e1d15;
+  --jade: #3d6b58;
+  --text: #f3ead6;
+  --muted: #b9ab8e;
+  --panel: rgba(18, 13, 9, 0.82);
+  --panel-edge: rgba(201, 164, 90, 0.55);
+  --serif: 'Cormorant Garamond', 'Times New Roman', serif;
+  --brush: 'Ma Shan Zheng', 'WenQuanYi Zen Hei', serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: #000; color: var(--text); font-family: var(--serif); }
+#app { position: fixed; inset: 0; }
+#app canvas { display: block; width: 100%; height: 100%; }
+#ui { position: fixed; inset: 0; pointer-events: none; user-select: none; }
+#ui .interactive, #ui button, #ui input { pointer-events: auto; }

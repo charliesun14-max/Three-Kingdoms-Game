@@ -1,0 +1,13 @@
+import { chromium } from 'playwright';
+import { spawn } from 'child_process';
+const port = 5950;
+const server = spawn('npx', ['vite', '--port', String(port), '--strictPort'], { stdio: ['ignore', 'pipe', 'pipe'], cwd: '/home/user/Three-Kingdoms-Game' });
+await new Promise((res) => { server.stdout.on('data', (d) => { if (String(d).includes('Local')) res(); }); setTimeout(res, 8000); });
+const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+const page = await browser.newPage({ viewport: { width: 640, height: 360 } });
+page.on('pageerror', (e) => console.log('ERR', e.message));
+await page.goto(`http://127.0.0.1:${port}/?frames=1&q=0`);
+await page.waitForFunction(() => window.__game && window.__game.done, null, { timeout: 200000 });
+const r = await page.evaluate(process.argv[2]);
+console.log(JSON.stringify(r, null, 1).slice(0, 4000));
+await browser.close(); server.kill(); process.exit(0);
