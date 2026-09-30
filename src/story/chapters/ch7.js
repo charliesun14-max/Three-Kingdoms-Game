@@ -28,14 +28,15 @@ export const CHAPTER7 = {
       const gateOut = st.S.xuchangCityGate_south_out, gateIn = st.S.xuchangCityGate_south_in;
       const hall = st.S.xuchangCity_hall;
       const withLiu = g.flags.liuBond !== 'rival';
+      let def1 = null;
       g.quests.start({
         id: 'q_final', main: true, title: 'The Mandate of Heaven', cn: '天命',
         desc: 'Take Xuchang and free the Son of Heaven from Cao Cao.',
         objectives: [
           { id: 'council', text: 'Address your generals at the command tent', marker: { x: cmd.x, z: cmd.z + 4 }, check: () => st.near(cmd.x, cmd.z + 4, 6) },
           { id: 'gate', text: 'Storm the south gate of Xuchang', hidden: true, marker: { x: gateOut.x, z: gateOut.z }, check: () => st.near(gateOut.x, gateOut.z, 14) },
-          { id: 'palace', text: 'Fight through the city to the palace', hidden: true, marker: { x: hall.x, z: hall.z + 6 } },
-          { id: 'xuchu', text: 'Defeat Xu Chu, Cao Cao\'s bodyguard', hidden: true },
+          { id: 'palace', text: 'Fight through the city to the palace', hidden: true, marker: () => (def1 && alive(def1).length > 3 ? { x: gateIn.x, z: gateIn.z - 6 } : { x: hall.x, z: hall.z + 16 }) },
+          { id: 'xuchu', text: 'Defeat Xu Chu, Cao Cao\'s bodyguard', hidden: true, marker: () => { const x = g.entities.get('xuChu'); return x && !x.dead ? x.pos : null; } },
           { id: 'emperor', text: 'Enter the palace hall', hidden: true, marker: { x: hall.x, z: hall.z + 2 }, check: () => done(g, 'q_final', 'xuchu') && st.near(hall.x, hall.z + 2, 5) },
         ],
         autoFinish: false,
@@ -64,10 +65,10 @@ export const CHAPTER7 = {
       joinFight(bros, g.player, 40);
       g.audio.play('horn');
       await st.waitFor(() => done(g, 'q_final', 'gate'));
-      const def1 = kit.wave('enemy', 14, gateIn.x, gateIn.z - 10, gateOut);
+      def1 = kit.wave('enemy', 14, gateIn.x, gateIn.z - 10, gateOut);
       kit.charge(line, { x: gateIn.x, z: gateIn.z - 20 });
       g.ui.subtitle('Cao soldier', 'Hold the gate! For the Chancellor!', 3);
-      await st.waitFor(() => alive(def1).length <= 3 && st.near(gateIn.x, gateIn.z, 30));
+      await st.waitFor(() => alive(def1).length <= 3 && (st.near(gateIn.x, gateIn.z, 30) || st.near(hall.x, hall.z, 80)));
       g.quests.complete('q_final', 'gate');
       const def2 = kit.wave('enemy', 12, hall.x, hall.z + 25, { x: gateIn.x, z: gateIn.z - 30 });
       const xc = kit.officer({ id: 'xuChu', figure: 'zangBa', name: 'Xu Chu', cn: '許褚', title: 'Zhongkang 仲康, the Tiger Fool', faction: 'enemy', role: 'soldier', x: hall.x, z: hall.z + 14, weapon: 'axe', body: 'generalArmor', hp: 1100, stats: { str: 20, vit: 20, blade: 16, block: 14 } });

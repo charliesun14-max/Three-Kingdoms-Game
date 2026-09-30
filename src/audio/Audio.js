@@ -116,13 +116,31 @@ export class Audio {
     for (const r of [1, 2.76, 5.4, 8.93]) this.tone(base * r * (0.98 + Math.random() * 0.04), dur / Math.sqrt(r), gain / r, pos, 'sine', null, 0.4);
     this.noise(0.05, 3000, 0.8, gain * 1.5, pos, 'highpass');
   }
-  pluck(freq, gain = 0.5, dest = null, when = 0) {
+  pluck(freq, gain = 0.5, dest = null, when = 0, slide = 0) {
     const c = this.ctx;
     const s = c.createBufferSource(); s.buffer = this.pluckBuffer(freq);
+    // 吟猱 ornament: the left hand slides/vibrates the stopped string after the pluck
+    if (slide) { const t0 = c.currentTime + when; s.playbackRate.setValueAtTime(1, t0 + 0.25); s.playbackRate.linearRampToValueAtTime(slide, t0 + 0.6); }
+    else if (!dest) { const t0 = c.currentTime + when; s.playbackRate.setValueAtTime(1, t0); for (let i = 1; i < 6; i++) s.playbackRate.linearRampToValueAtTime(1 + (i % 2 ? 0.006 : -0.006), t0 + 0.3 + i * 0.16); }
     const g = c.createGain(); g.gain.value = gain;
     s.connect(g); g.connect(dest || this.music);
     const vg = c.createGain(); vg.gain.value = 0.5; g.connect(vg); vg.connect(this.verb);
     s.start(c.currentTime + when);
+  }
+
+  // 簫 end-blown bamboo flute: breathy sine with delayed vibrato
+  xiao(freq, dur) {
+    const c = this.ctx, t = c.currentTime + 0.1;
+    while (freq > 900) freq /= 2;
+    const o = c.createOscillator(); o.type = 'sine'; o.frequency.value = freq;
+    const o2 = c.createOscillator(); o2.type = 'sine'; o2.frequency.value = freq * 2; const g2 = c.createGain(); g2.gain.value = 0.12; o2.connect(g2);
+    const lfo = c.createOscillator(); lfo.frequency.value = 5; const lg = c.createGain(); lg.gain.setValueAtTime(0, t); lg.gain.linearRampToValueAtTime(freq * 0.012, t + dur * 0.6); lfo.connect(lg); lg.connect(o.frequency);
+    const br = c.createBufferSource(); br.buffer = this.noiseBuf; const bf = c.createBiquadFilter(); bf.type = 'bandpass'; bf.frequency.value = freq * 2; bf.Q.value = 2; const bg = c.createGain(); bg.gain.value = 0.05; br.connect(bf); bf.connect(bg);
+    const g = c.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.09, t + 0.35); g.gain.setValueAtTime(0.09, t + dur - 0.6); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g2.connect(g); bg.connect(g); g.connect(this.music);
+    const vg = c.createGain(); vg.gain.value = 0.6; g.connect(vg); vg.connect(this.verb);
+    for (const n of [o, o2, lfo]) { n.start(t); n.stop(t + dur + 0.1); }
+    br.start(t); br.stop(t + dur + 0.1);
   }
 
   play(name, pos = null, opts = {}) {
@@ -148,11 +166,80 @@ export class Audio {
       case 'eat': this.noise(0.25, 1200, 1, 0.2, null, 'bandpass'); break;
       case 'drum': this.tone(70, 0.5, 0.9, pos, 'sine', 38, 0.4); this.noise(0.08, 200, 1, 0.5, pos, 'lowpass'); break;
       case 'horn': { const c = this.ctx, t = c.currentTime; const o = c.createOscillator(); o.type = 'sawtooth'; o.frequency.value = 146; const f = c.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 700; const g = c.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.25, t + 0.4); g.gain.setValueAtTime(0.25, t + 1.6); g.gain.exponentialRampToValueAtTime(0.0001, t + 2.4); o.connect(f); f.connect(g); this.route(g, pos, 1, 0.6); o.start(t); o.stop(t + 2.5); break; }
-      case 'cheer': this.noise(2.2, 900, 0.5, 0.35, pos, 'bandpass', 700, 0.3); break;
+      case 'cheer': this.noise(2.2, 900, 0.5, 0.35, pos, 'bandpass', 700, 0.3); for (let i = 0; i < 5; i++) setTimeout(() => this.voice({ id: 'crowd' + i + Math.random(), pos, baseLook: { height: 1.6 + Math.random() * 0.2 } }, 'shout'), i * 90 + Math.random() * 200); break;
+      case 'bow': this.pluck(98 + Math.random() * 8, 0.5, this.sfx); this.noise(0.12, 300, 2, 0.35, pos, 'lowpass'); this.noise(0.5, 1800, 1.2, 0.12, pos, 'bandpass', 700, 0.05); break;
+      case 'arrowHit': this.noise(0.08, 500, 1.2, 0.6, pos, 'lowpass'); this.tone(180, 0.12, 0.3, pos, 'triangle', 90); break;
+      case 'arrowGround': this.noise(0.06, 800, 1, 0.25, pos, 'lowpass'); break;
+      case 'hammer': this.metal(900 + Math.random() * 60, 0.5, 0.12, pos); break;
+      case 'splash': this.noise(0.4, 1400, 0.6, 0.3, pos, 'bandpass', 500, 0.02); break;
       default: break;
     }
   }
-  voice() {}
+  // Formant-synthesised vocalisations: glottal sawtooth + breath through vowel formants.
+  voice(ch, kind = 'effort') {
+    if (!this.enabled || !ch || !['effort', 'pain', 'death', 'shout'].includes(kind)) return;
+    const c = this.ctx, t = c.currentTime;
+    if ((ch._vox || 0) > t) return;
+    const cp = this.game.engine?.camera.position; const d = ch.pos && cp ? Math.hypot(ch.pos.x - cp.x, ch.pos.z - cp.z) : 0;
+    if (d > 45) return;
+    const female = ch.baseLook?.female;
+    const seed = (ch.id || '').length * 7.3 + (ch.baseLook?.height || 1.7) * 40;
+    const f0 = (female ? 215 : 108) * (0.88 + (seed % 1) * 0.28) * (kind === 'pain' ? 1.35 : kind === 'death' ? 1.2 : kind === 'shout' ? 1.25 : 1);
+    const dur = { effort: 0.22, pain: 0.38, death: 0.9, shout: 0.55 }[kind] || 0.3;
+    ch._vox = t + dur + (kind === 'effort' ? 0.6 : 0.2);
+    // vowel formants: 'ha' / 'ah' / 'oh' / 'uh'
+    const V = { effort: [[700, 1200, 2500]], pain: [[800, 1300, 2600], [550, 900, 2400]], death: [[750, 1150, 2500], [450, 800, 2300]], shout: [[650, 1100, 2450], [800, 1250, 2600]] }[kind];
+    const out = c.createGain(); out.gain.setValueAtTime(0.0001, t);
+    const peak = kind === 'effort' ? 0.22 : kind === 'death' ? 0.3 : 0.3;
+    out.gain.exponentialRampToValueAtTime(peak, t + (kind === 'effort' ? 0.02 : 0.05));
+    out.gain.setValueAtTime(peak, t + dur * 0.55);
+    out.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    const o = c.createOscillator(); o.type = 'sawtooth';
+    o.frequency.setValueAtTime(f0 * (kind === 'effort' ? 1.1 : 1), t);
+    if (kind === 'death') o.frequency.exponentialRampToValueAtTime(f0 * 0.55, t + dur);
+    else if (kind === 'pain') { o.frequency.linearRampToValueAtTime(f0 * 1.15, t + dur * 0.25); o.frequency.exponentialRampToValueAtTime(f0 * 0.8, t + dur); }
+    else o.frequency.exponentialRampToValueAtTime(f0 * 0.85, t + dur);
+    // jitter/vibrato so it isn't a buzzer
+    const lfo = c.createOscillator(); lfo.frequency.value = 5.5 + Math.random() * 3; const lg = c.createGain(); lg.gain.value = f0 * 0.025; lfo.connect(lg); lg.connect(o.frequency); lfo.start(t); lfo.stop(t + dur + 0.05);
+    const br = c.createBufferSource(); br.buffer = this.noiseBuf; const bg = c.createGain(); bg.gain.value = kind === 'effort' ? 0.5 : 0.25;
+    const src = c.createGain(); src.gain.value = 0.35; o.connect(src); br.connect(bg); bg.connect(src);
+    const [a, b] = [V[0], V[V.length - 1]];
+    [0, 1, 2].forEach((i) => {
+      const f = c.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = [9, 11, 14][i] * (female ? 0.9 : 1);
+      const k = female ? 1.17 : 1;
+      f.frequency.setValueAtTime(a[i] * k, t); f.frequency.linearRampToValueAtTime(b[i] * k, t + dur);
+      const fg = c.createGain(); fg.gain.value = [1, 0.55, 0.18][i] * 3;
+      src.connect(f); f.connect(fg); fg.connect(out);
+    });
+    this.route(out, ch.pos, 1, 0.25);
+    o.start(t); o.stop(t + dur + 0.05); br.start(t, Math.random()); br.stop(t + dur + 0.05);
+  }
+
+  hoof(pos, hard, gain = 0.2) {
+    this.noise(0.06, hard ? 900 : 380, 1.4, gain, pos, 'lowpass');
+    this.tone(hard ? 240 : 150, 0.07, gain * 0.7, pos, 'triangle', hard ? 160 : 90, 0.15);
+  }
+  dog(pos) {
+    const n = 1 + Math.floor(Math.random() * 3);
+    for (let i = 0; i < n; i++) setTimeout(() => {
+      if (!this.enabled) return;
+      const c = this.ctx, t = c.currentTime;
+      const o = c.createOscillator(); o.type = 'sawtooth'; o.frequency.setValueAtTime(420, t); o.frequency.exponentialRampToValueAtTime(260, t + 0.14);
+      const f = c.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 900; f.Q.value = 3;
+      const g = c.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.25, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.16);
+      o.connect(f); f.connect(g); this.route(g, pos, 1, 0.5); o.start(t); o.stop(t + 0.2);
+    }, i * (180 + Math.random() * 120));
+  }
+  rooster(pos) {
+    const c = this.ctx, t = c.currentTime;
+    const o = c.createOscillator(); o.type = 'sawtooth';
+    const pts = [[0, 600], [0.12, 900], [0.35, 880], [0.55, 1150], [1.1, 1050], [1.35, 700]];
+    o.frequency.setValueAtTime(600, t); for (const [dt, f] of pts) o.frequency.linearRampToValueAtTime(f, t + dt);
+    const f = c.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 1500; f.Q.value = 2;
+    const g = c.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.12, t + 0.06); g.gain.setValueAtTime(0.12, t + 1.1); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.4);
+    o.connect(f); f.connect(g); this.route(g, pos, 1, 0.6); o.start(t); o.stop(t + 1.45);
+  }
+
 
   // ---- ambience -----------------------------------------------------------
   startAmbience() {
@@ -191,6 +278,36 @@ export class Audio {
     let fd = 999;
     for (const f of g.world.settlements.fires) fd = Math.min(fd, Math.hypot(f.x - p.pos.x, f.z - p.pos.z));
     this.fireAmb.g.gain.setTargetAtTime(Math.max(0, 1 - fd / 12) * 0.05 * (0.6 + Math.random() * 0.8), t, 0.05);
+    // village life: dogs, cockcrow at dawn, the smith's hammer, summer cicadas
+    const hr = g.time?.hour ?? 12;
+    this.nextLife = (this.nextLife ?? 4) - dt;
+    if (this.nextLife <= 0) {
+      this.nextLife = 5 + Math.random() * 9;
+      const sp = g.world.settlements?.spots || {};
+      const near = g.world.region.settlements?.filter((s) => s.type !== 'banditCamp' && Math.hypot(s.x - p.pos.x, s.z - p.pos.z) < 140) || [];
+      if (near.length) {
+        const s = near[Math.floor(Math.random() * near.length)];
+        const pos = { x: s.x + (Math.random() - 0.5) * s.w, z: s.z + (Math.random() - 0.5) * s.d };
+        if (hr > 4.8 && hr < 7 && Math.random() < 0.6) this.rooster(pos);
+        else if (Math.random() < 0.45) this.dog(pos);
+      }
+      this.forge = null;
+      for (const k in sp) if (/smithy/.test(k) && hr > 7 && hr < 18) { this.forge = sp[k]; break; }
+    }
+    if (this.forge && hr > 7 && hr < 18 && Math.hypot(this.forge.x - p.pos.x, this.forge.z - p.pos.z) < 50) {
+      this.nextHammer = (this.nextHammer ?? 0) - dt;
+      if (this.nextHammer <= 0) { this.play('hammer', this.forge); this.hammerN = ((this.hammerN || 0) + 1) % 7; this.nextHammer = this.hammerN === 0 ? 2.5 + Math.random() * 3 : 0.55; }
+    }
+    if (!this.cicada) { const s = c.createBufferSource(); s.buffer = this.makeNoise(2); s.loop = true; const f = c.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 5200; f.Q.value = 6; const am = c.createGain(); const lfo = c.createOscillator(); lfo.frequency.value = 38; const lg = c.createGain(); lg.gain.value = 0.5; lfo.connect(lg); lg.connect(am.gain); am.gain.value = 0.5; const gn = c.createGain(); gn.gain.value = 0; s.connect(f); f.connect(am); am.connect(gn); gn.connect(this.amb); s.start(); lfo.start(); this.cicada = gn; }
+    const summer = g.time && g.time.month >= 5 && g.time.month <= 8 ? 1 : 0;
+    this.cicada.gain.setTargetAtTime(summer * (1 - night) * (0.5 + 0.5 * Math.sin(t * 0.09)) * 0.035 * (g.weather?.rain > 0.2 ? 0 : 1), t, 1.5);
+    // distant clash of a battle in progress
+    const fighters = g.entities?.list?.filter((e) => !e.dead && e.combat?.drawn && e.faction !== 'civilian' && e.pos && Math.hypot(e.pos.x - p.pos.x, e.pos.z - p.pos.z) < 120).length || 0;
+    if (fighters > 10) {
+      this.nextClash = (this.nextClash ?? 0) - dt;
+      if (this.nextClash <= 0) { this.metal(500 + Math.random() * 400, 0.5, 0.03 * Math.min(1, fighters / 30), null); if (Math.random() < 0.3) this.voice({ id: 'far' + Math.random(), pos: null, baseLook: {} }, 'shout'); this.nextClash = 0.15 + Math.random() * 0.5; }
+    }
+    this.crowd.g.gain.setTargetAtTime(Math.max(inTown ? 0.07 * (1 - night * 0.8) : 0, Math.min(0.12, fighters * 0.004)), t, 1);
     // birds by day, crickets by night
     this.nextBird -= dt;
     if (this.nextBird <= 0) {
@@ -217,6 +334,7 @@ export class Audio {
 
   updateMusic(dt) {
     const c = this.ctx;
+    this.music.gain.setTargetAtTime(this.game.dialogue?.active ? 0.16 : 0.34, c.currentTime, 0.6);
     const combat = this.game.inCombat;
     const mood = combat ? 'combat' : this.musicMood;
     this.nextNote -= dt;
@@ -251,7 +369,8 @@ export class Audio {
       }
     }
     const n = this.phrase.shift();
-    this.pluck(n.f, 0.55);
+    this.pluck(n.f, 0.55, null, 0, Math.random() < 0.3 ? (Math.random() < 0.5 ? 1.059 : 0.944) : 0);
+    if (mood === 'peace' && !this.phrase.length && Math.random() < 0.4) this.xiao(n.f * 2, 2.5 + Math.random() * 2);
     if (Math.random() < 0.25) this.pluck(n.f / 2, 0.3); // octave bass (散音)
     this.nextNote = n.d;
   }

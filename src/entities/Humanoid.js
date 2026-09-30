@@ -153,12 +153,6 @@ export function buildHumanoid(ap = {}) {
   S.add(sphereAt([0, 1.615, 0.005], 0.1, 0.9, 1.12, 1.0, 14), 'head', skin); // back of head / skull (face mesh overlays front)
   for (const s of [-1, 1]) S.add(sphereAt([s * 0.093, 1.6, -0.005], 0.022, 0.5, 1.2, 0.9, 6), 'head', ap.bigEars ? shade(skin, 1.0) : skin); // ears
   if (ap.bigEars) for (const s of [-1, 1]) S.add(sphereAt([s * 0.1, 1.58, -0.005], 0.026, 0.5, 1.7, 0.9, 6), 'head', skin);
-  { // nose: a small tapered wedge that reads from the side as well as the front
-    const nose = new THREE.ConeGeometry(0.017, 0.05, 4);
-    nose.rotateY(Math.PI / 4); nose.scale(1, 1, 0.9); nose.rotateX(-0.25);
-    nose.translate(0, 1.598, 0.1);
-    S.add(nose, 'head', shade(skin, 0.97));
-  }
 
   // --- torso (under-robe / skin shape)
   const torsoCol = ap.bare ? skin : robe;
@@ -417,7 +411,8 @@ export function buildHumanoid(ap = {}) {
   };
   if (ap.female) faceOpts.female = true;
   const ftex = faceTexture(faceOpts);
-  const fg = new THREE.SphereGeometry(0.1005, 16, 12, Math.PI * 0.0, Math.PI, 0.18 * Math.PI, 0.64 * Math.PI);
+  const fg = new THREE.SphereGeometry(0.1005, 36, 26, Math.PI * 0.0, Math.PI, 0.18 * Math.PI, 0.64 * Math.PI);
+  sculptFace(fg, ap);
   // Rotate so the texture centre (u=0.25 of full sphere → here u=0.5 of the half) faces +Z
   const fm = new THREE.Mesh(fg, new THREE.MeshStandardMaterial({ map: ftex, roughness: 0.75 }));
   fm.scale.set(0.9, 1.12, 1.0);
@@ -429,6 +424,28 @@ export function buildHumanoid(ap = {}) {
   byName.head.add(fm);
 
   return { mesh, bones: byName, face: fm, joints: J };
+}
+
+// Relief on the face shell: nose, brow ridge, cheekbones, lips and chin, pushed out radially.
+// Works in the shell's own UV space so the painted features stay registered with the relief.
+function sculptFace(geo, ap) {
+  const pos = geo.attributes.position, uv = geo.attributes.uv;
+  const G = (x, y, cx, cy, sx, sy) => Math.exp(-(((x - cx) / sx) ** 2) - (((y - cy) / sy) ** 2));
+  const nose = ap.female ? 0.8 : 1, v = new THREE.Vector3();
+  for (let i = 0; i < pos.count; i++) {
+    const x = uv.getX(i), y = uv.getY(i), dx = Math.abs(x - 0.5);
+    const edge = Math.min(1, Math.min(x, 1 - x) / 0.12) * Math.min(1, Math.min(y, 1 - y) / 0.1);
+    let d = 0.0025;
+    d += 0.021 * nose * G(x, y, 0.5, 0.37, 0.035, 0.07) + 0.01 * nose * G(x, y, 0.5, 0.47, 0.022, 0.08); // tip + bridge
+    d += 0.004 * G(x, y, 0.5, 0.33, 0.07, 0.025); // nostril wings
+    d += 0.0045 * G(dx, y, 0.085, 0.63, 0.07, 0.035) - 0.0028 * G(dx, y, 0.086, 0.55, 0.035, 0.03); // brow / sockets
+    d += 0.004 * G(dx, y, 0.17, 0.44, 0.07, 0.06); // cheekbones
+    d += 0.0035 * G(x, y, 0.5, 0.245, 0.06, 0.025) + 0.002 * G(x, y, 0.5, 0.2, 0.05, 0.02); // lips
+    d += 0.004 * G(x, y, 0.5, 0.06, 0.09, 0.06); // chin
+    v.fromBufferAttribute(pos, i).normalize();
+    pos.setXYZ(i, pos.getX(i) + v.x * d * edge, pos.getY(i) + v.y * d * edge, pos.getZ(i) + v.z * d * edge);
+  }
+  geo.computeVertexNormals();
 }
 
 // ---------------------------------------------------------------------------

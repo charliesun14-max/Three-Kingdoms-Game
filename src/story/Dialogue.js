@@ -66,8 +66,8 @@ export class Dialogue {
   say(id, text, opts = {}) {
     const g = this.game;
     const sp = this.speaker(id);
+    this.speakerId = id;
     if (opts.frame !== false && !g.cutscene?.camLocked) this.frame(id);
-    g.audio?.voice(sp, text);
     return new Promise((resolve) => {
       g.ui.showLine(sp, this.fmt(text), null);
       this.pending = { resolve, choices: null };
@@ -80,6 +80,7 @@ export class Dialogue {
     const g = this.game;
     const sp = this.speaker(id);
     const avail = choices.filter((c) => !c.if || c.if(g));
+    this.speakerId = id;
     if (!g.cutscene?.camLocked) this.frame(id);
     return new Promise((resolve) => {
       g.ui.showLine(sp, this.fmt(text), avail.map((c) => ({ t: this.fmt(c.t), tag: c.tag })), (i) => this.pick(i));

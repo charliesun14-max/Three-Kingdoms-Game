@@ -9,7 +9,7 @@ const SPECIES = {
   elm: { h: [8, 12], trunkR: 0.3, bark: [0.33, 0.28, 0.23], leaf: 'broad', tint: 0xa9c07c, crown: 'round', cards: 90, cardSize: 2.4 },
   poplar: { h: [14, 19], trunkR: 0.24, bark: [0.62, 0.6, 0.52], leaf: 'broad', tint: 0xb4c884, crown: 'column', cards: 80, cardSize: 2.0 },
   willow: { h: [7, 10], trunkR: 0.32, bark: [0.3, 0.26, 0.2], leaf: 'willow', tint: 0xb0c880, crown: 'weeping', cards: 60, cardSize: 2.2 },
-  peach: { h: [3.2, 4.6], trunkR: 0.14, bark: [0.3, 0.2, 0.17], leaf: 'blossom', tint: 0xffffff, crown: 'round', cards: 46, cardSize: 1.5 },
+  peach: { h: [3.2, 4.6], trunkR: 0.14, bark: [0.3, 0.2, 0.17], leaf: 'blossom', tint: 0xffffff, crown: 'round', cards: 78, cardSize: 1.15 },
   jujube: { h: [4, 6], trunkR: 0.15, bark: [0.3, 0.22, 0.16], leaf: 'broad', tint: 0x98b070, crown: 'sparse', cards: 40, cardSize: 1.6 },
   mulberry: { h: [15, 17], trunkR: 0.8, bark: [0.36, 0.3, 0.24], leaf: 'broad', tint: 0x9cbc70, crown: 'canopy', cards: 260, cardSize: 3.4 },
   shrub: { h: [0.9, 1.6], trunkR: 0.04, bark: [0.3, 0.25, 0.2], leaf: 'broad', tint: 0x94ae6c, crown: 'bush', cards: 16, cardSize: 1.2 },

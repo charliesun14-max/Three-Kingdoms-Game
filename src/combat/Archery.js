@@ -18,7 +18,7 @@ export class Archery {
     m.position.copy(from);
     g.engine.scene.add(m);
     this.arrows.push({ owner, pos: from.clone(), vel: dir.clone().normalize().multiplyScalar(speed), life: 6, mesh: m, stuck: false, dmg: (owner.weapon.dmg.stab || 20) * (0.5 + power * 0.7) });
-    g.audio?.play('swing', from);
+    g.audio?.play('bow', from);
   }
 
   update(dt) {
@@ -45,7 +45,7 @@ export class Archery {
             c.damage(dmg, a.owner, { arrow: true });
             if (Math.random() < 0.5) c.bleed = Math.min(6, c.bleed + 0.6);
             g.combat.blood.burst(a.pos, 12, Math.atan2(a.vel.x, a.vel.z));
-            g.audio?.play('hit', c.pos);
+            g.audio?.play('arrowHit', c.pos);
             if (!c.dead) c.stagger(0.3);
             g.events.emit('hit', a.owner, c, dmg, { dir: 'thrust', arrow: true });
           }
@@ -55,7 +55,7 @@ export class Archery {
       }
       // hit ground
       const gy = g.world.groundHeight(a.pos.x, a.pos.z);
-      if (a.pos.y < gy) { a.pos.y = gy + 0.05; a.mesh.position.copy(a.pos); a.stuck = true; a.life = Math.min(a.life, 20); }
+      if (a.pos.y < gy) { if (Math.hypot(a.pos.x - g.player.pos.x, a.pos.z - g.player.pos.z) < 30) g.audio?.play('arrowGround', a.pos); a.pos.y = gy + 0.05; a.mesh.position.copy(a.pos); a.stuck = true; a.life = Math.min(a.life, 20); }
       void prev;
     }
     for (const a of this.arrows) if (a.life <= 0) g.engine.scene.remove(a.mesh);

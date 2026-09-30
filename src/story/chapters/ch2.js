@@ -282,8 +282,8 @@ export const CHAPTER2 = {
         objectives: [
           { id: 'brief', text: 'Receive orders from Huangfu Song', marker: () => hs.pos },
           { id: 'gate', text: 'Assault the south gate of Guangzong', hidden: true, marker: { x: gateOut.x, z: gateOut.z }, check: () => st.near(gateOut.x, gateOut.z, 14) },
-          { id: 'inside', text: 'Fight through the streets to the county office', hidden: true, marker: { x: city.x, z: city.z } },
-          { id: 'liang', text: 'Defeat Zhang Liang', hidden: true },
+          { id: 'inside', text: 'Break the defenders inside the south gate', hidden: true, marker: { x: gateIn.x, z: gateIn.z - 6 } },
+          { id: 'liang', text: 'Fight through the streets and defeat Zhang Liang', hidden: true, marker: () => { const z = g.entities.get('zhangLiang'); return z && !z.dead ? z.pos : { x: city.x, z: city.z }; } },
         ],
         chronicle: 'Huangfu Song stormed Guangzong. Zhang Liang was slain and the Yellow Turban cause broken. (History: Zhang Jiao had already died of illness; his coffin was opened and his head sent to Luoyang.)',
       });
@@ -310,7 +310,7 @@ export const CHAPTER2 = {
       const gateDef = kit.wave('yellowTurban', 10, gateIn.x, gateIn.z - 10, gateOut);
       kit.charge(hanLine, { x: gateIn.x, z: gateIn.z - 20 });
       g.ui.subtitle('Huangfu Song', 'The gate is broken! Into the city!', 4);
-      await st.waitFor(() => alive(gateDef).length <= 3 && st.near(gateIn.x, gateIn.z, 25));
+      await st.waitFor(() => alive(gateDef).length <= 3 && (st.near(gateIn.x, gateIn.z, 30) || st.near(city.x, city.z, 70)));
       g.quests.complete('q_gz_storm', 'inside');
       const liang = kit.officer({ id: 'zhangLiang', figure: 'zhangJiao', name: 'Zhang Liang', cn: '張梁', title: 'General of Man 人公將軍', faction: 'yellowTurban', role: 'yellowTurban', x: city.x + 20, z: city.z - 10, weapon: 'ji', body: 'leatherArmor', hp: 520, stats: { str: 15, vit: 15, polearm: 13, block: 11 } });
       const guard2 = kit.wave('yellowTurban', 12, city.x + 10, city.z - 5, { x: gateIn.x, z: gateIn.z - 10 });

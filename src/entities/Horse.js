@@ -169,6 +169,19 @@ export class Horse {
     const gallop = clamp((s - 5) / 4, 0, 1), move = clamp(s / 1.5, 0, 1);
     this.phase += dt * lerp(lerp(3.2, 7, clamp((s - 1.5) / 3.5, 0, 1)), 9.5, gallop) * (s > 0.1 ? 1 : 0) * Math.sign(this.speed || 1);
     const ph = this.phase;
+    if (move > 0.2 && this.game.audio?.enabled) {
+      const beats = Math.floor(ph / Math.PI);
+      if (beats !== this._beat) {
+        this._beat = beats;
+        const p = this.game.player?.pos;
+        if (p && Math.hypot(p.x - this.pos.x, p.z - this.pos.z) < 40) {
+          const hard = this.game.world.hf.isRoad?.(this.pos.x, this.pos.z);
+          const gv = 0.12 + gallop * 0.18;
+          this.game.audio.hoof(this.pos, hard, gv);
+          setTimeout(() => this.game.audio.hoof(this.pos, hard, gv * 0.8), gallop > 0.5 ? 60 : 110 / Math.max(1, s * 0.4));
+        }
+      }
+    }
     // walk/trot: diagonal pairs; gallop: fronts together, backs together (rotary approximation)
     const offs = gallop > 0.5 ? { fl: 0, fr: 0.3, bl: Math.PI, br: Math.PI + 0.3 } : { fl: 0, fr: Math.PI, bl: Math.PI, br: 0 };
     const amp = lerp(0.35, 0.75, gallop) * move;

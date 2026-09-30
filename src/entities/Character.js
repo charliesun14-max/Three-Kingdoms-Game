@@ -129,6 +129,7 @@ export class Character {
     });
     this.game.combat.announce(this, dir, (this.model.anim.clip.def.hit * this.model.anim.clip.def.dur) / speed);
     this.game.audio?.play('swing', this.pos, { weapon: this.equip.weapon });
+    if (Math.random() < 0.45 || dir === 'overhead') this.game.audio?.voice(this, 'effort');
     if (riposte) this.combat.riposteUntil = -9;
     return true;
   }
@@ -154,6 +155,7 @@ export class Character {
     this.combat.attack = null;
     this.combat.blocking = false;
     this.model.anim.play(big ? 'stagger' : 'hit', { speed: big ? 1 : 1.2 });
+    if (!this.dead) this.game.audio?.voice(this, 'pain');
   }
 
   heal(n) { this.hp = Math.min(this.hpMax, this.hp + n); }
@@ -186,6 +188,8 @@ export class Character {
     this.deathTime = this.time;
     this.game.events?.emit('death', this, killer);
     this.game.audio?.play('death', this.pos);
+    if (this._vox) this._vox = 0;
+    this.game.audio?.voice(this, 'death');
   }
 
   // ---- per-frame -----------------------------------------------------------
@@ -264,7 +268,38 @@ export class Character {
     st.blocking = this.combat.blocking;
     st.dead = this.dead;
     st.sneak = this.sneak;
+    this.updateLook(dt);
     this.model.update(dt, st);
+  }
+
+  // Head/neck look-at: conversation partners, the current foe, or a passer-by who catches the eye.
+  updateLook(dt) {
+    const g = this.game, an = this.model.anim;
+    let tg = null;
+    if (!this.dead) {
+      const d = g.dialogue, p = g.player;
+      if (d?.active && d.speakerId) {
+        const sp = d.speakerId === 'player' ? p : g.entities.get(d.speakerId);
+        if (sp && sp !== this && this.distTo(sp) < 9) tg = sp;
+        else if (sp === this && p !== this && this.distTo(p) < 9) tg = p;
+      } else if (this.combat.target && !this.combat.target.dead) tg = this.combat.target;
+      else if (this !== p && p && !this.combat.drawn && (this.hash ?? (this.hash = [...String(this.id) + this.name].reduce((h, ch) => h * 31 + ch.charCodeAt(0), 7) % 10)) < 7) {
+        const dd = this.distTo(p);
+        if (dd < 5 && dd > 0.8) tg = p;
+      }
+    }
+    let yaw = 0, pitch = 0;
+    if (tg) {
+      const a = angleDiff(this.yaw, Math.atan2(tg.pos.x - this.pos.x, tg.pos.z - this.pos.z));
+      if (Math.abs(a) < 2.0) {
+        yaw = clamp(a, -1.15, 1.15) * 57.3;
+        const dy = (tg.pos.y + (tg.riding ? 2.3 : 1.55)) - (this.pos.y + (this.riding ? 2.3 : 1.55));
+        pitch = clamp(-Math.atan2(dy, Math.max(0.5, this.distTo(tg))) * 57.3, -30, 30);
+      }
+    }
+    const k = 1 - Math.exp(-dt * 5);
+    an.lookYaw += (yaw - an.lookYaw) * k;
+    an.lookPitch += (pitch - an.lookPitch) * k;
   }
 
   distTo(o) { return Math.hypot(o.pos.x - this.pos.x, o.pos.z - this.pos.z); }
