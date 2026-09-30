@@ -5,6 +5,8 @@ import { Input } from './core/Input.js';
 import { events } from './core/Events.js';
 import { GameTime } from './core/GameTime.js';
 import { World } from './world/World.js';
+import { REGIONS } from './world/regions.js';
+import { Campaign } from './story/Campaign.js';
 import { NavGrid } from './world/NavGrid.js';
 import { Entities } from './entities/Entities.js';
 import { Character } from './entities/Character.js';
@@ -25,6 +27,8 @@ import { Audio } from './audio/Audio.js';
 import { Progression } from './rpg/Progression.js';
 import { Inventory, itemDef, ARMORS, ITEMS } from './rpg/Items.js';
 import { Rng } from './core/Rng.js';
+import { Autopilot } from './debug/Autopilot.js';
+import { Riding } from './entities/Riding.js';
 
 const SAVE_KEY = 'tk_mandate_save_v1';
 
@@ -66,14 +70,16 @@ export class Game {
     requestAnimationFrame(() => this.loop());
     const hasSave = !!localStorage.getItem(SAVE_KEY);
     if (p.has('scene') && p.get('scene') === 'chars') { this.setupCharShowcase(); return; }
+    if (p.has('auto')) { new Autopilot(this); this.ui.fastCards = true; }
     if (p.has('play') || p.has('shot')) { await this.newGame({ skipIntro: p.has('skipIntro'), mission: p.get('mission') }); this.applyDebugParams(); return; }
     if (p.has('continue') && hasSave) { await this.loadGame(); return; }
     this.showTitle(hasSave);
   }
 
-  async loadRegion(id) {
+  async loadRegion(id, overrides = null) {
     if (this.world) this.disposeWorld();
-    this.world = new World(this.engine, id, (msg, pr) => this.ui.loading(msg, pr));
+    const def = overrides ? { ...REGIONS[id], ...overrides } : id;
+    this.world = new World(this.engine, def, (msg, pr) => this.ui.loading(msg, pr));
     this.ui.loading('Charting paths…', 0.8);
     await wait(10);
     this.nav = new NavGrid(this.world);
@@ -83,8 +89,49 @@ export class Game {
     this.ui.loading('Villagers wake…', 0.92);
     await wait(10);
     if (id === 'zhuo') this.population.populateZhuo();
+    else this.population.populateGeneric();
     this.regionId = id;
+    if (this.riding) this.riding.horses = [];
+    this.spawnAmbientHorses();
     this.world.update(0.016, this.time.hour, new THREE.Vector3());
+  }
+
+  spawnAmbientHorses() {
+    if (!this.riding) return;
+    const coats = ['bay', 'chestnut', 'black', 'grey', 'bay'];
+    let k = 0;
+    for (const s of this.world.region.settlements) {
+      if (s.type !== 'armyCamp' && s.type !== 'estate') continue;
+      for (let i = 0; i < 3; i++) this.riding.spawn({ coat: coats[k++ % coats.length], name: 'Army horse', x: s.x + s.w / 2 - 8, z: s.z - s.d / 4 + i * 3, yaw: Math.PI / 2 });
+    }
+  }
+
+  // Move the player (and squad) to another region map.
+  async travel(regionId, spawn = null, opts = {}) {
+    const pl = this.player;
+    await this.ui.fade(1, 0.8);
+    this.ui.showHUD(false);
+    const squad = this.army.alive().length;
+    const horse = this.riding.toJSON();
+    if (this.riding.mount) this.riding.dismount();
+    this.army.troops = [];
+    pl.model.root.parent?.remove(pl.model.root);
+    this.ui.loading(opts.msg || 'The road is long…', 0.05);
+    await wait(30);
+    await this.loadRegion(regionId, opts.overrides || null);
+    this.entities.add(pl);
+    const st = spawn || this.world.region.places.start;
+    pl.pos.set(st.x, this.world.groundHeight(st.x, st.z), st.z);
+    pl.vel.set(0, 0, 0);
+    pl.combat.target = null;
+    this.playerCtl.lockTarget = null;
+    this.playerFactionHostility = null;
+    if (squad) this.army.recruit(squad);
+    this.riding.reset(horse);
+    this.cameraCtl.snapBehind(pl);
+    this.ui.hideLoading();
+    this.ui.showHUD(true);
+    await this.ui.fade(0, 1);
   }
 
   disposeWorld() {
@@ -159,6 +206,8 @@ export class Game {
     this.dialogue = new Dialogue(this);
     this.army = new Army(this);
     this.story = new Story(this);
+    this.riding = new Riding(this);
+    this.spawnAmbientHorses();
     events.on('death', (c, killer) => this.onDeath(c, killer));
     events.on('hit', (a, d) => { if (d === this.player || a === this.player) this.lastCombat = this.clockTime; if (d === this.player) this.cameraCtl.shake = 0.08; });
   }
@@ -212,7 +261,8 @@ export class Game {
     this.frames++;
     this.clockTime += dt;
     try { this.tick(dt); } catch (e) { console.error(e); }
-    this.engine.render(dt);
+    try { this.autopilot?.update(dt); } catch (e) { console.error('autopilot', e); }
+    if (!this.autopilot || this.frames % 60 === 0) this.engine.render(dt);
     this.input.endFrame();
     const stopAt = this.params.has('frames') ? +this.params.get('frames') : Infinity;
     if (this.frames >= stopAt && (!this.shotWait || this.shotReady)) { this.done = true; return; }
@@ -247,18 +297,20 @@ export class Game {
     if (this.debugAttack && this.frames === this.debugAttack.frame) this.player.startAttack(this.debugAttack.dir);
     this.time.advance(dt * (this.timeWarp || 1));
     if (this.dialogue.active || this.cutscene?.lockPlayer) { this.player.stop(); this.player.setBlocking(false); }
-    else this.playerCtl.update(dt);
+    else if (!this.riding.controlPlayer(dt)) this.playerCtl.update(dt);
+    if (this.input.hit('KeyH') && !this.dialogue.active) this.riding.whistle();
     // hunger
     this.player.food = Math.max(0, this.player.food - dt * 0.0045 * (this.timeWarp || 1));
     if (this.player.food <= 0 && Math.random() < dt * 0.2) this.player.damage(1, null, { hunger: true });
 
     this.entities.update(dt);
+    this.riding.update(dt);
     this.combat.update(dt);
     this.army.update(dt);
     this.quests.update();
     this.story.update(dt);
     this.dialogue.update(dt);
-    if (!this.dialogue.active && !this.cutscene) this.updateInteraction();
+    if (!this.dialogue.active && !this.cutscene && !this.busyInteract) this.updateInteraction();
     else this.ui.prompt(null);
     this.updateLocation();
     this.inCombat = this.clockTime - (this.lastCombat ?? -99) < 6 || (this.playerCtl.lockTarget && !this.playerCtl.lockTarget.dead);
@@ -306,6 +358,7 @@ export class Game {
       if (score < bd) { bd = score; best = obj; }
     };
     for (const it of this.world.interactables) if (!it.disabled) consider(it.x, it.z, it.r, { kind: 'object', it });
+    if (!p.riding) for (const h of this.riding.horses) if (!h.rider) consider(h.pos.x, h.pos.z, 2.2, { kind: 'horse', h });
     for (const c of this.entities.nearby(p.pos, 3)) {
       if (c === p || c.ai?.hidden) continue;
       if (c.dead) { if (c.inventory.list().length || c.inventory.coins || c.equip.weapon !== 'fists') consider(c.pos.x, c.pos.z, 1.8, { kind: 'loot', c }); continue; }
@@ -319,6 +372,7 @@ export class Game {
       if (best.kind === 'object') label = best.it.label;
       else if (best.kind === 'loot') label = `Search the body of ${best.c.name}`;
       else if (best.kind === 'surrender') label = `Deal with ${best.c.name} (surrendered)`;
+      else if (best.kind === 'horse') label = `Mount ${best.h.name}`;
       else label = `Talk to ${best.c.name}${best.c.cn ? ' ' + best.c.cn : ''}`;
     }
     this.ui.prompt(label);
@@ -326,6 +380,14 @@ export class Game {
   }
 
   async interact(b) {
+    // one interaction at a time (handlers may run fades/cutscenes between dialogue lines)
+    if (this.busyInteract) return;
+    this.busyInteract = true;
+    try { await this.interactInner(b); } finally { this.busyInteract = false; }
+  }
+
+  async interactInner(b) {
+    if (b.kind === 'horse') return this.riding.mountHorse(b.h);
     if (b.kind === 'talk') return this.story.talk(b.c);
     if (b.kind === 'loot') return this.loot(b.c);
     if (b.kind === 'surrender') return this.story.surrendered(b.c);
@@ -540,7 +602,7 @@ export class Game {
   serialize() {
     return {
       v: 1, region: this.regionId, time: this.time.toJSON(), player: this.player.toJSON(), progression: this.progression.toJSON(),
-      quests: this.quests.toJSON(), flags: this.flags, chronicle: this.chronicle, story: this.story.toJSON(), army: this.army.toJSON(),
+      quests: this.quests.toJSON(), flags: this.flags, chronicle: this.chronicle, story: this.story.toJSON(), army: this.army.toJSON(), campaign: this.campaign?.toJSON(), horse: this.riding.toJSON(),
     };
   }
   save(silent = false) {
@@ -569,6 +631,8 @@ export class Game {
     p.buildModel();
     this.progression.load(s.progression);
     this.army.load(s.army);
+    if (s.horse) this.riding.reset(s.horse);
+    if (s.campaign) { this.campaign = new Campaign(this); this.campaign.load(s.campaign); }
     this.state = 'play';
     this.ui.showHUD(true);
     await this.story.restore(s.story, s.quests);

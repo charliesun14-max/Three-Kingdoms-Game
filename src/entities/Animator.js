@@ -31,6 +31,7 @@ export const POSES = {
   lie: { _lie: 1, shoulderL: [0, 0, 12], shoulderR: [0, 0, -12], elbowL: [-5, 0, 0], elbowR: [-5, 0, 0], thighL: [0, 0, 4], thighR: [0, 0, -4], kneeL: [4, 0, 0], kneeR: [4, 0, 0], head: [-8, 0, 0] },
   dead: { _lie: 1, shoulderL: [-20, 0, 50], shoulderR: [-30, 0, -65], elbowL: [-40, 0, 0], elbowR: [-15, 0, 0], thighL: [-10, 0, 12], thighR: [-25, 0, -8], kneeL: [30, 0, 0], kneeR: [15, 0, 0], head: [-10, 30, 0], chest: [0, 10, 0] },
   surrender: { thighL: [-88, 0, 4], kneeL: [92, 0, 0], thighR: [6, 0, -3], kneeR: [98, 0, 0], shoulderL: [-160, 0, 20], shoulderR: [-160, 0, -20], elbowL: [-30, 0, 0], elbowR: [-30, 0, 0], head: [15, 0, 0], _drop: 0.46 },
+  ride: { thighL: [-62, 0, 28], kneeL: [78, 0, 0], thighR: [-62, 0, -28], kneeR: [78, 0, 0], footL: [20, 0, 0], footR: [20, 0, 0], spine: [4, 0, 0], shoulderL: [-38, 0, 8], shoulderR: [-38, 0, -8], elbowL: [-55, 0, 0], elbowR: [-55, 0, 0] },
   cheer: { shoulderR: [-168, 0, -12], elbowR: [-10, 0, 0], shoulderL: [-20, 0, 20], chest: [-6, 0, 0], head: [-15, 0, 0] },
   point: { shoulderR: [-85, 10, -5], elbowR: [-5, 0, 0], handR: [0, 0, 0] },
   drink: { shoulderR: [-62, 28, -8], elbowR: [-132, 0, 0], head: [-18, 0, 0] },

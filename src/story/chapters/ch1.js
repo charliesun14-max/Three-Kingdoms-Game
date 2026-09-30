@@ -512,6 +512,7 @@ export const CHAPTER1 = {
       g.player.buildModel();
       g.player.inventory.coins += 100;
       g.progression.setRank('volunteer');
+      if (!g.riding.playerHorse()) { const hp = g.player.pos; g.riding.spawn({ owner: 'player', coat: 'chestnut', name: 'Chestnut 棗騮', x: hp.x + 3, z: hp.z + 2, yaw: Math.PI }); g.ui.notify('Zhang Fei gives you a chestnut horse from the Zhongshan merchants. Press E to mount, H to whistle.', 'item'); }
       g.quests.finish('q_oath');
       g.chronicleAdd('The volunteers of Zhuo number five hundred. Zou Jing, a colonel under Liu Yan, takes command.');
     },

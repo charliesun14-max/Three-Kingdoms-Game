@@ -190,7 +190,7 @@ export class Heightfield {
         for (let j = gj - rc; j <= gj + rc; j++) for (let i = gi - rc; i <= gi + rc; i++) {
           if (i < 0 || j < 0 || i >= this.N || j >= this.N) continue;
           const id = this.idx(i, j);
-          if (this.riverDist[id] < this.region.river.width / 2 + 5) continue; // bridge span
+          if (this.region.river && this.riverDist[id] < this.region.river.width / 2 + 5) continue; // bridge span
           const d = Math.hypot(this.toWorld(i) - px, this.toWorld(j) - pz);
           const prev = done.get(id);
           if (prev && prev.d <= d) continue;

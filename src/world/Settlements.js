@@ -177,6 +177,7 @@ export class Settlements {
       const fn = {
         village: this.buildVillage, walledTown: this.buildWalledTown, estate: this.buildEstate,
         armyCamp: this.buildArmyCamp, rebelCamp: this.buildRebelCamp, banditCamp: this.buildBanditCamp, hamlet: this.buildHamlet,
+        passFortress: this.buildPassFortress, altar: this.buildAltar, fleet: this.buildFleet,
       }[s.type];
       if (fn) fn.call(this, s);
     }
@@ -326,12 +327,12 @@ export class Settlements {
         this.collide(px, pz, pw, wallT + 2, g.rot, { kind: 'wall' });
       }
       const [ox, oz] = this.lw(cx + g.lx, cz + g.lz, g.rot, 0, g.id === 'north' || g.id === 'east' ? -9 : 9);
-      this.spot(`zhuoGate_${g.id}_out`, ox, oz);
+      this.spot(`${s.id}Gate_${g.id}_out`, ox, oz);
       const [ix, iz] = this.lw(cx + g.lx, cz + g.lz, g.rot, 0, g.id === 'north' || g.id === 'east' ? 9 : -9);
-      this.spot(`zhuoGate_${g.id}_in`, ix, iz);
+      this.spot(`${s.id}Gate_${g.id}_in`, ix, iz);
       // guard banners by gate
       const [b1x, b1z] = this.lw(cx + g.lx, cz + g.lz, g.rot, -4.5, g.id === 'north' || g.id === 'east' ? -6.5 : 6.5);
-      this.addBanner(b1x, b1z, '漢', { bg: '#8a1a12' }, 6, g.rot);
+      this.addBanner(b1x, b1z, s.banner || '漢', s.bannerColors || { bg: '#8a1a12' }, 6, g.rot);
     }
     for (const [sx, sz] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) {
       B.frame(cx, gy, cz, 0);
@@ -365,7 +366,9 @@ export class Settlements {
     dr.cyl('lacquer', 0, 1.0, 0, 0.55, 0.7, { rx: Math.PI / 2, seg: 14 });
     this.collide(yx + 6.5, yz + yd / 2 + 2, 1.4, 0.8);
     // main hall
-    const hall = this.place('tiled', yx, yz - 8, 0, { w: 18, d: 9, h: 3.8, lacquer: true, platform: 1.1, rise: 3.0, id: 'yamen_hall' });
+    const hall = s.palace
+      ? this.place('tiled', yx, yz - 10, 0, { w: 26, d: 12, h: 5, lacquer: true, platform: 2.0, rise: 4.2, id: 'palace_hall' })
+      : this.place('tiled', yx, yz - 8, 0, { w: 18, d: 9, h: 3.8, lacquer: true, platform: 1.1, rise: 3.0, id: 'yamen_hall' });
     this.spot('yamenHall', hall.door.x, hall.door.z + 1.5);
     this.place('tiled', yx - 18, yz + 8, Math.PI / 2, { w: 10, d: 5, gable: true, id: 'yamen_west' });
     this.place('tiled', yx + 18, yz + 8, -Math.PI / 2, { w: 10, d: 5, gable: true, id: 'yamen_east' });
@@ -486,6 +489,8 @@ export class Settlements {
       this.prop(jars, x, z, 0, 0.6, rng.int(1, 3), i + 50);
     }
     this.spot('townCentre', cx, cz);
+    this.spot(`${s.id}_centre`, cx, cz);
+    this.spot(`${s.id}_hall`, this.spots.yamenHall.x, this.spots.yamenHall.z);
   }
 
   buildEstate(s) {
@@ -558,8 +563,12 @@ export class Settlements {
     commandTent(ct, { w: 9, d: 7, color: 0xe0d6c0, roofColor: 0x8a2a1a });
     this.collide(cx, cz + hd - 14, 9.4, 7.4);
     this.spot('commandTent', cx, cz + hd - 19.5, Math.PI);
-    this.addBanner(cx - 6, cz + hd - 20, '劉', { bg: '#8a1a12' }, 7.5);
-    this.addBanner(cx + 6, cz + hd - 20, '義', { bg: '#1a1a1a', fg: '#e8d8a8', border: '#9a1e14' }, 7.5);
+    const bn = s.banners || ['劉', '義'];
+    const bc = s.bannerColors || { bg: '#8a1a12' };
+    this.addBanner(cx - 6, cz + hd - 20, bn[0], bc, 7.5);
+    this.addBanner(cx + 6, cz + hd - 20, bn[1], { bg: '#1a1a1a', fg: '#e8d8a8', border: '#9a1e14' }, 7.5);
+    this.spot(`${s.id}_command`, cx, cz + hd - 19.5, Math.PI);
+    this.spot(`${s.id}_centre`, cx, cz);
     // tent rows
     for (let r = 0; r < 2; r++) for (let i = 0; i < 5; i++) {
       const x = cx - hw + 12 + i * 9, z = cz - hd + 12 + r * 12;
@@ -584,8 +593,8 @@ export class Settlements {
     this.spot('campFire', cx + 22, cz + 14.5);
     this.prop(jars, cx + 30, cz + 20, 0, 0.8, 4, 12);
     this.prop(cart, cx + 34, cz + 6, 0.3, 1.4);
-    this.addBanner(cx - 4.5, cz - hd - 1, '漢', { bg: '#8a1a12' }, 7);
-    this.addBanner(cx + 4.5, cz - hd - 1, '劉', { bg: '#8a1a12' }, 7);
+    this.addBanner(cx - 4.5, cz - hd - 1, (s.gateBanners || ['漢'])[0], bc, 7);
+    this.addBanner(cx + 4.5, cz - hd - 1, (s.gateBanners || ['漢', '劉'])[1] || bn[0], bc, 7);
   }
 
   buildRebelCamp(s) {
@@ -669,6 +678,118 @@ export class Settlements {
     const cb = this.site(cx + 3, cz - 6, 0, 1, 1);
     cb.box('darkwood', 0, 0, 0, 1.2, 0.7, 0.8);
     cb.box('iron', 0, 0.5, 0.41, 0.2, 0.2, 0.02);
+  }
+
+  // A great wall with a gate tower closing a mountain valley (e.g. Hulao Pass).
+  buildPassFortress(s) {
+    const cx = s.x, cz = s.z, L = s.w, wallH = 12, wallT = 10, gateW = 26;
+    const B = this.B;
+    const gy = this.ground(cx, cz);
+    B.frame(cx, gy, cz, 0);
+    // wall runs along z; crenels face east (+x)
+    const half = L / 2;
+    const segs = [[half, gateW / 2], [-gateW / 2, -half]];
+    for (const [a, b] of segs) {
+      const r = wallSegment(B, 0, a, 0, b, { h: wallH, t: wallT });
+      this.collide(cx + r.cx, cz + r.cz, r.len, wallT, r.rot, { kind: 'wall' });
+    }
+    B.frame(cx, gy, cz, 0);
+    B.push().sub(0, 0, 0, Math.PI / 2);
+    gateTower(B, { w: gateW, d: wallT + 3, h: wallH, gateW: 7 });
+    B.pop();
+    const pw = (gateW - 7) / 2;
+    for (const sd of [-1, 1]) this.collide(cx, cz + sd * (3.5 + pw / 2), wallT + 3, pw, 0, { kind: 'wall' });
+    this.gateBlock = this.collide(cx, cz, 2, 7.2, 0, { kind: 'wall', gate: true });
+    // gate leaves (closed) as a separate mesh so the story can open them
+    const leaves = new THREE.Mesh(new THREE.BoxGeometry(0.5, wallH - 2, 7), new THREE.MeshStandardMaterial({ color: 0x4a2a18, roughness: 0.8 }));
+    leaves.position.set(cx + 1.5, gy + (wallH - 2) / 2, cz);
+    leaves.castShadow = true;
+    this.group.add(leaves);
+    this.gateLeaves = leaves;
+    // bastion towers
+    for (let z = -half + 25; z < half - 20; z += 45) {
+      if (Math.abs(z) < 30) continue;
+      B.frame(cx, gy, cz, 0);
+      B.push().sub(4, 0, z, 0);
+      cornerTower(B, { s: 11, h: wallH + 1 });
+      B.pop();
+      this.collide(cx + 4, cz + z, 11, 11);
+    }
+    this.spot(`${s.id}_east`, cx + 14, cz, -Math.PI / 2);
+    this.spot(`${s.id}_west`, cx - 14, cz, Math.PI / 2);
+    for (const z of [-9, 9]) this.addBanner(cx + 7.5, cz + z, s.banner || '董', s.bannerColors || { bg: '#2a1a2a', fg: '#e8d8a8', border: '#6a1a3a' }, 7);
+  }
+  openGate() {
+    if (this.gateBlock) this.world.colliders.remove(this.gateBlock);
+    if (this.gateLeaves) this.gateLeaves.visible = false;
+    this.game?.nav && null;
+  }
+
+  // Three-tiered earthen altar (like the 受禪台 where Han abdicated its mandate).
+  buildAltar(s) {
+    const cx = s.x, cz = s.z;
+    const gy = this.ground(cx, cz, 30, 30);
+    const tiers = [[30, 2.2], [21, 2.2], [12, 2.2]];
+    let y = 0;
+    for (const [w, h] of tiers) {
+      this.B.frame(cx, gy + y, cz, 0);
+      this.B.box(y === 0 ? 'stone' : 'rammed', 0, -0.2, 0, w, h + 0.2, w, { uv: 2 });
+      this.B.box('roofTile', 0, h, 0, w + 0.3, 0.12, w + 0.3, { uv: 2 });
+      y += h;
+      const top = gy + y;
+      this.collide(cx, cz, w, w, 0, { top: top - 0.5, kind: 'wall' });
+      this.surfaces.push({ x: cx, z: cz, hw: w / 2, hd: w / 2, c: 1, s: 0, y: top });
+    }
+    // stair ramp on the south face up all tiers
+    const L = 15, W = 4;
+    this.B.frame(cx, gy, cz + 15 - L / 2 + 0.5, 0);
+    const steps = 22;
+    for (let i = 0; i < steps; i++) this.B.box('stone', 0, 0, L / 2 - (i + 0.5) * (L / steps), W, ((i + 1) / steps) * y, L / steps, { uv: 1 });
+    const z0 = cz + 15.5, z1 = z0 - L;
+    this.surfaces.push({ x: cx, z: (z0 + z1) / 2, hw: W / 2, hd: L / 2, c: 1, s: 0, y: (lx, lz) => gy + Math.max(0, Math.min(y, ((L / 2 - lz) / L) * y)) });
+    // top pavilion
+    this.B.frame(cx, gy + y, cz, 0);
+    for (const [px, pz] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) this.B.cyl('lacquer', px * 3.5, 0, pz * 3.5, 0.22, 4, { seg: 8 });
+    this.B.roof('roofTile', 0, 4, 0, 7, 7, 2.6, { type: 'pyramid', overhang: 1.4, lift: 0.6 });
+    this.B.box('darkwood', 0, 0, -1.5, 3, 0.8, 1.2);
+    this.spot(`${s.id}_top`, cx, cz + 1, Math.PI);
+    this.spot(`${s.id}_foot`, cx, cz + 22, Math.PI);
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2;
+      this.addBanner(cx + Math.cos(a) * 19, cz + Math.sin(a) * 19, s.banner || '天', s.bannerColors || { bg: '#1a1a1a', fg: '#e8c860', border: '#9a1e14' }, 8);
+    }
+  }
+
+  // Tower ships (樓船) moored in a line on the river, optionally chained together.
+  buildFleet(s) {
+    const n = s.n || 10, rot = s.rot || 0;
+    const water = this.hf.waterAt(s.x, s.z) ?? this.ground(s.x, s.z);
+    this.ships = this.ships || [];
+    for (let i = 0; i < n; i++) {
+      const off = (i - (n - 1) / 2) * (s.spacing || 16);
+      const x = s.x + Math.cos(rot) * off, z = s.z - Math.sin(rot) * off;
+      const B = this.B.frame(x, water - 0.6, z, rot + Math.PI / 2);
+      const L = 22, W = 7;
+      B.box('darkwood', 0, 0, 0, W, 1.8, L, { uv: 2 });
+      B.box('darkwood', 0, 0.4, L / 2 + 1.2, W * 0.6, 1.6, 2.6, { uv: 2, rx: -0.3 });
+      B.box('darkwood', 0, 0.4, -L / 2 - 1.0, W * 0.7, 1.8, 2.2, { uv: 2, rx: 0.25 });
+      B.box('wood', 0, 1.8, 0, W + 0.4, 0.2, L + 0.4);
+      B.box('plaster', 0, 2.0, -2, W - 1.4, 2.6, L * 0.5);
+      B.roof('roofTile', 0, 4.6, -2, W - 1.4, L * 0.5, 1.2, { type: 'hip', overhang: 0.6, lift: 0.2, nv: 3 });
+      B.box('plaster', 0, 5.9, -3, W - 2.6, 2.0, L * 0.28);
+      B.roof('roofTile', 0, 7.9, -3, W - 2.6, L * 0.28, 1.2, { type: 'hip', overhang: 0.6, lift: 0.3, nv: 3 });
+      B.cyl('darkwood', 0, 1.8, 6, 0.18, 14, { seg: 6 });
+      B.quad('cloth', [new THREE.Vector3(-3, 6, 6.3), new THREE.Vector3(3, 6, 6.3), new THREE.Vector3(3, 14.5, 6.3), new THREE.Vector3(-3, 14.5, 6.3)], null, s.sailColor ?? 0xc8b890);
+      for (let r = 0; r < 6; r++) B.beam('wood', new THREE.Vector3(W / 2, 0.9, -L / 2 + 3 + r * 3.2), new THREE.Vector3(W / 2 + 2.5, -0.6, -L / 2 + 3 + r * 3.2), 0.08);
+      if (s.chained && i > 0) {
+        const px = s.x + Math.cos(rot) * (off - (s.spacing || 16)), pz = s.z - Math.sin(rot) * (off - (s.spacing || 16));
+        this.B.frame(0, water + 1.2, 0, 0);
+        this.B.beam('iron', new THREE.Vector3(px, 0, pz), new THREE.Vector3(x, 0, z), 0.12);
+      }
+      this.ships.push({ x, z, y: water + 2, rot });
+      this.surfaces.push({ x, z, hw: W / 2 + 0.2, hd: L / 2 + 1, c: Math.cos(rot + Math.PI / 2), s: Math.sin(rot + Math.PI / 2), y: water + 1.2 });
+    }
+    if (s.flag) for (const sh of this.ships.slice(-n)) this.addBanner(sh.x, sh.z, s.flag, s.bannerColors, 16);
   }
 
   update(dt, time, sky) {

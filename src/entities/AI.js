@@ -64,9 +64,12 @@ export class Brain {
     const d = Math.hypot(x - c.pos.x, z - c.pos.z);
     if (d < arriveR) { c.stop(); this.path = null; return true; }
     const t = this.game.clockTime;
-    if (!this.path || !this.pathGoal || Math.hypot(this.pathGoal[0] - x, this.pathGoal[1] - z) > 2 || t > this.repathAt) {
+    const goalMoved = !this.pathGoal || Math.hypot(this.pathGoal[0] - x, this.pathGoal[1] - z) > 2;
+    if (!this.path || (goalMoved && t > (this.nextRepath || 0)) || t > this.repathAt) {
       const nav = this.game.nav;
-      this.path = nav ? nav.findPath(c.pos.x, c.pos.z, x, z, 25000) : [[x, z]];
+      this.nextRepath = t + 0.7 + Math.random() * 0.6;
+      const near = d < 8;
+      this.path = nav ? nav.findPath(c.pos.x, c.pos.z, x, z, near ? 2500 : 12000) : [[x, z]];
       if (!this.path || !this.path.length) this.path = [[x, z]];
       this.pathIdx = 0;
       this.pathGoal = [x, z];

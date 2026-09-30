@@ -178,6 +178,82 @@ export class Population {
     }
   }
 
+  // Generic population for regions beyond Zhuo, driven by settlement types.
+  populateGeneric() {
+    const g = this.game, R = g.world.region, rng = this.rng, S = g.world.settlements.spots;
+    for (const st of R.settlements) {
+      if (g.flags[`cleared_${st.id}`]) continue;
+      switch (st.type) {
+        case 'walledTown': {
+          const hostile = st.faction === 'yellowTurban';
+          if (hostile) { this.spawnGarrison(st, 'yellowTurban', 18, { r: Math.min(st.w, st.d) * 0.4 }); break; }
+          for (const gid of ['north', 'south', 'east', 'west']) {
+            const out = S[`${st.id}Gate_${gid}_out`];
+            if (!out) continue;
+            for (const sd of [-1, 1]) {
+              const px = out.x + (gid === 'north' || gid === 'south' ? sd * 3.4 : 0), pz = out.z + (gid === 'east' || gid === 'west' ? sd * 3.4 : 0);
+              const c = this.spawn({ ...randomName(rng), title: 'Gate guard', role: 'guard', faction: st.faction || 'han', x: px, z: pz, appearance: randomAppearance('guard', rng), weapon: 'ji', body: 'lamellar', head: 'ironHelmet', stats: { str: 11, vit: 11, polearm: 8, block: 7 }, brain: { archetype: 'soldier', fighter: true, mode: 'guard', aggroRange: 14 } });
+              c.ai.post = { x: px, z: pz };
+            }
+          }
+          for (let i = 0; i < 12; i++) {
+            const female = rng.chance(0.4);
+            const x = st.x + rng.range(-st.w / 3, st.w / 3), z = st.z + rng.range(-st.d / 3, st.d / 3);
+            const c = this.spawn({ ...randomName(rng, female), role: 'townsman', faction: 'civilian', x, z, appearance: randomAppearance(female ? 'woman' : rng.pick(['farmer', 'merchant', 'official', 'elder']), rng), brain: { mode: 'wander' } });
+            c.ai.area = { x: st.x, z: st.z, r: Math.min(st.w, st.d) * 0.35 };
+          }
+          const stalls = g.world.settlements.marketStalls || [];
+          const kinds = ['grocer', 'tailor', 'salt', 'grocer', 'apothecary', 'salt'];
+          stalls.forEach((sp, i) => this.spawn({ ...randomName(rng), role: 'merchant', faction: 'civilian', x: sp.x, z: sp.z, yaw: sp.rot, appearance: randomAppearance('merchant', rng), shop: kinds[i], brain: { mode: 'idle' } }));
+          if (S.smithy) this.spawn({ id: 'smith', name: 'Blacksmith', cn: '鐵匠', role: 'merchant', faction: 'civilian', x: S.smithy.x, z: S.smithy.z, yaw: S.smithy.rot, appearance: { ...randomAppearance('farmer', rng), bare: true, build: 1.2 }, shop: 'smith', brain: { mode: 'schedule', schedule: [{ from: 0, to: 24, x: S.smithy.x, z: S.smithy.z, act: 'hammer', rot: S.smithy.rot }] } });
+          if (S.tavernDoor) this.spawn({ id: 'innkeeper', name: 'Innkeeper', cn: '掌櫃', role: 'merchant', faction: 'civilian', x: S.tavernDoor.x + 1.5, z: S.tavernDoor.z + 0.5, appearance: randomAppearance('merchant', rng), shop: 'innkeeper', brain: { mode: 'idle' } });
+          break;
+        }
+        case 'armyCamp': {
+          const f = st.faction || 'han';
+          const kind = f === 'han' || f === 'militia' ? 'soldier' : 'soldier';
+          const n = st.garrison ?? 10;
+          for (let i = 0; i < n; i++) {
+            const x = st.x + rng.range(-st.w / 3, st.w / 3), z = st.z + rng.range(-st.d / 4, st.d / 3);
+            const c = this.spawn({ ...randomName(rng), title: 'Soldier', role: 'soldier', faction: f, x, z, appearance: { ...randomAppearance(kind, rng), ...(st.uniform || {}) }, weapon: rng.pick(['ji', 'spear', 'dao']), shield: rng.chance(0.3), body: rng.chance(0.6) ? 'lamellar' : 'leatherArmor', head: 'ironHelmet', stats: { str: 10, vit: 10, polearm: 6, blade: 6, block: 6 }, brain: { archetype: 'soldier', fighter: true, mode: 'wander', aggroRange: 16 } });
+            c.ai.area = { x: st.x, z: st.z, r: Math.min(st.w, st.d) * 0.3 };
+            c.ai.leash = { x: st.x, z: st.z, r: Math.max(st.w, st.d) };
+            c.tags.add(st.id);
+          }
+          break;
+        }
+        case 'rebelCamp': this.spawnCamp(st.id, 'yellowTurban', 12); break;
+        case 'banditCamp': this.spawnCamp(st.id, 'bandit', 5); break;
+        case 'village': case 'hamlet': {
+          const n = st.type === 'village' ? 12 : 5;
+          for (let i = 0; i < n; i++) {
+            const female = rng.chance(0.4);
+            const c = this.spawn({ ...randomName(rng, female), role: female ? 'villager' : 'farmer', faction: 'civilian', x: st.x + rng.range(-st.w / 3, st.w / 3), z: st.z + rng.range(-st.d / 3, st.d / 3), appearance: randomAppearance(female ? 'woman' : 'farmer', rng), brain: { mode: 'wander' } });
+            c.ai.area = { x: st.x, z: st.z, r: Math.min(st.w, st.d) * 0.4 };
+          }
+          break;
+        }
+        default: break;
+      }
+    }
+  }
+
+  spawnGarrison(st, kind, n, o = {}) {
+    const rng = this.rng, list = [];
+    for (let i = 0; i < n; i++) {
+      const a = rng.range(0, Math.PI * 2), r = rng.range(5, o.r || 40);
+      const c = this.spawn({ ...randomName(rng), title: kind === 'yellowTurban' ? 'Yellow Turban' : 'Soldier', role: kind, faction: kind, x: st.x + Math.cos(a) * r, z: st.z + Math.sin(a) * r, appearance: randomAppearance(kind, rng), weapon: rng.pick(['spear', 'spear', 'dao', 'staff', 'club']), body: rng.chance(0.35) ? 'paddedJacket' : null, stats: { str: rng.int(7, 11), vit: rng.int(6, 10), polearm: 4, blade: 4 }, brain: { archetype: kind === 'yellowTurban' ? 'rebel' : 'soldier', fighter: true, mode: 'wander', aggroRange: 18 } });
+      c.ai.area = { x: st.x, z: st.z, r: o.r || 40 };
+      c.ai.leash = { x: st.x, z: st.z, r: (o.r || 40) * 1.8 };
+      c.tags.add(st.id);
+      c.inventory.coins = rng.int(2, 20);
+      if (kind === 'yellowTurban') c.inventory.add('yellowCloth');
+      list.push(c);
+    }
+    this.camps.set(st.id, list);
+    return list;
+  }
+
   spawnCamp(campId, kind, n) {
     const g = this.game, rng = this.rng;
     const s = g.world.region.settlements.find((x) => x.id === campId);

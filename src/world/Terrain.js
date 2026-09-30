@@ -29,6 +29,7 @@ export class Terrain {
       uHalf: { value: hf.half },
       uSize: { value: hf.size },
       uSeason: { value: 0.0 }, // 0 summer .. 1 autumn
+      uRockTint: { value: new THREE.Vector3(...(hf.region.rockTint || [1, 1, 1])) },
     };
     this.uniforms = uniforms;
     mat.onBeforeCompile = (sh) => {
@@ -42,6 +43,7 @@ varying vec3 vWPos;
 varying vec3 vWNorm;
 uniform sampler2D tGrass, tDry, tLoess, tRock, tField, tRoad, tLitter, tMask, tWet;
 uniform float uHalf, uSize, uSeason;
+uniform vec3 uRockTint;
 float h21(vec2 p){ return fract(sin(dot(p, vec2(127.1,311.7))) * 43758.5453); }
 float vnoise(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.0-2.0*f);
   return mix(mix(h21(i),h21(i+vec2(1,0)),f.x), mix(h21(i+vec2(0,1)),h21(i+vec2(1,1)),f.x), f.y); }
@@ -62,7 +64,7 @@ vec3 tex2(sampler2D t, vec2 p){
   vec3 grass = tex2(tGrass, wp);
   vec3 dry = tex2(tDry, wp);
   vec3 loess = tex2(tLoess, wp);
-  vec3 rock = tex2(tRock, wp * 0.6 + vec2(0.0, vWPos.y*0.1));
+  vec3 rock = tex2(tRock, wp * 0.6 + vec2(0.0, vWPos.y*0.1)) * uRockTint;
   vec3 field = texture2D(tField, wp * 0.09).rgb;
   vec3 road = texture2D(tRoad, wp * 0.16).rgb;
   vec3 litter = tex2(tLitter, wp);

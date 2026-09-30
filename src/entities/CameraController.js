@@ -77,7 +77,7 @@ export class CameraController {
       this.targetDist = clamp(this.targetDist + inp.mouse.wheel * 0.4, 1.8, 7.5);
     }
     this.pitch = clamp(this.pitch, -0.5, 1.15);
-    this.dist = lerp(this.dist, lock ? Math.max(3.4, this.targetDist) : this.targetDist, 1 - Math.exp(-6 * dt));
+    this.dist = lerp(this.dist, lock ? Math.max(3.4, this.targetDist) : p.riding ? Math.max(5.5, this.targetDist) : this.targetDist, 1 - Math.exp(-6 * dt));
     const head = new THREE.Vector3(p.pos.x, p.pos.y + 1.55 - p.model.anim.drop * 0.9, p.pos.z);
     if (lock) {
       const tx = lock.pos.x - p.pos.x, tz = lock.pos.z - p.pos.z;

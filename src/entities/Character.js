@@ -207,6 +207,7 @@ export class Character {
       }
     }
 
+    if (this.riding) { this.model.update(dt, { speed: 0, stance: 'relaxed', weaponCls: 'fists' }); return; }
     // --- movement integration
     const stunned = t < this.combat.staggerUntil || t < this.combat.knockedUntil || this.dead;
     let want = stunned ? _zero : this.desired;

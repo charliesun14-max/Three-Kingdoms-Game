@@ -13,7 +13,7 @@ export class World {
   constructor(engine, regionId = 'zhuo', onProgress = () => {}) {
     this.engine = engine;
     this.scene = engine.scene;
-    this.region = REGIONS[regionId];
+    this.region = typeof regionId === 'object' ? regionId : REGIONS[regionId];
     this.colliders = new Colliders(16);
     this.interactables = [];
     onProgress('Shaping the land…', 0.1);

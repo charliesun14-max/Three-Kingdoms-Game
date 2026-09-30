@@ -228,17 +228,19 @@ export class UI {
 
   // ---------------------------------------------------------------- overlays
   fade(to, dur = 1) {
+    if (this.fastCards) dur = 0.02;
     this.fadeEl.style.transition = `opacity ${dur}s`;
     this.fadeEl.style.opacity = to;
     return new Promise((r) => setTimeout(r, dur * 1000));
   }
   async chapterCard(num, titleCn, titleEn, sub, hold = 4.5) {
+    if (this.fastCards) hold = 0.2;
     this.chapterEl.innerHTML = `<div class="num">${num}</div><div class="title">${titleCn}</div><div class="en">${titleEn}</div><div class="sub">${sub || ''}</div>`;
     this.chapterEl.classList.add('on');
     this.game.audio?.play('gong');
     await wait(hold * 1000);
     this.chapterEl.classList.remove('on');
-    await wait(1400);
+    await wait(this.fastCards ? 50 : 1400);
   }
   rankUp(r) {
     this.rankEl.innerHTML = `<div class="l">Promotion</div><div class="cn">${r.cn}</div><div class="en">${r.name}</div>`;
@@ -287,7 +289,7 @@ export class UI {
   hideLoading() { this.loadEl?.remove(); this.loadEl = null; }
 
   // ---------------------------------------------------------------- panels
-  anyPanelOpen() { return !!this.panelOpen || !!this.titleEl || this.deathEl.classList.contains('on'); }
+  anyPanelOpen() { return !!this.panelOpen || !!this.titleEl || this.deathEl.classList.contains('on') || !!this.root.querySelector('.panel-wrap.on'); }
 
   openPanel(tab) {
     this.panelOpen = tab;

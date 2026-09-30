@@ -3,10 +3,15 @@
 import * as THREE from 'three';
 import { wait } from '../ui/UI.js';
 import { CHAPTER1 } from './chapters/ch1.js';
+import { CHAPTER2 } from './chapters/ch2.js';
+import { CHAPTER3 } from './chapters/ch3.js';
+import { CHAPTER4 } from './chapters/ch4.js';
+import { CHAPTER5 } from './chapters/ch5.js';
+import { CHAPTER7 } from './chapters/ch7.js';
 import { SMALLTALK } from './smalltalk.js';
 import { itemDef } from '../rpg/Items.js';
 
-export const MISSIONS = { ...CHAPTER1 };
+export const MISSIONS = { ...CHAPTER1, ...CHAPTER2, ...CHAPTER3, ...CHAPTER4, ...CHAPTER5, ...CHAPTER7 };
 export const MISSION_ORDER = Object.keys(MISSIONS);
 
 export class Story {
