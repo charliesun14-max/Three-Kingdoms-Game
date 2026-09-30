@@ -41,7 +41,15 @@ export class Story {
   actor(id, spec) {
     const g = this.g;
     let c = g.entities.get(id);
-    if (c && !c.dead) return c;
+    if (c && !c.dead) {
+      // reuse the living actor, but move them to where this scene needs them
+      if (spec.x !== undefined) this.place(c, spec.x, spec.z);
+      if (spec.weapon && spec.weapon !== c.equip.weapon) c.setWeapon(spec.weapon);
+      c.ai?.cancelScript?.();
+      c.model.anim.setPose(null); c.model.anim.setLoop(null);
+      c.faceYaw = null;
+      return c;
+    }
     c = g.spawnNPC({ id, faction: 'militia', essential: true, brain: { archetype: 'hero', fighter: true, mode: 'idle', passive: true }, ...spec });
     c.tags.add('cast');
     c.tags.add('alwaysActive');

@@ -53,7 +53,7 @@ export const CHAPTER2 = {
         desc: 'Lu Zhi wants the rebels\' grain depot east of Guangzong burned. A city without grain cannot hold.',
         objectives: [
           { id: 'talk', text: 'Report to General Lu Zhi at the command tent', marker: () => lz.pos },
-          { id: 'burn', text: 'Burn the grain stores at the rebel depot (0/3)', hidden: true, count: 3, marker: { x: depot.x, z: depot.z } },
+          { id: 'burn', text: 'Burn the grain stores at the rebel depot', hidden: true, count: 3, marker: () => { const p = g.world.interactables.find((i) => i.kind === 'grain' && !i.disabled); return p ? { x: p.x, z: p.z } : { x: depot.x, z: depot.z }; } },
           { id: 'back', text: 'Return to Lu Zhi', hidden: true, marker: () => lz.pos },
         ],
         chronicle: 'At Guangzong you burned the Yellow Turban grain depot under cover of night.',
