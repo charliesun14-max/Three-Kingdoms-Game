@@ -209,6 +209,11 @@ export class Audio {
   }
 
   setMood(m) { this.musicMood = m; }
+  setRain(v) {
+    if (!this.enabled) return;
+    if (!this.rainN) { const c = this.ctx; const s = c.createBufferSource(); s.buffer = this.makeNoise(3); s.loop = true; const f = c.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 900; const gn = c.createGain(); gn.gain.value = 0; s.connect(f); f.connect(gn); gn.connect(this.amb); s.start(); this.rainN = gn; }
+    this.rainN.gain.setTargetAtTime(v * 0.22, this.ctx.currentTime, 0.8);
+  }
 
   updateMusic(dt) {
     const c = this.ctx;

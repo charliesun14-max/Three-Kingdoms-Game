@@ -30,6 +30,7 @@ import { Rng } from './core/Rng.js';
 import { Autopilot } from './debug/Autopilot.js';
 import { Riding } from './entities/Riding.js';
 import { Horse } from './entities/Horse.js';
+import { Weather } from './world/Weather.js';
 
 const SAVE_KEY = 'tk_mandate_save_v1';
 
@@ -92,6 +93,7 @@ export class Game {
     if (id === 'zhuo') this.population.populateZhuo();
     else this.population.populateGeneric();
     this.regionId = id;
+    this.weather = new Weather(this);
     if (this.riding) this.riding.horses = [];
     this.spawnAmbientHorses();
     this.world.update(0.016, this.time.hour, new THREE.Vector3());
@@ -235,6 +237,7 @@ export class Game {
     if (p.has('weapon')) this.player.setWeapon(p.get('weapon'));
     if (p.has('armor')) { this.player.equip.body = p.get('armor'); this.player.buildModel(); }
     if (p.has('drawn')) this.player.draw(true);
+    if (p.has('weather')) { this.weather.set(p.get('weather')); this.weather.overcast = this.weather.target.overcast; this.weather.rain = this.weather.target.rain; this.weather.nextChange = 99; }
     if (p.has('foes')) {
       // debug skirmish: spawn enemies in front of the player
       const n = +p.get('foes') || 2;
@@ -318,6 +321,7 @@ export class Game {
     this.inCombat = this.clockTime - (this.lastCombat ?? -99) < 6 || (this.playerCtl.lockTarget && !this.playerCtl.lockTarget.dead);
     this.cameraCtl.update(dt);
     const focus = this.player.pos;
+    this.weather?.update(dt);
     this.world.update(dt, this.time.hour, focus);
     this.ui.update(dt);
     this.audio.update(dt);

@@ -29,6 +29,7 @@ export class Terrain {
       uHalf: { value: hf.half },
       uSize: { value: hf.size },
       uSeason: { value: 0.0 }, // 0 summer .. 1 autumn
+      uWetness: { value: 0 },
       uRockTint: { value: new THREE.Vector3(...(hf.region.rockTint || [1, 1, 1])) },
     };
     this.uniforms = uniforms;
@@ -44,6 +45,7 @@ varying vec3 vWNorm;
 uniform sampler2D tGrass, tDry, tLoess, tRock, tField, tRoad, tLitter, tMask, tWet;
 uniform float uHalf, uSize, uSeason;
 uniform vec3 uRockTint;
+uniform float uWetness;
 float h21(vec2 p){ return fract(sin(dot(p, vec2(127.1,311.7))) * 43758.5453); }
 float vnoise(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.0-2.0*f);
   return mix(mix(h21(i),h21(i+vec2(1,0)),f.x), mix(h21(i+vec2(0,1)),h21(i+vec2(1,1)),f.x), f.y); }
@@ -88,10 +90,11 @@ vec3 tex2(sampler2D t, vec2 p){
   col = mix(col, mud, wet * 0.8);
   // macro variation
   col *= 0.92 + 0.16 * n1;
+  col *= 1.0 - uWetness * 0.28;
   diffuseColor.rgb *= col;
 `)
         .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
-  roughnessFactor = mix(0.95, 0.55, wet*0.7);`);
+  roughnessFactor = mix(0.95, 0.55, max(wet * 0.7, uWetness * 0.6));`);
     };
     mat.customProgramCacheKey = () => 'terrainSplat';
     return mat;
