@@ -10,14 +10,15 @@ const D = Math.PI / 180;
 const BONE_LIST = ['hips', 'spine', 'chest', 'neck', 'head', 'shoulderL', 'elbowL', 'handL', 'shoulderR', 'elbowR', 'handR', 'thighL', 'kneeL', 'footL', 'thighR', 'kneeR', 'footR'];
 
 const ease = (t) => t * t * (3 - 2 * t);
+const _wv = new THREE.Vector3();
 
 // ---- static poses -----------------------------------------------------------
 export const POSES = {
   relaxed: { shoulderL: [2, 0, 7], shoulderR: [2, 0, -7], elbowL: [-12, 0, 0], elbowR: [-12, 0, 0], handL: [0, 0, 0], handR: [0, 0, 0] },
-  guardBlade: { shoulderR: [-38, 12, -22], elbowR: [-68, 0, 0], handR: [10, 0, 10], shoulderL: [-28, -10, 16], elbowL: [-70, 0, 0], chest: [4, -8, 0], spine: [2, 0, 0] },
-  guardShield: { shoulderR: [-38, 12, -22], elbowR: [-68, 0, 0], handR: [10, 0, 10], shoulderL: [-55, -25, 20], elbowL: [-80, 0, 0], handL: [0, 0, 0], chest: [4, -8, 0] },
-  guardPolearm: { shoulderR: [-8, -6, -18], elbowR: [-88, 0, 0], handR: [0, 0, 0], shoulderL: [-58, -24, 6], elbowL: [-32, 0, 0], handL: [0, 0, 0], chest: [4, -24, 0], spine: [3, -8, 0] },
-  guardFists: { shoulderR: [-50, 20, -10], elbowR: [-115, 0, 0], shoulderL: [-55, -20, 10], elbowL: [-115, 0, 0], chest: [6, -10, 0] },
+  guardBlade: { _w: [0.2, 0.75, 0.65],  shoulderR: [-38, 12, -22], elbowR: [-68, 0, 0], handR: [10, 0, 10], shoulderL: [-28, -10, 16], elbowL: [-70, 0, 0], chest: [4, -8, 0], spine: [2, 0, 0] },
+  guardShield: { _w: [0.2, 0.75, 0.65],  shoulderR: [-38, 12, -22], elbowR: [-68, 0, 0], handR: [10, 0, 10], shoulderL: [-55, -25, 20], elbowL: [-80, 0, 0], handL: [0, 0, 0], chest: [4, -8, 0] },
+  guardPolearm: { _w: [0.06, 0.12, 1],  shoulderR: [-8, -6, -18], elbowR: [-88, 0, 0], handR: [0, 0, 0], shoulderL: [-58, -24, 6], elbowL: [-32, 0, 0], handL: [0, 0, 0], chest: [4, -24, 0], spine: [3, -8, 0] },
+  guardFists: { _w: [0, 0.7, 0.7],  shoulderR: [-50, 20, -10], elbowR: [-115, 0, 0], shoulderL: [-55, -20, 10], elbowL: [-115, 0, 0], chest: [6, -10, 0] },
   carryPolearm: { shoulderR: [-10, 0, -8], elbowR: [-60, 0, 0], handR: [0, 0, 0] },
   bow: { shoulderL: [-48, -8, 18], shoulderR: [-48, 8, -18], elbowL: [-82, 0, 0], elbowR: [-82, 0, 0], handL: [0, 0, 0], handR: [0, 0, 0], spine: [18, 0, 0], chest: [12, 0, 0], head: [16, 0, 0] },
   kneel: { hips: [0, 0, 0], thighL: [-88, 0, 4], kneeL: [92, 0, 0], thighR: [6, 0, -3], kneeR: [98, 0, 0], footR: [40, 0, 0], spine: [6, 0, 0], shoulderL: [-15, 0, 10], shoulderR: [-15, 0, -10], elbowL: [-30, 0, 0], elbowR: [-30, 0, 0], _drop: 0.46 },
@@ -43,30 +44,30 @@ function atk(wind, strike, dur = 0.82, hit = 0.46) {
 export const CLIPS = {
   // Blade (one-handed, right hand)
   blade_right: atk(
-    { shoulderR: [-55, -35, -75], elbowR: [-70, 0, 0], handR: [0, 0, 30], chest: [0, -38, 0], spine: [0, -12, 0], shoulderL: [-20, 0, 25] },
-    { shoulderR: [-82, 45, -10], elbowR: [-12, 0, 0], handR: [0, 0, -20], chest: [8, 34, 0], spine: [4, 12, 0], shoulderL: [-10, 0, 30] }),
+    { _w: [-0.6, 0.72, -0.3], shoulderR: [-55, -35, -75], elbowR: [-70, 0, 0], handR: [0, 0, 30], chest: [0, -38, 0], spine: [0, -12, 0], shoulderL: [-20, 0, 25] },
+    { _w: [0.85, 0.05, 0.55], shoulderR: [-82, 45, -10], elbowR: [-12, 0, 0], handR: [0, 0, -20], chest: [8, 34, 0], spine: [4, 12, 0], shoulderL: [-10, 0, 30] }),
   blade_left: atk(
-    { shoulderR: [-70, 62, 12], elbowR: [-112, 0, 0], handR: [0, 0, -30], chest: [0, 36, 0], spine: [0, 12, 0] },
-    { shoulderR: [-78, -30, -62], elbowR: [-10, 0, 0], handR: [0, 0, 20], chest: [8, -34, 0], spine: [4, -12, 0], shoulderL: [-10, 0, 35] }),
+    { _w: [0.6, 0.72, -0.25], shoulderR: [-70, 62, 12], elbowR: [-112, 0, 0], handR: [0, 0, -30], chest: [0, 36, 0], spine: [0, 12, 0] },
+    { _w: [-0.85, 0.02, 0.55], shoulderR: [-78, -30, -62], elbowR: [-10, 0, 0], handR: [0, 0, 20], chest: [8, -34, 0], spine: [4, -12, 0], shoulderL: [-10, 0, 35] }),
   blade_overhead: atk(
-    { shoulderR: [-168, 5, -18], elbowR: [-78, 0, 0], handR: [30, 0, 0], chest: [-10, -6, 0], spine: [-6, 0, 0], shoulderL: [-30, 0, 20] },
-    { shoulderR: [-62, 12, -8], elbowR: [-8, 0, 0], handR: [-30, 0, 0], chest: [18, 4, 0], spine: [12, 0, 0], thighL: [-22, 0, 0], kneeL: [16, 0, 0] }),
+    { _w: [0, 0.65, -0.75], shoulderR: [-168, 5, -18], elbowR: [-78, 0, 0], handR: [30, 0, 0], chest: [-10, -6, 0], spine: [-6, 0, 0], shoulderL: [-30, 0, 20] },
+    { _w: [0, -0.35, 1], shoulderR: [-62, 12, -8], elbowR: [-8, 0, 0], handR: [-30, 0, 0], chest: [18, 4, 0], spine: [12, 0, 0], thighL: [-22, 0, 0], kneeL: [16, 0, 0] }),
   blade_thrust: atk(
-    { shoulderR: [-8, -10, -22], elbowR: [-118, 0, 0], handR: [-45, 0, 0], chest: [0, -26, 0], spine: [0, -8, 0] },
-    { shoulderR: [-84, 8, -4], elbowR: [-4, 0, 0], handR: [-58, 0, 0], chest: [10, 16, 0], spine: [10, 6, 0], thighL: [-28, 0, 0], kneeL: [18, 0, 0], shoulderL: [10, 0, 30] }, 0.78, 0.44),
+    { _w: [0.05, 0.05, 1], shoulderR: [-8, -10, -22], elbowR: [-118, 0, 0], handR: [-45, 0, 0], chest: [0, -26, 0], spine: [0, -8, 0] },
+    { _w: [0, -0.02, 1], shoulderR: [-84, 8, -4], elbowR: [-4, 0, 0], handR: [-58, 0, 0], chest: [10, 16, 0], spine: [10, 6, 0], thighL: [-28, 0, 0], kneeL: [18, 0, 0], shoulderL: [10, 0, 30] }, 0.78, 0.44),
   // Polearm (two-handed)
   polearm_thrust: atk(
-    { shoulderR: [8, -6, -20], elbowR: [-70, 0, 0], shoulderL: [-40, -24, 6], elbowL: [-60, 0, 0], chest: [0, -32, 0], spine: [0, -10, 0] },
-    { shoulderR: [-55, 10, -10], elbowR: [-20, 0, 0], shoulderL: [-85, -18, 4], elbowL: [-4, 0, 0], chest: [14, -8, 0], spine: [12, 0, 0], thighL: [-30, 0, 0], kneeL: [18, 0, 0] }, 0.86, 0.48),
+    { _w: [0.05, 0.1, 1], shoulderR: [8, -6, -20], elbowR: [-70, 0, 0], shoulderL: [-40, -24, 6], elbowL: [-60, 0, 0], chest: [0, -32, 0], spine: [0, -10, 0] },
+    { _w: [0, -0.06, 1], shoulderR: [-55, 10, -10], elbowR: [-20, 0, 0], shoulderL: [-85, -18, 4], elbowL: [-4, 0, 0], chest: [14, -8, 0], spine: [12, 0, 0], thighL: [-30, 0, 0], kneeL: [18, 0, 0] }, 0.86, 0.48),
   polearm_right: atk(
-    { shoulderR: [-30, -20, -60], elbowR: [-80, 0, 0], shoulderL: [-70, 10, 20], elbowL: [-50, 0, 0], chest: [0, -50, 0], spine: [0, -14, 0] },
-    { shoulderR: [-60, 40, -10], elbowR: [-40, 0, 0], shoulderL: [-50, -40, 40], elbowL: [-30, 0, 0], chest: [8, 40, 0], spine: [4, 14, 0] }, 0.95, 0.52),
+    { _w: [-0.85, 0.25, 0.45], shoulderR: [-30, -20, -60], elbowR: [-80, 0, 0], shoulderL: [-70, 10, 20], elbowL: [-50, 0, 0], chest: [0, -50, 0], spine: [0, -14, 0] },
+    { _w: [0.85, 0.02, 0.5], shoulderR: [-60, 40, -10], elbowR: [-40, 0, 0], shoulderL: [-50, -40, 40], elbowL: [-30, 0, 0], chest: [8, 40, 0], spine: [4, 14, 0] }, 0.95, 0.52),
   polearm_left: atk(
-    { shoulderR: [-60, 40, -10], elbowR: [-60, 0, 0], shoulderL: [-40, -40, 30], elbowL: [-60, 0, 0], chest: [0, 44, 0], spine: [0, 14, 0] },
-    { shoulderR: [-30, -30, -50], elbowR: [-60, 0, 0], shoulderL: [-75, 10, 10], elbowL: [-30, 0, 0], chest: [8, -46, 0], spine: [4, -14, 0] }, 0.95, 0.52),
+    { _w: [0.85, 0.25, 0.45], shoulderR: [-60, 40, -10], elbowR: [-60, 0, 0], shoulderL: [-40, -40, 30], elbowL: [-60, 0, 0], chest: [0, 44, 0], spine: [0, 14, 0] },
+    { _w: [-0.85, 0.02, 0.5], shoulderR: [-30, -30, -50], elbowR: [-60, 0, 0], shoulderL: [-75, 10, 10], elbowL: [-30, 0, 0], chest: [8, -46, 0], spine: [4, -14, 0] }, 0.95, 0.52),
   polearm_overhead: atk(
-    { shoulderR: [-150, 0, -20], elbowR: [-60, 0, 0], shoulderL: [-160, 0, 20], elbowL: [-50, 0, 0], chest: [-12, -10, 0], spine: [-6, 0, 0] },
-    { shoulderR: [-40, 6, -14], elbowR: [-60, 0, 0], shoulderL: [-70, -10, 10], elbowL: [-20, 0, 0], chest: [20, -10, 0], spine: [14, 0, 0], thighL: [-24, 0, 0], kneeL: [16, 0, 0] }, 1.0, 0.54),
+    { _w: [0, 0.95, 0.3], shoulderR: [-150, 0, -20], elbowR: [-60, 0, 0], shoulderL: [-160, 0, 20], elbowL: [-50, 0, 0], chest: [-12, -10, 0], spine: [-6, 0, 0] },
+    { _w: [0, -0.3, 1], shoulderR: [-40, 6, -14], elbowR: [-60, 0, 0], shoulderL: [-70, -10, 10], elbowL: [-20, 0, 0], chest: [20, -10, 0], spine: [14, 0, 0], thighL: [-24, 0, 0], kneeL: [16, 0, 0] }, 1.0, 0.54),
   // Fists
   fists_right: atk({ shoulderR: [-40, 10, -40], elbowR: [-110, 0, 0], chest: [0, -30, 0] }, { shoulderR: [-88, 30, -10], elbowR: [-10, 0, 0], chest: [4, 26, 0] }, 0.6, 0.34),
   fists_left: atk({ shoulderL: [-40, -10, 40], elbowL: [-110, 0, 0], chest: [0, 30, 0] }, { shoulderL: [-88, -30, 10], elbowL: [-10, 0, 0], chest: [4, -26, 0] }, 0.6, 0.34),
@@ -75,7 +76,7 @@ export const CLIPS = {
   // Reactions
   hit: { dur: 0.42, keys: [{ t: 0, pose: null }, { t: 0.25, pose: { chest: [-16, 10, 0], spine: [-8, 0, 0], head: [-18, 10, 0] } }, { t: 1, pose: null }] },
   stagger: { dur: 0.9, keys: [{ t: 0, pose: null }, { t: 0.2, pose: { chest: [-22, -14, 0], spine: [-12, 0, 0], head: [-20, 0, 0], shoulderR: [-20, 0, -45], shoulderL: [-20, 0, 45], thighR: [18, 0, 0], kneeR: [20, 0, 0] } }, { t: 0.7, pose: { chest: [-8, 0, 0] } }, { t: 1, pose: null }] },
-  parry: { dur: 0.35, keys: [{ t: 0, pose: null }, { t: 0.3, pose: { shoulderR: [-95, 30, -30], elbowR: [-60, 0, 0], handR: [0, 0, 40], chest: [0, 10, 0] } }, { t: 1, pose: null }] },
+  parry: { dur: 0.35, keys: [{ t: 0, pose: null }, { t: 0.3, pose: { _w: [0.9, 0.4, 0.3], shoulderR: [-95, 30, -30], elbowR: [-60, 0, 0], handR: [0, 0, 40], chest: [0, 10, 0] } }, { t: 1, pose: null }] },
   dodge: { dur: 0.45, keys: [{ t: 0, pose: null }, { t: 0.4, pose: { thighL: [20, 0, 0], kneeL: [30, 0, 0], thighR: [-30, 0, 0], kneeR: [40, 0, 0], chest: [-10, 0, 0], _drop: 0.1 } }, { t: 1, pose: null }] },
   // Everyday
   farm: { dur: 1.6, loop: true, keys: [{ t: 0, pose: { shoulderR: [-40, 0, -12], elbowR: [-60, 0, 0], shoulderL: [-50, -10, 10], elbowL: [-40, 0, 0], spine: [18, 0, 0] } }, { t: 0.45, pose: { shoulderR: [-150, 0, -15], elbowR: [-60, 0, 0], shoulderL: [-150, 0, 15], elbowL: [-40, 0, 0], spine: [-4, 0, 0] } }, { t: 0.62, pose: { shoulderR: [-40, 0, -12], elbowR: [-40, 0, 0], shoulderL: [-50, -10, 10], elbowL: [-20, 0, 0], spine: [30, 0, 0] } }, { t: 1, pose: { shoulderR: [-40, 0, -12], elbowR: [-60, 0, 0], shoulderL: [-50, -10, 10], elbowL: [-40, 0, 0], spine: [18, 0, 0] } }] },
@@ -124,7 +125,7 @@ export class Animator {
   samplePose(pose, out, w) {
     if (!pose || w <= 0) return;
     for (const k in pose) {
-      if (k[0] === '_') continue;
+      if (k[0] === '_' && k !== '_w') continue;
       const v = pose[k], o = out[k];
       if (!o) continue;
       o[0] = lerp(o[0], v[0], w); o[1] = lerp(o[1], v[1], w); o[2] = lerp(o[2], v[2], w);
@@ -141,7 +142,7 @@ export class Animator {
     // null pose = current base (weight 0)
     const touched = new Set([...Object.keys(a.pose || {}), ...Object.keys(b.pose || {})]);
     for (const k of touched) {
-      if (k[0] === '_' || !out[k]) continue;
+      if ((k[0] === '_' && k !== '_w') || !out[k]) continue;
       const base = out[k];
       const va = a.pose && a.pose[k] ? a.pose[k] : base;
       const vb = b.pose && b.pose[k] ? b.pose[k] : base;
@@ -158,6 +159,7 @@ export class Animator {
     this.time += dt;
     const out = {};
     for (const b of BONE_LIST) out[b] = [0, 0, 0];
+    out._w = [0.2, 0.75, 0.65];
 
     // Base / stance
     this.samplePose(POSES.relaxed, out, 1);
@@ -210,9 +212,9 @@ export class Animator {
     this.blocking = lerp(this.blocking, s.blocking ? 1 : 0, 1 - Math.exp(-18 * dt));
     if (this.blocking > 0.01) {
       const bp = s.weaponCls === 'polearm'
-        ? { shoulderR: [-30, 20, -30], elbowR: [-100, 0, 0], shoulderL: [-80, -40, 30], elbowL: [-70, 0, 0], chest: [4, 10, 0] }
+        ? { _w: [0.92, 0.38, 0.1], shoulderR: [-30, 20, -30], elbowR: [-100, 0, 0], shoulderL: [-80, -40, 30], elbowL: [-70, 0, 0], chest: [4, 10, 0] }
         : s.shield ? { shoulderL: [-80, -40, 10], elbowL: [-85, 0, 0], shoulderR: [-40, 10, -22] }
-          : { shoulderR: [-92, 42, -26], elbowR: [-58, 0, 0], handR: [0, 0, 50], chest: [4, 12, 0], shoulderL: [-20, 0, 25] };
+          : { _w: [0.95, 0.3, 0.15], shoulderR: [-92, 42, -26], elbowR: [-58, 0, 0], handR: [0, 0, 50], chest: [4, 12, 0], shoulderL: [-20, 0, 25] };
       this.samplePose(bp, out, this.blocking);
     }
 
@@ -263,6 +265,9 @@ export class Animator {
       this._e.set(c[0] * D, c[1] * D, c[2] * D, 'XYZ');
       bone.quaternion.setFromEuler(this._e);
     }
+    if (!this.wdir) this.wdir = new THREE.Vector3(0.2, 0.75, 0.65);
+    _wv.set(out._w[0], out._w[1], out._w[2]).normalize();
+    this.wdir.lerp(_wv, 1 - Math.exp(-(this.clip ? 30 : 16) * dt)).normalize();
     this.drop = lerp(this.drop, drop, 1 - Math.exp(-12 * dt));
     this.lie = lerp(this.lie, lieTarget, 1 - Math.exp(-(s.dead ? 7 : 4) * dt));
     this.bones.hips.position.y = 0.95 - this.drop;

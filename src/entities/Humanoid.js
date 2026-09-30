@@ -11,7 +11,7 @@ export const BONES = [
   'thighL', 'kneeL', 'footL', 'thighR', 'kneeR', 'footR',
 ];
 const BI = Object.fromEntries(BONES.map((b, i) => [b, i]));
-const PARENT = {
+export const PARENT = {
   hips: 'root', spine: 'hips', chest: 'spine', neck: 'chest', head: 'neck',
   shoulderL: 'chest', elbowL: 'shoulderL', handL: 'elbowL',
   shoulderR: 'chest', elbowR: 'shoulderR', handR: 'elbowR',
@@ -19,7 +19,7 @@ const PARENT = {
 };
 
 // Rest-pose joint positions in model space (metres) for a 1.72 m adult.
-function jointPositions(p) {
+export function jointPositions(p) {
   const sw = 0.19 * p.shoulders, hw = 0.095 * p.hipsW;
   return {
     root: [0, 0, 0], hips: [0, 0.95, 0], spine: [0, 1.05, 0], chest: [0, 1.25, 0], neck: [0, 1.47, 0], head: [0, 1.55, 0],

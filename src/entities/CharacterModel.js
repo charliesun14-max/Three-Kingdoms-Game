@@ -5,7 +5,9 @@ import { Animator } from './Animator.js';
 import { buildWeaponMesh, WEAPONS } from '../combat/Weapons.js';
 
 const _a = new THREE.Vector3(), _b = new THREE.Vector3(), _dir = new THREE.Vector3(), _up = new THREE.Vector3(0, 1, 0);
-const _qw = new THREE.Quaternion(), _qh = new THREE.Quaternion();
+const _qw = new THREE.Quaternion(), _qh = new THREE.Quaternion(), _qr = new THREE.Quaternion(), _qp = new THREE.Quaternion();
+const _s1 = new THREE.Vector3(), _t1 = new THREE.Vector3(), _t2 = new THREE.Vector3(), _t3 = new THREE.Vector3(), _p1 = new THREE.Vector3();
+const _e1 = new THREE.Vector3(), _e2 = new THREE.Vector3(), _d1 = new THREE.Vector3(), _d2 = new THREE.Vector3(), _co = new THREE.Vector3();
 
 export class CharacterModel {
   constructor(appearance = {}) {
@@ -103,21 +105,52 @@ export class CharacterModel {
 
   update(dt, state) {
     this.anim.update(dt, state);
-    // Two-handed polearms: lay the shaft through both hands so thrusts and sweeps read correctly.
+    // Drawn weapons point along the animation's weapon direction (character space),
+    // held at the right hand. This reads far better than raw hand-bone orientation.
     const cls = WEAPONS[this.weaponId]?.cls;
-    if (this.weaponMesh && !this.sheathed && cls === 'polearm') {
+    if (this.weaponMesh && !this.sheathed && cls !== 'bow' && this.anim.wdir) {
       this.root.updateMatrixWorld(true);
-      const hr = this.bones.handR, hl = this.bones.handL;
-      hr.getWorldPosition(_a);
-      hl.getWorldPosition(_b);
-      _dir.subVectors(_b, _a);
-      if (_dir.lengthSq() < 1e-4) return;
-      _dir.normalize();
+      const hr = this.bones.handR;
+      _dir.copy(this.anim.wdir).applyQuaternion(this.root.getWorldQuaternion(_qr));
       _qw.setFromUnitVectors(_up, _dir);
       hr.getWorldQuaternion(_qh);
       this.weaponMesh.quaternion.copy(_qh.invert().multiply(_qw));
       this.weaponMesh.position.set(0, -0.07, 0.02);
+      if (cls === 'polearm' && this.anim.lie < 0.2) {
+        // left hand grips the shaft ahead of the right hand
+        hr.getWorldPosition(_a);
+        _b.copy(_a).addScaledVector(_dir, 0.55 * this.scale);
+        this.solveArmIK('L', _b);
+      }
     }
+  }
+
+  // Analytic two-bone IK: rotate shoulder & elbow so the hand reaches target (world).
+  solveArmIK(side, target) {
+    const sh = this.bones['shoulder' + side], el = this.bones['elbow' + side], hd = this.bones['hand' + side];
+    const S = sh.getWorldPosition(_s1), a = el.position.length() * this.scale, b = hd.position.length() * this.scale;
+    _t1.subVectors(target, S);
+    let d = _t1.length();
+    const maxd = (a + b) * 0.999;
+    if (d > maxd) { _t1.multiplyScalar(maxd / d); d = maxd; }
+    if (d < 0.05) return;
+    const dirT = _t2.copy(_t1).normalize();
+    // pole: elbows drop down and out to the side
+    _p1.set(side === 'L' ? 0.6 : -0.6, -1, -0.2).applyQuaternion(this.root.getWorldQuaternion(_qr));
+    _p1.addScaledVector(dirT, -_p1.dot(dirT)).normalize();
+    const cosA = (a * a + d * d - b * b) / (2 * a * d);
+    const ang = Math.acos(Math.max(-1, Math.min(1, cosA)));
+    const E = _e1.copy(S).addScaledVector(dirT, Math.cos(ang) * a).addScaledVector(_p1, Math.sin(ang) * a);
+    this.aimBone(sh, el.position, _d1.subVectors(E, S));
+    sh.updateMatrixWorld(true);
+    const Ew = el.getWorldPosition(_e2);
+    this.aimBone(el, hd.position, _d2.subVectors(_t3.copy(S).add(_t1), Ew));
+    el.updateMatrixWorld(true);
+  }
+  aimBone(bone, childOffset, worldDir) {
+    bone.parent.getWorldQuaternion(_qp);
+    const dirP = worldDir.clone().normalize().applyQuaternion(_qp.invert());
+    bone.quaternion.setFromUnitVectors(_co.copy(childOffset).normalize(), dirP);
   }
 
   dispose() {
