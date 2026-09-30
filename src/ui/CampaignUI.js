@@ -117,6 +117,7 @@ export class CampaignUI {
     if (g.autopilot) {
       const c = g.campaign;
       const tgt = ['yu', 'yan', 'qing', 'yang', 'ji', 'si', 'jing'].find((id) => c.canAttack(id));
+      if (!g.params.has('autoField') && tgt && c.troops() < c.prov[tgt].troops * 1.4 && c.gold >= 700) return Promise.resolve({ type: 'recruit' });
       return Promise.resolve(tgt ? { type: 'attack', id: tgt, mode: g.params.has('autoField') ? 'field' : 'auto' } : { type: 'rest' });
     }
     g.input.exitLock();
@@ -166,7 +167,7 @@ export class CampaignUI {
       html += `</div>`;
     } else html += `<p class="muted" style="margin-top:14px">Click a province on the map. Provinces ringed in red border your lands and can be attacked.</p>`;
     html += `<h3>Other orders (one per year)</h3><div style="display:flex;flex-direction:column;gap:8px">
-      <span class="btn" data-a="recruit">⚑ Raise 10,000 troops (800)</span>
+      <span class="btn" data-a="recruit">⚑ Raise 14,000 troops (700)</span>
       <span class="btn" data-a="rest">☾ Rest and govern — end the year</span></div>
       <h3>Annals</h3>${c.log.slice(0, 8).map((l) => `<p style="margin:4px 0;font-size:14px"><b>${l.year}</b> — ${l.text}</p>`).join('')}`;
     box.innerHTML = html;

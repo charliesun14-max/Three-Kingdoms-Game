@@ -53,7 +53,7 @@ export class Campaign {
   get player() { return this.game.player; }
   owned(f = 'player') { return Object.values(this.prov).filter((p) => p.owner === f); }
   troops(f = 'player') { return this.owned(f).reduce((a, p) => a + p.troops, 0); }
-  income() { return this.owned().reduce((a, p) => a + p.dev * 150, 0); }
+  income() { return 300 + this.owned().reduce((a, p) => a + p.dev * 220, 0); }
   neighbors(id) { return ADJ[id] || []; }
   canAttack(id) {
     const p = this.prov[id];
@@ -66,16 +66,16 @@ export class Campaign {
   strength(f, troops) {
     if (f === 'player') {
       const pl = this.player.stats;
-      return troops * (1 + pl.leadership * 0.025 + this.officers.length * 0.06 + this.game.progression.renown * 0.001);
+      return troops * (1.1 + pl.leadership * 0.03 + this.officers.length * 0.08 + this.game.progression.renown * 0.002);
     }
-    return troops * (f === 'cao' ? 1.2 : f === 'yuan' ? 1.0 : 1.05);
+    return troops * (f === 'cao' ? 1.1 : f === 'yuan' ? 0.95 : 1.0);
   }
 
   // Player-committed attack: returns battle spec (for 3D) or resolves automatically.
   prepareAttack(id) {
     const tgt = this.prov[id];
     const from = this.neighbors(id).map((n) => this.prov[n]).filter((p) => p.owner === 'player').sort((a, b) => b.troops - a.troops)[0];
-    const commit = Math.max(4, Math.floor(from.troops * 0.75));
+    const commit = Math.max(4, Math.floor(from.troops * 0.85));
     return { target: id, from: from.id, commit, defender: tgt.owner, defTroops: tgt.troops };
   }
 
@@ -114,11 +114,11 @@ export class Campaign {
   }
 
   recruit() {
-    if (this.gold < 800) return false;
-    this.gold -= 800;
+    if (this.gold < 700) return false;
+    this.gold -= 700;
     const cap = this.owned().sort((a, b) => b.dev - a.dev)[0];
-    cap.troops += 10;
-    this.note(`You raised 10,000 troops in ${cap.name}.`);
+    cap.troops += 14;
+    this.note(`You raised 14,000 troops in ${cap.name}.`);
     return true;
   }
   develop(id) {

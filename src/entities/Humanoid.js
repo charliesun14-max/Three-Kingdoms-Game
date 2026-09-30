@@ -72,9 +72,13 @@ class SkinBuilder {
     const n = g.attributes.position.count;
     const col = new Float32Array(n * 3), si = new Uint16Array(n * 4), sw = new Float32Array(n * 4);
     const c = new THREE.Color(color);
-    const p = g.attributes.position;
+    const p = g.attributes.position, nrm = g.attributes.normal;
     for (let i = 0; i < n; i++) {
-      col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b;
+      // cheap baked occlusion: surfaces facing down/inward and lower on the body are darker
+      const ny = nrm ? nrm.getY(i) : 0;
+      const y = p.getY(i);
+      const ao = Math.min(1, 0.72 + 0.2 * (ny * 0.5 + 0.5) + 0.12 * Math.min(1, y / 1.5));
+      col[i * 3] = c.r * ao; col[i * 3 + 1] = c.g * ao; col[i * 3 + 2] = c.b * ao;
       if (weightsFn) {
         const ws = weightsFn(p.getX(i), p.getY(i), p.getZ(i));
         let tot = 0;
