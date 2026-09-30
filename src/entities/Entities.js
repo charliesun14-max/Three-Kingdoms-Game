@@ -61,6 +61,8 @@ export class Entities {
     }
   }
   update(dt) {
+    // bodies of nameless soldiers fade from the world after a few minutes
+    if (Math.random() < dt) for (const c of this.list) if (c.dead && !c.tags.has('cast') && this.game.clockTime - (c.deathTime || 0) > 240) { this.remove(c); break; }
     this.rebuild();
     const pl = this.game.player;
     for (const c of this.list) {

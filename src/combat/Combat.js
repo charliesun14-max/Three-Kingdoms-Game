@@ -2,6 +2,7 @@
 // (ripostes), armour mitigation, bleeding and faction hostility.
 import * as THREE from 'three';
 import { angleDiff } from '../core/MathUtil.js';
+import { Trails } from './Trails.js';
 
 export const PERFECT_WINDOW = 0.26;
 
@@ -21,6 +22,7 @@ export class Combat {
     this.game = game;
     this.blood = new BloodFX(game.engine.scene);
     this.sparks = new SparkFX(game.engine.scene);
+    this.trails = new Trails(game.engine.scene);
     this.overrides = new Map(); // "a|b" -> bool (temporary hostility, e.g. crimes or duels)
   }
 
@@ -172,6 +174,7 @@ export class Combat {
       def.vel.z += (kz / L) * (big ? 3.5 : 1.5);
     }
     g.events.emit('hit', att, def, total, { masterstrike, dir });
+    if (att === g.player || def === g.player) g.hitStop = masterstrike ? 0.14 : 0.06;
     this.skillUse(att, W.cls === 'polearm' ? 'polearm' : W.cls === 'fists' ? 'unarmed' : 'blade', 1 + total / 30);
     this.skillUse(att, 'str', 0.3);
   }
@@ -182,6 +185,7 @@ export class Combat {
   }
 
   update(dt) {
+    this.trails.update(dt, this.game.entities.list, this.game.engine.camera.position);
     this.blood.update(dt);
     this.sparks.update(dt);
   }

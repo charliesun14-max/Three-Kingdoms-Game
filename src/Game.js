@@ -257,7 +257,8 @@ export class Game {
 
   // ------------------------------------------------------------------ main loop
   loop() {
-    const dt = Math.min(0.05, this.clock.getDelta());
+    let dt = Math.min(0.05, this.clock.getDelta());
+    if (this.hitStop > 0) { this.hitStop -= dt; dt *= 0.12; }
     this.dt = dt;
     this.frames++;
     this.clockTime += dt;
