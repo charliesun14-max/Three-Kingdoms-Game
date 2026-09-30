@@ -222,6 +222,7 @@ export class Brain {
       this.navTo(this.leash.x, this.leash.z, 3);
       return;
     }
+    if (c.weaponCls === 'bow') { this.archer(dt, tg, d); return; }
     const engage = reach * 0.8 + tg.radius;
     const tokenOk = g.combat.requestToken ? g.combat.requestToken(this, tg) : true;
     if (d > engage + 0.6) {
@@ -261,6 +262,28 @@ export class Brain {
     // riposte after a perfect block
     if (now < c.combat.riposteUntil && !c.combat.attack) c.startAttack(this.pickAttackDir(tg));
     if (!tokenOk) g.combat.releaseToken?.(this, tg);
+  }
+
+  // Keep 12-28 m away and loose arrows with skill-based spread.
+  archer(dt, tg, d) {
+    const c = this.c, g = this.game;
+    if (d < 10) this.navTo(c.pos.x - (tg.pos.x - c.pos.x), c.pos.z - (tg.pos.z - c.pos.z), 3, 1);
+    else if (d > 30) this.navTo(tg.pos.x, tg.pos.z, 3, 25);
+    else c.stop();
+    c.faceYaw = Math.atan2(tg.pos.x - c.pos.x, tg.pos.z - c.pos.z);
+    this.nextShot = (this.nextShot ?? 1 + Math.random() * 2) - dt;
+    if (this.nextShot <= 0 && d < 45 && !c.combat.attack) {
+      this.nextShot = 2.2 + Math.random() * 1.8;
+      const from = c.pos.clone(); from.y += 1.45;
+      const T = tg.pos.clone(); T.y += 1.1;
+      const flight = d / 45;
+      T.x += tg.vel.x * flight; T.z += tg.vel.z * flight;
+      const dir = T.sub(from);
+      dir.y += d * d * 0.0024; // arc to compensate for drop
+      const spread = (1 - this.arch.skill) * 0.08;
+      dir.normalize(); dir.x += (Math.random() - 0.5) * spread; dir.y += (Math.random() - 0.5) * spread; dir.z += (Math.random() - 0.5) * spread;
+      g.combat.archery.shoot(c, from, dir, 1);
+    }
   }
 
   pickAttackDir(tg) {

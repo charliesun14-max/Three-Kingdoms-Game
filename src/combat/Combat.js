@@ -3,6 +3,7 @@
 import * as THREE from 'three';
 import { angleDiff } from '../core/MathUtil.js';
 import { Trails } from './Trails.js';
+import { Archery } from './Archery.js';
 
 export const PERFECT_WINDOW = 0.26;
 
@@ -23,6 +24,7 @@ export class Combat {
     this.blood = new BloodFX(game.engine.scene);
     this.sparks = new SparkFX(game.engine.scene);
     this.trails = new Trails(game.engine.scene);
+    this.archery = new Archery(game);
     this.overrides = new Map(); // "a|b" -> bool (temporary hostility, e.g. crimes or duels)
   }
 
@@ -186,6 +188,7 @@ export class Combat {
 
   update(dt) {
     this.trails.update(dt, this.game.entities.list, this.game.engine.camera.position);
+    this.archery.update(dt);
     this.blood.update(dt);
     this.sparks.update(dt);
   }

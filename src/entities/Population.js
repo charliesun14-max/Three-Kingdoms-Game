@@ -18,7 +18,7 @@ export function randomName(rng, female = false) {
 }
 
 export const SHOPS = {
-  smith: { title: 'Blacksmith', stock: { staff: 2, club: 1, dao: 2, jian: 1, spear: 2, axe: 1, shield: 2, paddedJacket: 2, leatherCap: 2, leatherArmor: 1 }, coins: 1500 },
+  smith: { title: 'Blacksmith', stock: { staff: 2, club: 1, dao: 2, jian: 1, spear: 2, axe: 1, bow: 2, shield: 2, paddedJacket: 2, leatherCap: 2, leatherArmor: 1 }, coins: 1500 },
   grocer: { title: 'Grocer', stock: { milletCake: 12, driedMeat: 6, wine: 5, bandage: 4, millet: 3 }, coins: 400 },
   apothecary: { title: 'Apothecary', stock: { bandage: 10, medicine: 5, herbs: 4 }, coins: 500 },
   tailor: { title: 'Cloth Merchant', stock: { headCloth: 4, hempTunic: 3, paddedJacket: 1, silk: 2 }, coins: 900 },

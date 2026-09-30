@@ -122,7 +122,7 @@ export class CameraController {
       this.shake = Math.max(0, this.shake - dt * 1.5);
     }
     this.cam.lookAt(this.look);
-    const wantFov = g.playerCtl?.sprinting ? 68 : 62;
+    const wantFov = this.aiming ? 42 : g.playerCtl?.sprinting ? 68 : 62;
     this.fov = lerp(this.fov, wantFov, 1 - Math.exp(-4 * dt));
     if (Math.abs(this.cam.fov - this.fov) > 0.05) { this.cam.fov = this.fov; this.cam.updateProjectionMatrix(); }
   }

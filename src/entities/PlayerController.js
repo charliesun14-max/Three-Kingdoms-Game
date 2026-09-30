@@ -1,5 +1,6 @@
 // Player input -> character actions. When locked onto an enemy, mouse motion
 // selects the attack direction (like Kingdom Come) instead of turning the camera.
+import * as THREE from 'three';
 import { clamp } from '../core/MathUtil.js';
 
 export class PlayerController {
@@ -41,7 +42,7 @@ export class PlayerController {
 
     // --- lock-on management
     if (this.lockTarget && (this.lockTarget.dead || this.lockTarget.ai?.surrendered || c.distTo(this.lockTarget) > 18 || !c.combat.drawn)) this.lockTarget = null;
-    if (c.combat.drawn && !this.lockTarget) {
+    if (c.combat.drawn && !this.lockTarget && c.weaponCls !== 'bow') {
       const n = this.pickLock();
       if (n && c.distTo(n) < 9) this.lockTarget = n;
     }
@@ -86,7 +87,18 @@ export class PlayerController {
       if (inp.hit('KeyX')) this.selDir = 'overhead';
       if (inp.hit('KeyV')) this.selDir = 'right';
       if (inp.hit('KeyB')) this.selDir = 'thrust';
-      if (inp.mouseHit(0)) {
+      if (c.weaponCls === 'bow') {
+        if (inp.mouseDown(0) && c.canAct()) { this.bowDraw = Math.min(1, (this.bowDraw || 0) + dt * 1.1); c.stamina -= dt * 6; g.cameraCtl.aiming = true; }
+        else if (this.bowDraw > 0.15) {
+          const cam = g.engine.camera;
+          const dir = new THREE.Vector3(); cam.getWorldDirection(dir);
+          const from = c.pos.clone(); from.y += 1.45; from.addScaledVector(dir, 0.6);
+          g.combat.archery.shoot(c, from, dir, this.bowDraw);
+          g.progression.gain('archery', 1);
+          this.bowDraw = 0; g.cameraCtl.aiming = false;
+        } else { this.bowDraw = 0; g.cameraCtl.aiming = false; }
+        c.faceYaw = g.cameraCtl.yaw;
+      } else if (inp.mouseHit(0)) {
         const sw = this.lockTarget ? null : inp.swipeDir(8);
         const dir = sw ? { left: 'left', right: 'right', up: 'overhead', down: 'thrust' }[sw] : this.selDir;
         if (c.startAttack(dir)) this.selDir = dir;

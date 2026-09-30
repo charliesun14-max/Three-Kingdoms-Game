@@ -7,11 +7,11 @@ export const alive = (list) => list.filter((c) => !c.dead && !c.ai?.surrendered 
 
 export const UNIFORMS = {
   yellowTurban: { look: 'yellowTurban', weapons: ['spear', 'spear', 'staff', 'dao', 'club', 'hoe'], body: [null, null, 'paddedJacket'], head: [null], arch: 'rebel', hp: 60, title: 'Yellow Turban' },
-  han: { look: 'soldier', weapons: ['ji', 'spear', 'dao'], body: ['lamellar', 'leatherArmor'], head: ['ironHelmet'], arch: 'soldier', hp: 90, title: 'Han soldier' },
+  han: { look: 'soldier', weapons: ['ji', 'spear', 'dao', 'bow'], body: ['lamellar', 'leatherArmor'], head: ['ironHelmet'], arch: 'soldier', hp: 90, title: 'Han soldier' },
   militia: { look: 'militia', weapons: ['spear', 'spear', 'dao', 'ji'], body: ['paddedJacket', 'leatherArmor'], head: [null, 'leatherCap'], arch: 'militia', hp: 80, title: 'Soldier' },
   dongZhuo: { look: 'soldier', uniform: { robe: 0x3a2a3a }, weapons: ['ji', 'spear', 'dao'], body: ['lamellar'], head: ['ironHelmet'], arch: 'soldier', hp: 95, title: "Dong Zhuo's soldier" },
   bingzhou: { look: 'soldier', uniform: { robe: 0x6a1414 }, weapons: ['ji', 'ji', 'dao'], body: ['lamellar'], head: ['ironHelmet'], arch: 'soldier', hp: 110, title: 'Bingzhou rider', faction: 'dongZhuo' },
-  enemy: { look: 'soldier', uniform: { robe: 0x2a3446 }, weapons: ['ji', 'spear', 'dao'], body: ['lamellar', 'leatherArmor'], head: ['ironHelmet'], arch: 'soldier', hp: 95, title: 'Enemy soldier' },
+  enemy: { look: 'soldier', uniform: { robe: 0x2a3446 }, weapons: ['ji', 'spear', 'dao', 'bow'], body: ['lamellar', 'leatherArmor'], head: ['ironHelmet'], arch: 'soldier', hp: 95, title: 'Enemy soldier' },
   bandit: { look: 'bandit', weapons: ['dao', 'club', 'axe', 'spear'], body: [null, 'paddedJacket'], head: [null], arch: 'bandit', hp: 65, title: 'Bandit' },
 };
 

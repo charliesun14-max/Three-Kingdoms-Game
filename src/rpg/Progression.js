@@ -9,6 +9,7 @@ export const SKILLS = {
   polearm: { name: 'Polearm', cn: '長兵', desc: 'Spears, halberds and staves.' },
   unarmed: { name: 'Unarmed', cn: '拳腳', desc: 'Fists and grappling.' },
   block: { name: 'Defence', cn: '格擋', desc: 'Blocking and parrying (perfect blocks train it fastest).' },
+  archery: { name: 'Archery', cn: '射', desc: 'Bows and crossbows.' },
   speech: { name: 'Speech', cn: '辯', desc: 'Persuasion and better prices.' },
   leadership: { name: 'Leadership', cn: '統率', desc: 'Command more troops and inspire them.' },
   stealth: { name: 'Stealth', cn: '潛行', desc: 'Moving unseen.' },
