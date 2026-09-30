@@ -52,7 +52,8 @@ export class Brain {
   // --- scripted control --------------------------------------------------------
   goTo(x, z, speed = 1.6) {
     return new Promise((resolve) => {
-      this.script = { x, z, speed, resolve };
+      const d = Math.hypot(x - this.c.pos.x, z - this.c.pos.z);
+      this.script = { x, z, speed, resolve, deadline: this.game.clockTime + Math.max(5, (d / speed) * 2.5) };
       this.path = null;
     });
   }
@@ -132,7 +133,8 @@ export class Brain {
     if (this.script) {
       c.faceYaw = null;
       const s = this.script;
-      if (this.navTo(s.x, s.z, s.speed, 0.5)) { c.stop(); const r = s.resolve; this.script = null; r?.(); }
+      if (now > s.deadline) { c.pos.set(s.x, this.game.world.groundHeight(s.x, s.z), s.z); }
+      if (this.navTo(s.x, s.z, s.speed, 0.5) || now > s.deadline) { c.stop(); const r = s.resolve; this.script = null; r?.(); }
       return;
     }
 

@@ -14,6 +14,7 @@ export class Entities {
     return c;
   }
   remove(c) {
+    c.ai?.cancelScript?.();
     const i = this.list.indexOf(c);
     if (i >= 0) this.list.splice(i, 1);
     if (this.byId.get(c.id) === c) this.byId.delete(c.id);

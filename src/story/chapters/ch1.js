@@ -361,6 +361,7 @@ export const CHAPTER1 = {
           { id: 'read', text: 'Read the proclamation at the Zhuo county office', marker: { x: nb.x, z: nb.z } },
           { id: 'tavern', text: 'Drink with Liu Bei and Zhang Fei at the tavern', hidden: true, marker: { x: S.tavernTable.x, z: S.tavernTable.z } },
         ],
+        autoFinish: false,
         chronicle: 'At the county office of Zhuo, Liu Bei read Liu Yan\'s proclamation and sighed; Zhang Fei rebuked him, and the two became friends. At the tavern, Guan Yu of Hedong joined them.',
       });
       const read = async () => {
