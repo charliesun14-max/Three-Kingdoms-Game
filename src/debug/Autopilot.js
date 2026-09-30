@@ -29,6 +29,7 @@ export class Autopilot {
     const p = g.player;
     p.hp = p.hpMax; p.stamina = p.staminaMax; p.bleed = 0; p.food = 100;
     if (g.cutscene || g.busyInteract) return;
+    const q = g.quests.tracked();
     // dispatch nearby hostiles (keep officers for a moment so scripted duels can trigger)
     let killed = 0;
     for (const c of g.entities.nearby(p.pos, 70)) {
@@ -38,9 +39,8 @@ export class Autopilot {
       c.die(p); killed++;
       if (killed > 6) break;
     }
-    if (!p.combat.drawn && g.entities.nearby(p.pos, 30).some((c) => !c.dead && g.combat.hostile(p, c))) p.draw(true);
+    if (!p.combat.drawn && q && q.objs.some((o) => o.id === 'draw' && !o.done)) p.draw(true);
     // quest marker
-    const q = g.quests.tracked();
     const m = g.quests.markers()[0];
     if (m && m.x !== undefined) {
       const dx = m.x - p.pos.x, dz = m.z - p.pos.z;

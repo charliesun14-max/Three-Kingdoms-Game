@@ -141,7 +141,7 @@ export class SkySystem {
     const moonDir = this.sunDir.clone().multiplyScalar(-1);
     moonDir.y = Math.abs(moonDir.y) * 0.8 + 0.2;
     this.moon.position.copy(this.engine.camera.position).addScaledVector(moonDir.normalize(), 8000);
-    this.moon.material.opacity = night;
+    this.moon.material.opacity = Math.max(0, (night - 0.25) / 0.75);
     // sky colours by time of day
     const zen = new THREE.Color(0.1, 0.24, 0.55).lerp(new THREE.Color(0.2, 0.22, 0.35), golden * 0.6).lerp(new THREE.Color(0.004, 0.008, 0.02), night);
     const hor = new THREE.Color(0.55, 0.68, 0.82).lerp(new THREE.Color(0.95, 0.55, 0.28), golden).lerp(new THREE.Color(0.02, 0.03, 0.06), night);

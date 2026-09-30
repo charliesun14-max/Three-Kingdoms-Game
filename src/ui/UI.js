@@ -271,7 +271,7 @@ export class UI {
         <div class="mi" data-a="about"><span class="cn">史</span>History &amp; Credits</div>
       </div>
       <div class="foot">Controls: WASD · Mouse · F draw weapon · LMB strike (mouse direction chooses the cut) · RMB block · E interact</div>
-      <div class="seal-big"><span>天</span><span>命</span><span>三</span><span>國</span></div>`;
+      <div class="seal-big"><span>三</span><span>天</span><span>國</span><span>命</span></div>`;
     el.querySelectorAll('.mi').forEach((m) => { m.onclick = () => handlers[m.dataset.a]?.(); });
     this.root.appendChild(el);
     this.titleEl = el;

@@ -29,6 +29,7 @@ import { Inventory, itemDef, ARMORS, ITEMS } from './rpg/Items.js';
 import { Rng } from './core/Rng.js';
 import { Autopilot } from './debug/Autopilot.js';
 import { Riding } from './entities/Riding.js';
+import { Horse } from './entities/Horse.js';
 
 const SAVE_KEY = 'tk_mandate_save_v1';
 
@@ -278,7 +279,7 @@ export class Game {
       const cx = 200, cz = 150;
       cam.position.set(cx + Math.cos(t) * 180, 60 + Math.sin(t * 0.7) * 8, cz + Math.sin(t) * 180);
       cam.lookAt(cx - 60, 25, cz - 40);
-      this.world.update(dt, 18.3, new THREE.Vector3(cx, 20, cz));
+      this.world.update(dt, 17.3, new THREE.Vector3(cx, 20, cz));
       return;
     }
     if (!this.player) { this.world?.update(dt, this.time.hour, this.engine.camera.position); return; }
@@ -676,8 +677,15 @@ export class Game {
     cam.position.set(px + cx, this.world.hf.getHeight(px, pz + cz) + cy, pz + cz);
     cam.lookAt(px, this.world.hf.getHeight(px, pz) + 1.0, pz);
     this.state = 'showcase';
+    const horses = (this.params.get('horses') || '').split(',').filter(Boolean).map((coat, i) => {
+      const h = new Horse(this, { coat, x: px - 3 + i * 3, z: pz - 2.5, yaw: Math.PI / 2 });
+      h.pos.y = this.world.hf.getHeight(h.pos.x, h.pos.z);
+      h.speed = +(this.params.get('hspeed') || 0);
+      return h;
+    });
     this.tick = (dt) => {
       for (const c of this.showcase) c.model.update(dt, c.state);
+      for (const h of horses) { const s = h.speed; h.update(dt); h.pos.x = px - 3 + horses.indexOf(h) * 3; h.speed = s; h.root.position.copy(h.pos); }
       this.world.update(dt, this.time.hour, new THREE.Vector3(px, 20, pz));
     };
   }
