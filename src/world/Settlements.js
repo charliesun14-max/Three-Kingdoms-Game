@@ -128,6 +128,21 @@ export class Settlements {
     this.interact({ id: `fire_${x | 0}_${z | 0}`, x, z, r: 2.2, label: 'Rest by the fire', verb: 'rest', kind: 'fire' });
   }
 
+  // Burning haystacks, torches etc. spawned at runtime by the story.
+  addDynamicFire(x, z, scale = 1.6, y = null) {
+    const gy = y ?? this.ground(x, z);
+    const fire = makeFlame(scale);
+    fire.position.set(x, gy, z);
+    this.group.add(fire);
+    const light = new THREE.PointLight(0xff7a2a, 0, 26 * scale, 1.6);
+    light.position.set(x, gy + 1.5 * scale, z);
+    this.group.add(light);
+    const f = { mesh: fire, light, x, z, base: 30 * scale, dynamic: true };
+    this.fires.push(f);
+    f.remove = () => { this.group.remove(fire, light); this.fires.splice(this.fires.indexOf(f), 1); };
+    return f;
+  }
+
   addLantern(x, y, z) {
     const g = new THREE.SphereGeometry(0.22, 10, 8);
     g.scale(1, 1.2, 1);

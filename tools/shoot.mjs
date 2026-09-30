@@ -22,7 +22,7 @@ try {
 fs.mkdirSync('screenshots/tmp', { recursive: true });
 await page.screenshot({ path: `screenshots/tmp/${name}.png`, timeout: 120000 });
 console.log(`shot ${name} in ${((Date.now() - t0) / 1000).toFixed(1)}s`);
-console.log(logs.filter((l) => !l.includes('GPU stall')).slice(0, 30).join('\n'));
+console.log([...new Set(logs.filter((l) => !l.includes('GPU stall') && !l.includes('[vite]')))].slice(0, 12).join('\n'));
 await browser.close();
 server.kill();
 process.exit(0);

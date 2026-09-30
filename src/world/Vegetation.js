@@ -334,7 +334,7 @@ ${HEIGHT_SAMPLER}`)
   float dist = length(wxz - uCam.xz);
   float fade = 1.0 - smoothstep(uRadius * 0.6, uRadius * 0.98, dist);
   float scale = (dens > r3 ? 1.0 : 0.0) * fade;
-  float hgt = mix(0.35, 0.85, gvn(wxz * 0.08)) * mix(0.7, 1.2, r1) * scale;
+  float hgt = mix(0.22, 0.55, gvn(wxz * 0.08)) * mix(0.65, 1.15, r1) * scale;
   float ang = r2 * 6.2831;
   vec3 p = position;
   p = vec3(p.x * cos(ang) - p.z * sin(ang), p.y, p.x * sin(ang) + p.z * cos(ang));
