@@ -120,10 +120,7 @@ export class Settlements {
     const fire = makeFlame(big ? 1.3 : 1);
     fire.position.set(x, y + 0.1, z);
     this.group.add(fire);
-    const light = new THREE.PointLight(0xff8a3a, 0, big ? 22 : 16, 1.6);
-    light.position.set(x, y + 1.2, z);
-    this.group.add(light);
-    this.fires.push({ mesh: fire, light, x, z, base: big ? 10 : 7 });
+    this.fires.push({ mesh: fire, x, z, y: y + 1.2, range: big ? 22 : 16, base: big ? 10 : 7 });
     this.world.colliders.addCircle(x, z, 0.8, { kind: 'fire' });
     this.interact({ id: `fire_${x | 0}_${z | 0}`, x, z, r: 2.2, label: 'Rest by the fire', verb: 'rest', kind: 'fire' });
   }
@@ -134,12 +131,9 @@ export class Settlements {
     const fire = makeFlame(scale);
     fire.position.set(x, gy, z);
     this.group.add(fire);
-    const light = new THREE.PointLight(0xff7a2a, 0, 26 * scale, 1.6);
-    light.position.set(x, gy + 1.5 * scale, z);
-    this.group.add(light);
-    const f = { mesh: fire, light, x, z, base: 9 * scale, dynamic: true };
+    const f = { mesh: fire, x, z, y: gy + 1.5 * scale, range: 26 * scale, base: 9 * scale, dynamic: true };
     this.fires.push(f);
-    f.remove = () => { this.group.remove(fire, light); this.fires.splice(this.fires.indexOf(f), 1); };
+    f.remove = () => { this.group.remove(fire); this.fires.splice(this.fires.indexOf(f), 1); };
     return f;
   }
 
@@ -796,13 +790,22 @@ export class Settlements {
     for (const u of this.banners) u.uTime.value = time;
     const night = sky.nightFactor ?? 0;
     const cam = this.world.engine.camera.position;
-    for (const f of this.fires) {
-      f.mesh.userData.uni.uTime.value = time;
-      const d = Math.hypot(cam.x - f.x, cam.z - f.z);
-      const flick = 0.8 + 0.2 * Math.sin(time * 13 + f.x) * Math.sin(time * 7.3 + f.z);
-      f.light.intensity = d < 140 ? f.base * flick * (0.35 + night * 0.9) : 0;
-      f.light.visible = d < 140;
+    // A fixed pool of point lights is assigned to the nearest fires, so the scene's light
+    // count never changes (changing it forces every shader to recompile).
+    if (!this.lightPool) {
+      this.lightPool = [];
+      for (let i = 0; i < 6; i++) { const l = new THREE.PointLight(0xff7a2a, 0, 20, 1.6); this.world.scene.add(l); this.lightPool.push(l); }
     }
+    for (const f of this.fires) { f.mesh.userData.uni.uTime.value = time; f._d = Math.hypot(cam.x - f.x, cam.z - f.z); }
+    const near = this.fires.slice().sort((a, b) => a._d - b._d);
+    this.lightPool.forEach((l, i) => {
+      const f = near[i];
+      if (!f || f._d > 160) { l.intensity = 0; return; }
+      const flick = 0.8 + 0.2 * Math.sin(time * 13 + f.x) * Math.sin(time * 7.3 + f.z);
+      l.position.set(f.x, f.y, f.z);
+      l.distance = f.range;
+      l.intensity = f.base * flick * (0.35 + night * 0.9);
+    });
     for (const l of this.lanterns) l.material.emissiveIntensity = 0.15 + night * 2.8;
   }
 }

@@ -22,7 +22,7 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #000; color:
 /* ---------- HUD ---------- */
 .hud { position: absolute; inset: 0; opacity: 1; transition: opacity .6s; }
 .hud.hidden { opacity: 0; }
-.hud-date { position: absolute; top: 18px; left: 22px; text-shadow: 0 1px 3px #000, 0 0 12px rgba(0,0,0,.6); }
+.hud-date { position: absolute; top: 12px; left: 14px; padding: 6px 10px 10px; background: radial-gradient(ellipse at 0% 0%, rgba(10,7,4,.5), rgba(10,7,4,0) 75%); text-shadow: 0 1px 3px #000, 0 0 12px rgba(0,0,0,.6); }
 .hud-date .cn { font-family: var(--brush); font-size: 26px; color: #f1e2bc; letter-spacing: 2px; }
 .hud-date .en { font-size: 15px; color: var(--muted); margin-top: 2px; }
 .hud-date .loc { font-size: 17px; color: #e8d6a8; margin-top: 6px; font-style: italic; }
@@ -36,7 +36,7 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #000; color:
 .compass .mark.enemy { background: #c43a2a; box-shadow: 0 0 6px rgba(255,60,40,.8); width: 6px; height: 6px; }
 .compass .mark.place { background: #b8c8d8; width: 6px; height: 6px; box-shadow: none; }
 .compass-center { position: absolute; top: 34px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 6px solid var(--gold); }
-.quest-tracker { position: absolute; top: 20px; right: 24px; width: 330px; text-align: right; text-shadow: 0 1px 3px #000, 0 0 10px rgba(0,0,0,.7); }
+.quest-tracker { position: absolute; top: 14px; right: 16px; width: 350px; padding: 8px 12px 10px; text-align: right; background: radial-gradient(ellipse at 100% 0%, rgba(10,7,4,.55), rgba(10,7,4,0) 75%); text-shadow: 0 1px 3px #000, 0 0 10px rgba(0,0,0,.7); }
 .quest-tracker .qt-title { font-size: 19px; font-weight: 700; color: #f0dca8; }
 .quest-tracker .qt-title .cn { font-family: var(--brush); font-weight: 400; margin-left: 6px; color: #d8b870; }
 .quest-tracker .qt-obj { font-size: 16px; color: #efe6d2; margin-top: 3px; }

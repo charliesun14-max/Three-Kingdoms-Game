@@ -38,6 +38,7 @@ export class Autopilot {
       c.die(p); killed++;
       if (killed > 6) break;
     }
+    if (!p.combat.drawn && g.entities.nearby(p.pos, 30).some((c) => !c.dead && g.combat.hostile(p, c))) p.draw(true);
     // quest marker
     const q = g.quests.tracked();
     const m = g.quests.markers()[0];

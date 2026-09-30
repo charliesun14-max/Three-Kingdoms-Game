@@ -1,10 +1,13 @@
 // Runs the story autopilot headless and reports progress/errors.
 import { chromium } from 'playwright';
-import { spawn } from 'child_process';
+import { spawn, spawnSync } from 'child_process';
 const [mission = '', minutes = '10', extra = ''] = process.argv.slice(2);
 const port = 5100 + Math.floor(Math.random() * 800);
-const server = spawn('npx', ['vite', '--port', String(port), '--strictPort'], { stdio: ['ignore', 'pipe', 'pipe'] });
-await new Promise((res) => { server.stdout.on('data', (d) => { if (String(d).includes('Local')) res(); }); setTimeout(res, 8000); });
+// Test a frozen build so source edits during the run don't reload the page.
+const snap = `/tmp/tk-autotest-${port}`;
+spawnSync('npx', ['vite', 'build', '--outDir', snap, '--emptyOutDir'], { stdio: 'ignore' });
+const server = spawn('npx', ['vite', 'preview', '--outDir', snap, '--port', String(port), '--strictPort'], { stdio: ['ignore', 'pipe', 'pipe'] });
+await new Promise((res) => { server.stdout.on('data', (d) => { if (String(d).includes('Local') || String(d).includes('http')) res(); }); setTimeout(res, 8000); });
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage({ viewport: { width: 320, height: 180 } });
 const errs = [];

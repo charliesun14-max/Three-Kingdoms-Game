@@ -292,7 +292,7 @@ class GrassField {
     this.spacing = opts.spacing ?? (q >= 2 ? 0.34 : q === 1 ? 0.42 : 0.6);
     this.radius = opts.radius ?? (q >= 2 ? 46 : q === 1 ? 34 : 24);
     const n = Math.floor((this.radius * 2) / this.spacing);
-    const geo = bladeClump(opts.blades ?? 6, 3, 0.045, 7, false);
+    const geo = bladeClump(opts.blades ?? 9, 3, 0.022, 7, false);
     const offs = new Float32Array(n * n * 2);
     let k = 0;
     for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
@@ -346,15 +346,15 @@ ${HEIGHT_SAMPLER}`)
   vec3 transformed = vec3(wxz.x + p.x, gy + p.y - 0.04, wxz.y + p.z);
   vT = t;
   float dry = smoothstep(0.45, 0.8, gvn(wxz * 0.02) + gvn(wxz * 0.11 + 3.1) * 0.35);
-  vec3 green = mix(vec3(0.06, 0.1, 0.025), vec3(0.15, 0.2, 0.05), r3);
-  vec3 straw = vec3(0.3, 0.24, 0.1);
+  vec3 green = mix(vec3(0.08, 0.13, 0.03), vec3(0.2, 0.26, 0.07), r3);
+  vec3 straw = vec3(0.34, 0.28, 0.12);
   vGCol = mix(green, straw, dry * 0.45 + m.a * 0.2);
 `)
         .replace('#include <beginnormal_vertex>', 'vec3 objectNormal = vec3(0.0, 1.0, 0.0);');
       sh.fragmentShader = sh.fragmentShader
         .replace('#include <common>', '#include <common>\nvarying float vT; varying vec3 vGCol;')
         .replace('#include <map_fragment>', `
-  vec3 gc = vGCol * mix(0.45, 1.15, vT);
+  vec3 gc = vGCol * mix(0.5, 1.25, vT) + vec3(0.03, 0.04, 0.0) * vT * vT;
   diffuseColor.rgb *= gc;`);
     };
     mat.customProgramCacheKey = () => 'grassGPU';
