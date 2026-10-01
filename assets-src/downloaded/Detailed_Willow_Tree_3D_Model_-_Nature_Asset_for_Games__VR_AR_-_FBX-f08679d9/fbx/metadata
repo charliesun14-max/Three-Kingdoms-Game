@@ -1,0 +1,93 @@
+{
+	"assetNamespace": "fab",
+	"listing":
+	{
+		"averageRating": 3,
+		"createdAt": "",
+		"description": "<p>\"<strong>A gracefully elegant 3D Willow Tree model perfect for games, simulations, or VR/AR projects. This highly detailed nature asset features natural textures, subtle animations, and a realistic organic design.</strong></p><ul><li><p><strong>Use Case</strong>: Ideal for creating serene environments, game levels, or immersive VR experiences.</p></li><li><p><strong>Details</strong>: Includes multiple branches, realistic bark textures, and optimization for high-performance rendering in engines like Unreal Engine.</p></li><li><p><strong>File Formats Available</strong>: <strong>FBX/Blend File</strong>.</p></li></ul>",
+		"isAiForbidden": false,
+		"isAiGenerated": false,
+		"lastUpdatedAt": "",
+		"listingType": "3d-model",
+		"media": "https://media.fab.com/image_previews/gallery_images/f6439a1c-6a0f-4893-861c-4a64302b79ab/8fec2754-17e7-4aff-be02-7531678ee6d5.png",
+		"publishedAt": "2025-02-16T14:33:42.196032Z",
+		"reviewCount": 2,
+		"thumbnail": "https://media.fab.com/image_previews/gallery_images/fe1812f8-2e52-4cca-8a88-4ec5ab99c886/f28c1863-bcad-426f-94fe-afe6087905eb.png",
+		"title": "Detailed Willow Tree 3D Model - Nature Asset for Games, VR/AR - FBX",
+		"uid": "f08679d9-b20d-46c3-8e26-594f3c2a08f5",
+		"updatedAt": "",
+		"user":
+		{
+			"coverImageUrl": "https://cdn1.epicgames.com/fab/seller/o-yvm9qtp27g89r5knh3962flf8sfuw9/cover/adf1dc19.png",
+			"profileImageUrl": "https://cdn1.epicgames.com/fab/seller/o-yvm9qtp27g89r5knh3962flf8sfuw9/profile/bbd5577d.png",
+			"sellerName": "Montaha",
+			"uid": "0d9ce7cd-2235-487d-90d6-9cf79f361157"
+		},
+		"tags": [
+			{
+				"name": "Leaf",
+				"slug": "leaf",
+				"uid": "3400b08c-bfe2-496f-bb7a-8348bffb0852"
+			},
+			{
+				"name": "Tree",
+				"slug": "tree",
+				"uid": "365e087d-8586-4b06-94e8-69c855e5f0aa"
+			},
+			{
+				"name": "Nature",
+				"slug": "nature",
+				"uid": "8d858676-26d9-4329-b3f7-0b3a4107b7f9"
+			},
+			{
+				"name": "Wood",
+				"slug": "wood",
+				"uid": "bcd38165-4b32-484d-bce7-c6cdaf827f77"
+			},
+			{
+				"name": "Willow",
+				"slug": "willow",
+				"uid": "dc1496ec-2702-4c95-8cf7-0acdcb9893ee"
+			}
+		],
+		"category":
+		{
+			"name": "Nature & Plants",
+			"path": "nature-plants",
+			"slug": "nature-plants",
+			"uid": "57243087-7d23-45a2-b08d-cf12cc77efed"
+		},
+		"assetFormats": [
+			{
+				"assetFormatType":
+				{
+					"name": "FBX",
+					"groupName": "3D Exchange Formats",
+					"code": "fbx",
+					"icon": "cube",
+					"extensions": [
+						"fbx"
+					]
+				}
+			}
+		],
+		"_PluginMetas":
+		{
+			"apiDataVersion": "0.0.1",
+			"entitlementUid": "754bbf2c-86a2-4cb1-94f3-cfde22c33466",
+			"cacheSize": 0,
+			"downloaded": []
+		}
+	},
+	"target": "",
+	"quality": "",
+	"format": "fbx",
+	"fileId": "5730b68b-1b05-4e3c-a022-a88580c3d9ac",
+	"platformIncluded": "",
+	"distributionPointBaseUrls": [],
+	"distributionMethod": "",
+	"entitlementUid": "754bbf2c-86a2-4cb1-94f3-cfde22c33466",
+	"invertedNormal": false,
+	"isConverted": false,
+	"isQuixel": false
+}

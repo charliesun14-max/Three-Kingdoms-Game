@@ -1,0 +1,87 @@
+{
+	"assetNamespace": "fab",
+	"listing":
+	{
+		"averageRating": 0,
+		"createdAt": "",
+		"description": "Main_ground",
+		"isAiForbidden": false,
+		"isAiGenerated": false,
+		"lastUpdatedAt": "",
+		"listingType": "3d-model",
+		"media": "https://media.fab.com/image_previews/gallery_images/a3f9da94-cf54-4387-a1c9-9c1e99a185a2/24cab7fb-ae37-4fd6-ab18-b82df2d417e0.jpeg",
+		"publishedAt": "2024-12-24T16:30:13.485760Z",
+		"reviewCount": 0,
+		"thumbnail": "https://media.fab.com/image_previews/gallery_images/0db20f67-acbd-4e54-b31b-12bc20ff1d89/65e116b3-e32d-4892-a7d5-db63058416df.jpeg",
+		"title": "Main_ground",
+		"uid": "88110d7c-c12f-467e-b62a-f46857efd712",
+		"updatedAt": "",
+		"user":
+		{
+			"coverImageUrl": "",
+			"profileImageUrl": "https://cdn1.epicgames.com/fab/seller/o-dr7jcxd9m9fuq7fskzn455xrbw45mm/profileImage/blob-500x500-772da11fd45cd0745ff3439efe3515ce.jpg",
+			"sellerName": "do0nnie",
+			"uid": "95345c2e-e373-41cf-9311-ed3494300382"
+		},
+		"tags": [
+			{
+				"name": "Nature",
+				"slug": "nature",
+				"uid": "8d858676-26d9-4329-b3f7-0b3a4107b7f9"
+			}
+		],
+		"category":
+		{
+			"name": "Nature & Plants",
+			"path": "nature-plants",
+			"slug": "nature-plants",
+			"uid": "57243087-7d23-45a2-b08d-cf12cc77efed"
+		},
+		"assetFormats": [
+			{
+				"assetFormatType":
+				{
+					"name": "FBX",
+					"groupName": "3D Exchange Formats",
+					"code": "fbx",
+					"icon": "cube",
+					"extensions": [
+						"fbx"
+					]
+				}
+			},
+			{
+				"assetFormatType":
+				{
+					"name": "Converted Files",
+					"groupName": "",
+					"code": "converted-files",
+					"icon": "cube",
+					"extensions": [
+						"gltf",
+						"glb",
+						"usdz"
+					]
+				}
+			}
+		],
+		"_PluginMetas":
+		{
+			"apiDataVersion": "0.0.1",
+			"entitlementUid": "00fea9e5-ce48-43e1-ae07-32d92739bde6",
+			"cacheSize": 0,
+			"downloaded": []
+		}
+	},
+	"target": "",
+	"quality": "",
+	"format": "fbx",
+	"fileId": "df185e7d-e960-49f2-a6bf-b8f04bc84959",
+	"platformIncluded": "",
+	"distributionPointBaseUrls": [],
+	"distributionMethod": "",
+	"entitlementUid": "00fea9e5-ce48-43e1-ae07-32d92739bde6",
+	"invertedNormal": false,
+	"isConverted": false,
+	"isQuixel": false
+}
