@@ -162,6 +162,8 @@ export class Character {
 
   damage(amount, attacker, info = {}) {
     if (this.dead) return;
+    // fistfights end in a yield, not a corpse
+    if (this.hp - amount < 1 && this.game.social?.nonLethal(this, attacker)) amount = Math.max(0, this.hp - 1);
     this.hp -= amount;
     this.combat.lastHit = this.time;
     this.game.events?.emit('damaged', this, attacker, amount, info);

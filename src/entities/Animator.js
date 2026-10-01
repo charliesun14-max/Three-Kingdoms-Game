@@ -35,6 +35,14 @@ export const POSES = {
   cheer: { shoulderR: [-168, 0, -12], elbowR: [-10, 0, 0], shoulderL: [-20, 0, 20], chest: [-6, 0, 0], head: [-15, 0, 0] },
   point: { shoulderR: [-85, 10, -5], elbowR: [-5, 0, 0], handR: [0, 0, 0] },
   drink: { shoulderR: [-62, 28, -8], elbowR: [-132, 0, 0], head: [-18, 0, 0] },
+  // everyday labour and town life
+  carryPole: { shoulderR: [-48, 22, -12], elbowR: [-118, 0, 0], handR: [0, 0, 10], shoulderL: [-8, 0, 10], spine: [6, 0, 0] },
+  carryFront: { shoulderL: [-38, -12, 12], shoulderR: [-38, 12, -12], elbowL: [-72, 0, 0], elbowR: [-72, 0, 0], spine: [-4, 0, 0] },
+  carrySack: { shoulderR: [-150, 12, -14], elbowR: [-128, 0, 0], shoulderL: [-10, 0, 12], spine: [10, 0, 6], head: [4, 0, 8] },
+  cower: { thighL: [-72, 0, 10], kneeL: [118, 0, 0], thighR: [-72, 0, -10], kneeR: [118, 0, 0], spine: [32, 0, 0], chest: [12, 0, 0], head: [10, 0, 0], shoulderL: [-135, 0, 30], shoulderR: [-135, 0, -30], elbowL: [-125, 0, 0], elbowR: [-125, 0, 0], _drop: 0.38 },
+  beg: { thighL: [-80, 0, 30], kneeL: [120, 0, 0], thighR: [-80, 0, -30], kneeR: [120, 0, 0], spine: [16, 0, 0], head: [6, 0, 0], shoulderL: [-25, 0, 10], elbowL: [-60, 0, 0], shoulderR: [-62, 0, -6], elbowR: [-24, 0, 0], handR: [0, 0, -60], _drop: 0.55 },
+  fish: { shoulderR: [-58, 12, -12], elbowR: [-62, 0, 0], shoulderL: [-46, -22, 12], elbowL: [-74, 0, 0], spine: [4, 0, 0] },
+  playQin: { thighL: [-92, 0, 3], kneeL: [165, 0, 0], thighR: [-92, 0, -3], kneeR: [165, 0, 0], footL: [60, 0, 0], footR: [60, 0, 0], spine: [10, 0, 0], head: [12, 0, 0], shoulderL: [-38, -18, 14], shoulderR: [-38, 18, -14], elbowL: [-48, 0, 0], elbowR: [-48, 0, 0], _drop: 0.6 },
 };
 
 // ---- clips ------------------------------------------------------------------
@@ -84,6 +92,38 @@ export const CLIPS = {
   talk: { dur: 2.4, loop: true, keys: [{ t: 0, pose: { shoulderR: [-25, 10, -10], elbowR: [-60, 0, 0] } }, { t: 0.3, pose: { shoulderR: [-35, -10, -25], elbowR: [-75, 0, 0], handR: [0, 0, 20] } }, { t: 0.6, pose: { shoulderR: [-20, 15, -8], elbowR: [-55, 0, 0] } }, { t: 1, pose: { shoulderR: [-25, 10, -10], elbowR: [-60, 0, 0] } }] },
   talk_once: { dur: 1.8, keys: [{ t: 0, pose: null }, { t: 0.25, pose: { shoulderR: [-35, -10, -25], elbowR: [-75, 0, 0], handR: [0, 0, 20] } }, { t: 0.6, pose: { shoulderR: [-28, 12, -10], elbowR: [-62, 0, 0] } }, { t: 1, pose: null }] },
   hammer: { dur: 0.9, loop: true, keys: [{ t: 0, pose: { shoulderR: [-60, 0, -10], elbowR: [-40, 0, 0], spine: [15, 0, 0] } }, { t: 0.5, pose: { shoulderR: [-130, 0, -10], elbowR: [-90, 0, 0], spine: [10, 0, 0] } }, { t: 0.65, pose: { shoulderR: [-50, 0, -10], elbowR: [-30, 0, 0], spine: [20, 0, 0] } }, { t: 1, pose: { shoulderR: [-60, 0, -10], elbowR: [-40, 0, 0], spine: [15, 0, 0] } }] },
+  sweep: { dur: 1.3, loop: true, keys: [
+    { t: 0, pose: { shoulderR: [-42, 26, -12], elbowR: [-34, 0, 0], shoulderL: [-55, -6, 10], elbowL: [-60, 0, 0], spine: [22, 14, 0], head: [-10, 0, 0] } },
+    { t: 0.5, pose: { shoulderR: [-34, -22, -16], elbowR: [-24, 0, 0], shoulderL: [-50, -26, 10], elbowL: [-52, 0, 0], spine: [22, -12, 0], head: [-10, 0, 0] } },
+    { t: 1, pose: { shoulderR: [-42, 26, -12], elbowR: [-34, 0, 0], shoulderL: [-55, -6, 10], elbowL: [-60, 0, 0], spine: [22, 14, 0], head: [-10, 0, 0] } }] },
+  wash: { dur: 1.1, loop: true, keys: [
+    { t: 0, pose: { shoulderL: [-55, -10, 6], shoulderR: [-55, 10, -6], elbowL: [-30, 0, 0], elbowR: [-30, 0, 0], spine: [38, 0, 0], head: [-14, 0, 0] } },
+    { t: 0.5, pose: { shoulderL: [-70, 10, 6], shoulderR: [-70, -10, -6], elbowL: [-12, 0, 0], elbowR: [-12, 0, 0], spine: [44, 0, 0], head: [-14, 0, 0] } },
+    { t: 1, pose: { shoulderL: [-55, -10, 6], shoulderR: [-55, 10, -6], elbowL: [-30, 0, 0], elbowR: [-30, 0, 0], spine: [38, 0, 0], head: [-14, 0, 0] } }] },
+  chop: { dur: 1.25, loop: true, keys: [
+    { t: 0, pose: { shoulderR: [-60, 6, -8], elbowR: [-30, 0, 0], shoulderL: [-60, -6, 8], elbowL: [-30, 0, 0], spine: [24, 0, 0] } },
+    { t: 0.45, pose: { shoulderR: [-170, 6, -10], elbowR: [-70, 0, 0], shoulderL: [-170, -6, 10], elbowL: [-70, 0, 0], spine: [-10, 0, 0], chest: [-6, 0, 0] } },
+    { t: 0.62, pose: { shoulderR: [-55, 6, -8], elbowR: [-10, 0, 0], shoulderL: [-55, -6, 8], elbowL: [-10, 0, 0], spine: [30, 0, 0] } },
+    { t: 1, pose: { shoulderR: [-60, 6, -8], elbowR: [-30, 0, 0], shoulderL: [-60, -6, 8], elbowL: [-30, 0, 0], spine: [24, 0, 0] } }] },
+  clap: { dur: 0.5, loop: true, keys: [
+    { t: 0, pose: { shoulderL: [-58, -34, 4], shoulderR: [-58, 34, -4], elbowL: [-72, 0, 0], elbowR: [-72, 0, 0] } },
+    { t: 0.5, pose: { shoulderL: [-58, -18, 4], shoulderR: [-58, 18, -4], elbowL: [-64, 0, 0], elbowR: [-64, 0, 0] } },
+    { t: 1, pose: { shoulderL: [-58, -34, 4], shoulderR: [-58, 34, -4], elbowL: [-72, 0, 0], elbowR: [-72, 0, 0] } }] },
+  cheerLoop: { dur: 1.6, loop: true, keys: [
+    { t: 0, pose: { shoulderR: [-160, 0, -14], elbowR: [-20, 0, 0], head: [-10, 0, 0] } },
+    { t: 0.5, pose: { shoulderR: [-120, 0, -24], elbowR: [-60, 0, 0], head: [-4, 0, 0] } },
+    { t: 1, pose: { shoulderR: [-160, 0, -14], elbowR: [-20, 0, 0], head: [-10, 0, 0] } }] },
+  juggle: { dur: 0.6, loop: true, keys: [
+    { t: 0, pose: { shoulderL: [-40, -10, 10], shoulderR: [-30, 10, -10], elbowL: [-80, 0, 0], elbowR: [-100, 0, 0], head: [-20, 0, 0] } },
+    { t: 0.5, pose: { shoulderL: [-30, -10, 10], shoulderR: [-40, 10, -10], elbowL: [-100, 0, 0], elbowR: [-80, 0, 0], head: [-20, 0, 0] } },
+    { t: 1, pose: { shoulderL: [-40, -10, 10], shoulderR: [-30, 10, -10], elbowL: [-80, 0, 0], elbowR: [-100, 0, 0], head: [-20, 0, 0] } }] },
+  pluckQin: { dur: 0.9, loop: true, keys: [
+    { t: 0, pose: { shoulderR: [-38, 18, -14], elbowR: [-48, 0, 0], handR: [0, 0, 0] } },
+    { t: 0.3, pose: { shoulderR: [-40, 6, -14], elbowR: [-54, 0, 0], handR: [0, 0, 20] } },
+    { t: 1, pose: { shoulderR: [-38, 18, -14], elbowR: [-48, 0, 0], handR: [0, 0, 0] } }] },
+  greet: { dur: 1.5, keys: [{ t: 0, pose: null }, { t: 0.28, pose: POSES.salute }, { t: 0.42, pose: { ...POSES.salute, spine: [28, 0, 0], chest: [14, 0, 0] } }, { t: 0.8, pose: POSES.salute }, { t: 1, pose: null }] },
+  insult: { dur: 1.4, keys: [{ t: 0, pose: null }, { t: 0.2, pose: { shoulderR: [-125, 0, -22], elbowR: [-70, 0, 0], chest: [-6, -10, 0], head: [-8, 0, 0] } }, { t: 0.35, pose: { shoulderR: [-135, 0, -22], elbowR: [-50, 0, 0], chest: [-6, -10, 0] } }, { t: 0.5, pose: { shoulderR: [-120, 0, -22], elbowR: [-75, 0, 0], chest: [-6, -10, 0] } }, { t: 0.65, pose: { shoulderR: [-135, 0, -22], elbowR: [-50, 0, 0], chest: [-6, -10, 0] } }, { t: 1, pose: null }] },
+  shrug: { dur: 1.2, keys: [{ t: 0, pose: null }, { t: 0.35, pose: { shoulderL: [-20, -30, 30], shoulderR: [-20, 30, -30], elbowL: [-70, 0, 0], elbowR: [-70, 0, 0], head: [0, 0, 10] } }, { t: 0.7, pose: { shoulderL: [-20, -30, 30], shoulderR: [-20, 30, -30], elbowL: [-70, 0, 0], elbowR: [-70, 0, 0], head: [0, 0, 10] } }, { t: 1, pose: null }] },
   drinkLoop: { dur: 4, loop: true, keys: [{ t: 0, pose: { shoulderR: [-30, 10, -8], elbowR: [-80, 0, 0] } }, { t: 0.2, pose: POSES.drink }, { t: 0.35, pose: POSES.drink }, { t: 0.5, pose: { shoulderR: [-30, 10, -8], elbowR: [-80, 0, 0] } }, { t: 1, pose: { shoulderR: [-30, 10, -8], elbowR: [-80, 0, 0] } }] },
 };
 
@@ -219,12 +259,6 @@ export class Animator {
       this.samplePose(bp, out, this.blocking);
     }
 
-    // Looping activity (farming, talking)
-    if (this.loopClip && !this.clip && moveW < 0.1) {
-      this.loopClip.t = (this.loopClip.t + dt) % this.loopClip.def.dur;
-      drop += this.sampleClip(this.loopClip.def, this.loopClip.t, out) || 0;
-    }
-
     // Static pose override (kneel, sit, lie ...)
     const targetPoseW = this.pose ? 1 : 0;
     this.poseW = lerp(this.poseW, targetPoseW, 1 - Math.exp(-5 * dt));
@@ -235,6 +269,12 @@ export class Animator {
       drop = lerp(drop, P._drop ?? 0, this.poseW);
     }
     const lieTarget = (P && P._lie && this.pose) || s.dead ? 1 : 0;
+
+    // Looping activity (farming, talking, washing...) layered over any seated/kneeling pose
+    if (this.loopClip && !this.clip && moveW < 0.1) {
+      this.loopClip.t = (this.loopClip.t + dt) % this.loopClip.def.dur;
+      drop += this.sampleClip(this.loopClip.def, this.loopClip.t, out) || 0;
+    }
 
     // One-shot clip
     if (this.clip) {

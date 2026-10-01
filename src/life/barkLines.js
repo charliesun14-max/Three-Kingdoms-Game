@@ -1,0 +1,72 @@
+// Short spoken lines ("barks") for street life, greetings, insults, brawls and the law.
+export const BARKS = {
+  playerGreet: ['Good day to you.', 'Peace be with you.', 'Have you eaten yet?', 'Well met, friend.', 'Greetings, elder brother.', 'May your house prosper.'],
+  playerGreetLord: ['Be at ease.', 'Carry on.', 'Peace upon this house.'],
+  playerAntag: ['What are you staring at?', 'Out of my way, dog.', 'Your face could curdle soy milk.', 'Move, or I\'ll move you.', 'Your father was a turtle egg!', 'Is that a face or a burnt millet cake?'],
+
+  greet: {
+    farmer: ['Good day. The millet grows, slowly.', 'Peace to you. Mind the ditch.', 'Have you eaten? Heaven keep you.'],
+    villager: ['Good day! Come back for the harvest festival.', 'Have you eaten? Well, well.', 'Mind the children by the well.'],
+    townsman: ['Good day, good day.', 'Fine weather for the market.', 'Peace be with you, friend.', 'Ah — you again. Well met.'],
+    woman: ['Good day to you.', 'Mm. Good day.', 'Peace be with you.'],
+    merchant: ['Welcome, welcome! Something for you today?', 'A fine day for buying, sir!', 'Good day, honoured guest!'],
+    guard: ['Keep the peace.', 'Move along, citizen.', 'Hm. Good day.'],
+    soldier: ['Hail, brother.', 'Good day. Keep your edge sharp.'],
+    child: ['Hello, big brother!', 'Do you have a sweet?', 'Hee hee!'],
+    elder: ['Good day, young one. Heaven sees all.', 'Ah, good manners. Rare these days.'],
+    official: ['Hm. Good day.', 'Mind the regulations.'],
+    preacher: ['The Yellow Sky shall rise, friend.', 'Peace — the Great Peace — be upon you.'],
+    beggar: ['A coin, kind sir? Just one coin…', 'Heaven bless you, Heaven bless you.'],
+    servant: ['Good day, sir.', 'Peace be with you.'],
+    default: ['Good day.', 'Peace be with you.'],
+  },
+  greetLord: ['My lord! (bows deeply)', 'Your humble servant, lord.', 'The great hero of Zhuo! An honour!', 'My lord — please, pass.'],
+  greetInfamous: ['…Good day. (looks away)', 'I want no trouble.', 'Heaven protect me…'],
+  greetFriend: ['Ha! Good to see you again!', 'Friend! Come drink with me later.', 'Ah, my benefactor!'],
+
+  antagCoward: ['Please, I want no trouble!', 'Heaven help me — leave me be!', 'I-I\'ve done nothing to you!', 'Someone call the watch!', 'Spare me, sir!'],
+  antagTough: ['Say that again, I dare you.', 'You want a beating? Come on, then!', 'Your mother should have drowned you.', 'Big words from a small man.', 'Watch your tongue, or lose your teeth.'],
+  antagGuard: ['One more word and you\'ll see the inside of the cells.', 'Mind yourself. I have a stick and the law.', 'Insult an officer of the county again — I dare you.'],
+  brawlStart: ['Right! Fists up!', 'I\'ll knock your teeth into your belly!', 'Come here, you!'],
+  brawlCrowd: ['Fight! Fight!', 'Hit him!', 'Two coins on the big one!', 'Ooh — that\'ll bruise!', 'Get up! Get up!', 'Ha! Look at him go!', 'Someone fetch the watch!', 'Not the face!'],
+  brawlYield: ['Enough! Enough — I yield!', 'All right! You win, you win!', 'Ow… mercy, mercy!'],
+  brawlWin: ['Stay down. Learn some manners.', 'Ha! I\'ll take this for my trouble.', 'Next time, keep your mouth shut.'],
+
+  hawk: {
+    grocer: ['Millet cakes! Hot millet cakes!', 'Dried meat! Fresh greens! Cheap, cheap!', 'Jujubes sweet as honey!'],
+    salt: ['Sea salt from Bohai! The finest salt!', 'Salt! Mats! Sandals — straw sandals!'],
+    tailor: ['Silk from Qi! Hemp from Zhuo!', 'Head-cloths of every colour!'],
+    apothecary: ['Herbs for fever! Ointment for wounds!', 'Ginseng! Angelica! Cures for every ill!'],
+    butcher: ['Pork! Mutton! Wine to wash it down!', 'Fresh-killed this morning!'],
+    smith: ['Blades! Spear-heads! Iron from Nanyang!', 'Sharpening, two coins!'],
+    innkeeper: ['Warm wine! A mat for the night!', 'Come in, come in — the stove is hot!'],
+  },
+  weaponCivilian: ['Put that away! This is a peaceful town!', 'Aiya — a blade!', 'What are you doing with that?', 'Mind that thing!'],
+  weaponGuard: ['Sheathe your blade, or answer to the magistrate!', 'Weapons away inside the walls!', 'You — put that away. Now.'],
+  curfew: ['The night drum has sounded. Off the streets.', 'Curfew. Go home, or go to the cells.', 'Late to be wandering, friend.'],
+  rain: ['Rain! Bring the millet in!', 'Aiya, my good shoes!', 'Heaven weeps again.', 'Under the eaves, quick!'],
+  passing: ['Watch where you walk.', 'Excuse me.', 'Pardon, pardon.', 'Hm.'],
+  thief: ['Thief! Stop, thief!', 'Guards! Guards! A thief!', 'My purse! He took my purse!'],
+  crimeSeen: ['Murder! Murder!', 'Guards! Help!', 'Run! Run!'],
+  guardChase: ['Halt! In the name of the magistrate!', 'You there — stop!', 'Stop, criminal!'],
+  alms: ['Heaven bless you! May your sons be generals!', 'Bless you, kind lord!', 'May you never know hunger.'],
+  tip: ['Thank you, thank you, honoured guest!', 'Ah! A generous patron!'],
+
+  // short exchanges between two passers-by
+  chats: [
+    ['Did you hear? Salt went up again.', 'Again? The magistrate must be building another house.'],
+    ['My son wants to join the army.', 'Better a live farmer than a dead hero, I told mine.'],
+    ['The well by the east gate tastes of iron.', 'Then the smith will be pleased — free iron!'],
+    ['They say a flood drowned three counties in Jizhou.', 'Heaven is angry. Everyone says so.'],
+    ['Have you seen the new girl at the wine shop?', 'Your wife has, too. Be careful.'],
+    ['My ox is sick.', 'Give it ginger and pray to the Earth God.'],
+    ['How much for the cloth?', 'For you? Same price as for everyone. Ha!'],
+    ['The tax collectors come next month.', 'Then I will be ill next month.'],
+    ['Liubo tonight at the tavern?', 'Only if you pay what you owe me from last time.'],
+    ['I dreamed of a yellow dragon last night.', 'A good omen! Or bad. Ask the diviner.'],
+    ['The rains came late again.', 'Late rain, thin millet. Same as my grandfather said.'],
+    ['Who is that fellow? He fights like a tiger.', 'Shh — he can hear you.'],
+  ],
+};
+
+export const pick = (a) => a[Math.floor(Math.random() * a.length)];

@@ -45,9 +45,9 @@ export class Progression {
     this.merit += n;
     if (n > 0) this.game.ui.notify(`+${n} merit 軍功${reason ? ' — ' + reason : ''}`, 'merit');
   }
-  addVirtue(n, reason = '') {
+  addVirtue(n, reason = '', silent = false) {
     this.virtue = Math.max(-100, Math.min(100, this.virtue + n));
-    this.game.ui.notify(`${n > 0 ? 'Virtue rises' : 'Virtue falls'} 德 ${n > 0 ? '+' : ''}${n}${reason ? ' — ' + reason : ''}`, n > 0 ? 'virtue' : 'vice');
+    if (!silent) this.game.ui.notify(`${n > 0 ? 'Virtue rises' : 'Virtue falls'} 德 ${n > 0 ? '+' : ''}${n}${reason ? ' — ' + reason : ''}`, n > 0 ? 'virtue' : 'vice');
   }
   addRenown(n) { this.renown += n; }
   setRank(id, announce = true) {

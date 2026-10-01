@@ -19,11 +19,11 @@ export function randomName(rng, female = false) {
 
 export const SHOPS = {
   smith: { title: 'Blacksmith', stock: { staff: 2, club: 1, dao: 2, jian: 1, spear: 2, axe: 1, bow: 2, shield: 2, paddedJacket: 2, leatherCap: 2, leatherArmor: 1 }, coins: 1500 },
-  grocer: { title: 'Grocer', stock: { milletCake: 12, driedMeat: 6, wine: 5, bandage: 4, millet: 3 }, coins: 400 },
+  grocer: { title: 'Grocer', stock: { milletCake: 12, driedMeat: 6, wine: 5, bandage: 4, millet: 3, fishingRod: 2, incense: 10 }, coins: 400 },
   apothecary: { title: 'Apothecary', stock: { bandage: 10, medicine: 5, herbs: 4 }, coins: 500 },
   tailor: { title: 'Cloth Merchant', stock: { headCloth: 4, hempTunic: 3, paddedJacket: 1, silk: 2 }, coins: 900 },
   innkeeper: { title: 'Innkeeper', stock: { wine: 10, driedMeat: 5, milletCake: 8 }, coins: 600 },
-  butcher: { title: 'Butcher & Wine-seller', stock: { driedMeat: 10, wine: 12 }, coins: 800 },
+  butcher: { title: 'Butcher & Wine-seller', stock: { driedMeat: 10, wine: 12, roastMeat: 4 }, coins: 1200 },
   salt: { title: 'Salt Trader', stock: { salt: 4, sandals: 6, mat: 3 }, coins: 700 },
 };
 

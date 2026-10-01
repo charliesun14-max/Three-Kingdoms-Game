@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { buildHumanoid } from './Humanoid.js';
 import { Animator } from './Animator.js';
 import { buildWeaponMesh, WEAPONS } from '../combat/Weapons.js';
+import { PROPS, HOLD, WEAR } from '../life/Props.js';
 
 const _a = new THREE.Vector3(), _b = new THREE.Vector3(), _dir = new THREE.Vector3(), _up = new THREE.Vector3(0, 1, 0);
 const _qw = new THREE.Quaternion(), _qh = new THREE.Quaternion(), _qr = new THREE.Quaternion(), _qp = new THREE.Quaternion();
@@ -88,6 +89,19 @@ export class CharacterModel {
     }
   }
 
+  // Everyday prop by name (broom, rod, pole...): held in the right hand or worn on the body.
+  setProp(kind) {
+    if (this.propKind === kind) return;
+    if (this.propMesh) { this.propMesh.parent?.remove(this.propMesh); this.propMesh = null; }
+    this.propKind = kind || null;
+    if (!kind || !PROPS[kind]) return;
+    const mesh = PROPS[kind]();
+    this.propMesh = mesh;
+    const w = WEAR[kind];
+    if (w) { this.bones[w.bone].add(mesh); mesh.position.set(...w.pos); mesh.rotation.set(...w.rot); }
+    else { this.bones.handR.add(mesh); mesh.position.set(0, -0.07, 0.02); }
+  }
+
   // Hand-held prop (cup, hoe, scroll...)
   holdProp(mesh) {
     if (this.propMesh) this.propMesh.parent?.remove(this.propMesh);
@@ -105,6 +119,19 @@ export class CharacterModel {
 
   update(dt, state) {
     this.anim.update(dt, state);
+    if (this.propMesh) {
+      this.propMesh.visible = this.sheathed;
+      const hold = HOLD[this.propKind];
+      if (hold && this.sheathed) {
+        this.root.updateMatrixWorld(true);
+        const hr = this.bones.handR;
+        if (hold.dir === 'forearm') { hr.getWorldPosition(_a); this.bones.elbowR.getWorldPosition(_b); _dir.subVectors(_a, _b).normalize(); }
+        else _dir.set(...hold.dir).normalize().applyQuaternion(this.root.getWorldQuaternion(_qr));
+        _qw.setFromUnitVectors(_up, _dir);
+        hr.getWorldQuaternion(_qh);
+        this.propMesh.quaternion.copy(_qh.invert().multiply(_qw));
+      }
+    }
     // Drawn weapons point along the animation's weapon direction (character space),
     // held at the right hand. This reads far better than raw hand-bone orientation.
     const cls = WEAPONS[this.weaponId]?.cls;

@@ -91,12 +91,14 @@ export class SideQuests {
     g.dialogue.begin();
     const r = await st.choose(c.id, 'Welcome, welcome! Wine, meat — or a game of liubo? The dice sticks are fresh-cut bamboo.', [
       { t: 'Show me your food and wine.', v: 'shop' },
+      { t: 'A hot meal and a cup of wine. (12 coins)', v: 'meal', if: () => g.player.inventory.coins >= 12 },
       { t: 'Play liubo — bet 10 coins', v: 10, if: () => g.player.inventory.coins >= 10 },
       { t: 'Play liubo — bet 50 coins', v: 50, if: () => g.player.inventory.coins >= 50 },
       { t: 'Rent a mat for the night (8 coins)', v: 'sleep', if: () => g.player.inventory.coins >= 8 },
       { t: 'Nothing, thank you.', v: 0 },
     ]);
     if (r === 'shop') { g.dialogue.end(); g.ui.openShop(c); return true; }
+    if (r === 'meal') { g.dialogue.end(); await g.life?.act.meal(c); return true; }
     if (r === 'sleep') { g.player.inventory.coins -= 8; g.dialogue.end(); await g.sleep({}); return true; }
     if (typeof r === 'number' && r > 0) {
       const throwSticks = () => Array.from({ length: 6 }, () => (Math.random() < 0.5 ? 1 : 0)).reduce((a, b) => a + b, 0);

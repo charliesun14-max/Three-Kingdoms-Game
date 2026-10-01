@@ -26,6 +26,7 @@ export class UI {
       <div class="crosshair"></div>
       <svg class="star" viewBox="-75 -75 150 150"></svg>
       <div class="prompt"></div>
+      <div class="wanted"></div>
       <div class="notify"></div>
       <div class="subtitle"></div>
       <div class="help"></div>`;
@@ -43,7 +44,7 @@ export class UI {
     this.subT = 0;
     this.lastHp = 1;
     this.compassMarks = [];
-    this.q('.help').innerHTML = '<kbd>WASD</kbd> move · <kbd>Shift</kbd> run · <kbd>F</kbd> draw · <kbd>LMB</kbd> attack · <kbd>RMB</kbd> block · <kbd>E</kbd> interact<br><kbd>I</kbd> inventory · <kbd>J</kbd> journal · <kbd>M</kbd> map · <kbd>C</kbd> character · <kbd>Esc</kbd> menu';
+    this.q('.help').innerHTML = '<kbd>WASD</kbd> move · <kbd>Shift</kbd> run · <kbd>F</kbd> draw · <kbd>LMB</kbd> attack · <kbd>RMB</kbd> block · <kbd>E</kbd> interact · <kbd>Q</kbd> greet · <kbd>T</kbd> antagonize · <kbd>C</kbd> sneak<br><kbd>I</kbd> inventory · <kbd>J</kbd> journal · <kbd>M</kbd> map · <kbd>C</kbd> character · <kbd>Esc</kbd> menu';
   }
 
   // ---------------------------------------------------------------- combat star
@@ -178,9 +179,9 @@ export class UI {
   }
 
   // ---------------------------------------------------------------- messages
-  prompt(text) {
+  prompt(text, alt = '') {
     const el = this.q('.prompt');
-    const html = text ? `<kbd>E</kbd>${text}` : '';
+    const html = text ? `<kbd>E</kbd>${text}${alt ? `<span class="alt">${alt}</span>` : ''}` : '';
     if (el.innerHTML !== html) el.innerHTML = html;
   }
   notify(text, kind = '') {

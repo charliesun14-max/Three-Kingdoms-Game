@@ -48,6 +48,7 @@ export class Combat {
     if (this.overrides.has(k2)) return this.overrides.get(k2);
     const fa = a.faction, fb = b.faction;
     if (fa === fb) return false;
+    if (this.game.law?.hostileTo(a, b)) return true;
     if (HOSTILE[fa]?.includes(fb) || HOSTILE[fb]?.includes(fa)) return true;
     const pf = this.game.playerFactionHostility;
     if (pf && ((fa === 'player' && pf.has(fb)) || (fb === 'player' && pf.has(fa)))) return true;
@@ -76,7 +77,9 @@ export class Combat {
     for (const c of g.entities.nearby(attacker.pos, reach + 1.5)) {
       if (c === attacker || c.dead) continue;
       const friendlyFire = !this.hostile(attacker, c) && attacker.combat.target !== c;
-      if (friendlyFire && !(attacker.faction === 'player' && c === attacker.combat.target)) continue;
+      // outside battle the player may strike anyone (and answer to the law for it) — never story allies or the squad
+      const wild = attacker === g.player && !g.inCombat && !c.essential && !c.tags.has('squad') && ['civilian', 'han', 'militia'].includes(c.faction);
+      if (friendlyFire && !wild && !(attacker.faction === 'player' && c === attacker.combat.target)) continue;
       const d = attacker.distTo(c) - c.radius;
       if (d > reach) continue;
       const a = Math.abs(attacker.angleTo(c));

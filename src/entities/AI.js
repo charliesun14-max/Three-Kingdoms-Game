@@ -14,6 +14,24 @@ export const ARCHETYPES = {
   trainer: { skill: 0.6, aggression: 0.45, block: 0.7, perfect: 0.2, reaction: 0.28, fleeAt: 0, surrender: 0 },
 };
 
+// Everyday activities a schedule entry can name: loop clip, static pose and prop on arrival.
+const ACTS = {
+  sweep: { loop: 'sweep', prop: 'broom' },
+  wash: { pose: 'kneel', loop: 'wash' },
+  chop: { loop: 'chop', prop: 'axe' },
+  fish: { pose: 'fish', prop: 'rod' },
+  beg: { pose: 'beg' },
+  qin: { pose: 'playQin', loop: 'pluckQin' },
+  juggle: { loop: 'juggle' },
+  watch: { loop: 'clap' },
+  listen: { pose: 'sitGround' },
+  storyteller: { pose: 'seiza', loop: 'talk' },
+  cheer: { loop: 'cheerLoop' },
+  stand: { pose: 'armsCrossed' },
+  idle: { pose: 'handsBehind' },
+  basket: { pose: 'carryFront', prop: 'basket' },
+};
+
 export class Brain {
   constructor(char, opts = {}) {
     this.c = char;
@@ -129,6 +147,14 @@ export class Brain {
     const now = g.clockTime;
 
     if (this.surrendered) { c.stop(); c.model.anim.setPose('surrender'); return; }
+
+    // temporary behaviour from town life (watching a brawl, cowering, chatting, fleeing a crime...)
+    if (this.override && !this.script) {
+      if (this.override(dt) !== false) return;
+      this.override = null;
+      c.model.anim.setPose(null); c.model.anim.setLoop(null); c.faceYaw = null;
+      this.activity = null;
+    }
 
     if (this.script) {
       c.faceYaw = null;
@@ -355,7 +381,17 @@ export class Brain {
       this.arrived = false;
       c.model.anim.setLoop(null);
       c.model.anim.setPose(null);
+      c.model.setProp(entry.carry || null);
       this.setHidden(false);
+    }
+    // porters walk loads back and forth between two places
+    if (entry.act === 'haul') {
+      c.model.setProp(entry.prop || 'pole');
+      c.model.anim.setPose(entry.pose || 'carryPole');
+      if (this.haulPause > 0) { this.haulPause -= dt; c.stop(); return; }
+      const tgt = this.haulLeg ? entry.to : entry;
+      if (this.navTo(tgt.x, tgt.z, entry.speed || 1.2, 0.9)) { this.haulLeg = !this.haulLeg; this.haulPause = 2 + Math.random() * 4; }
+      return;
     }
     if (!this.arrived) {
       c.faceYaw = null;
@@ -372,6 +408,7 @@ export class Brain {
         else if (act === 'guard') c.model.anim.setPose(null);
         else if (act === 'pray') c.model.anim.setPose('kneel');
         else if (act === 'wander') { this.area = { x: entry.x, z: entry.z, r: entry.r || 8 }; }
+        else if (ACTS[act]) { const A = ACTS[act]; if (A.pose) c.model.anim.setPose(A.pose); if (A.loop) c.model.anim.setLoop(A.loop); if (A.prop) c.model.setProp(A.prop); }
       }
     } else if (entry.act === 'wander') {
       this.wander(dt);

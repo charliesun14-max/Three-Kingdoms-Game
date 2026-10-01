@@ -1,7 +1,7 @@
 // Arrows: ballistic projectiles with simple character hit tests.
 import * as THREE from 'three';
 
-const _v = new THREE.Vector3();
+const _v = new THREE.Vector3(), _t = new THREE.Vector3();
 export class Archery {
   constructor(game) {
     this.game = game;
@@ -19,6 +19,7 @@ export class Archery {
     g.engine.scene.add(m);
     this.arrows.push({ owner, pos: from.clone(), vel: dir.clone().normalize().multiplyScalar(speed), life: 6, mesh: m, stuck: false, dmg: (owner.weapon.dmg.stab || 20) * (0.5 + power * 0.7) });
     g.audio?.play('bow', from);
+    g.life?.act.onArrowShot(owner);
   }
 
   update(dt) {
@@ -31,6 +32,17 @@ export class Archery {
       a.pos.addScaledVector(a.vel, dt);
       a.mesh.position.copy(a.pos);
       a.mesh.lookAt(a.pos.clone().add(a.vel));
+      // straw butts on the archery range: segment against each target's face
+      let struck = false;
+      for (const tg of this.targets || []) {
+        const d0 = _t.subVectors(prev, tg.center).dot(tg.normal), d1 = _t.subVectors(a.pos, tg.center).dot(tg.normal);
+        if (d0 < 0 || d1 > 0.02) continue;
+        const u = d0 / (d0 - d1 || 1);
+        const hit = _t.copy(prev).lerp(a.pos, u);
+        const dist = hit.distanceTo(tg.center);
+        if (dist < tg.r) { a.pos.copy(hit).addScaledVector(tg.normal, 0.05); a.mesh.position.copy(a.pos); a.stuck = true; a.life = 30; g.life?.act.onTargetHit(tg, dist); struck = true; break; }
+      }
+      if (struck) continue;
       // hit characters
       for (const c of g.entities.nearby(a.pos, 3)) {
         if (c === a.owner || c.dead || !(g.combat.hostile(a.owner, c) || a.owner.combat.target === c)) continue;

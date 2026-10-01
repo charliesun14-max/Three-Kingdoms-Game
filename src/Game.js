@@ -30,6 +30,11 @@ import { Rng } from './core/Rng.js';
 import { Autopilot } from './debug/Autopilot.js';
 import { Riding } from './entities/Riding.js';
 import { BattleKit } from './story/BattleKit.js';
+import { Barks } from './life/Barks.js';
+import { Social } from './life/Social.js';
+import { Law } from './life/Law.js';
+import { Life } from './life/Life.js';
+import { Minigames } from './life/Minigames.js';
 import { Horse } from './entities/Horse.js';
 import { Weather } from './world/Weather.js';
 
@@ -82,6 +87,8 @@ export class Game {
   async loadRegion(id, overrides = null) {
     if (this.world) this.disposeWorld();
     this.combat?.blood.clearPools();
+    this.barks?.clear();
+    this.social?.end();
     const def = overrides ? { ...REGIONS[id], ...overrides } : id;
     this.world = new World(this.engine, def, (msg, pr) => this.ui.loading(msg, pr));
     this.ui.loading('Charting paths…', 0.8);
@@ -98,6 +105,7 @@ export class Game {
     this.weather = new Weather(this);
     if (this.riding) this.riding.horses = [];
     this.spawnAmbientHorses();
+    if (this.player) this.life = new Life(this);
     this.world.update(0.016, this.time.hour, new THREE.Vector3());
   }
 
@@ -212,9 +220,23 @@ export class Game {
     this.army = new Army(this);
     this.story = new Story(this);
     this.riding = new Riding(this);
+    this.barks = new Barks(this);
+    this.social = new Social(this);
+    this.law = new Law(this);
+    this.minigames = new Minigames(this);
+    this.life = new Life(this);
     this.spawnAmbientHorses();
     events.on('death', (c, killer) => this.onDeath(c, killer));
-    events.on('hit', (a, d) => { if (d === this.player || a === this.player) this.lastCombat = this.clockTime; if (d === this.player) this.cameraCtl.shake = 0.08; });
+    events.on('hit', (a, d) => {
+      this.social.onHit(a, d);
+      // striking a peaceful townsperson is assault; from then on they are fair game (and so are you)
+      if (a === this.player && !this.inCombat && ['civilian', 'han', 'militia'].includes(d.faction) && !this.social.nonLethal(d, a) && !d.tags.has('sparring') && !this.law.hunting()) {
+        if (!d.mem?.assaulted) { (d.mem = d.mem || {}).assaulted = true; this.law.crime('assault', { victim: d, certain: this.law.isEnforcer(d) }); if (this.law.isEnforcer(d)) this.law.state.hostile[this.regionId] = true; }
+        this.combat.setHostile(this.player, d, true);
+      }
+      if (d === this.player || a === this.player) this.lastCombat = this.clockTime;
+      if (d === this.player) this.cameraCtl.shake = 0.08;
+    });
   }
 
   async newGame(opts = {}) {
@@ -306,7 +328,7 @@ export class Game {
     }
     if (!this.player) { this.world?.update(dt, this.time.hour, this.engine.camera.position); return; }
     const paused = this.ui.anyPanelOpen();
-    inp.wantLock = !paused && !this.dialogue.active;
+    inp.wantLock = !paused && !this.dialogue.active && !this.minigame;
     // panels
     if (inp.hit('Escape')) { if (this.ui.panelOpen) this.ui.closePanel(); else if (!this.dialogue.active) this.ui.openPanel('menu'); }
     if (!this.dialogue.active && !this.cutscene) {
@@ -319,7 +341,7 @@ export class Game {
 
     if (this.debugAttack && this.frames === this.debugAttack.frame) this.player.startAttack(this.debugAttack.dir);
     this.time.advance(dt * (this.timeWarp || 1));
-    if (this.dialogue.active || this.cutscene?.lockPlayer) { this.player.stop(); this.player.setBlocking(false); }
+    if (this.dialogue.active || this.cutscene?.lockPlayer || this.minigame) { this.player.stop(); this.player.setBlocking(false); }
     else if (!this.riding.controlPlayer(dt)) this.playerCtl.update(dt);
     if (this.input.hit('KeyH') && !this.dialogue.active) this.riding.whistle();
     // hunger
@@ -336,6 +358,10 @@ export class Game {
     if (!this.dialogue.active && !this.cutscene && !this.busyInteract) this.updateInteraction();
     else this.ui.prompt(null);
     this.updateLocation();
+    this.social.update(dt);
+    this.life?.update(dt);
+    this.law.update(dt);
+    this.barks.update();
     this.inCombat = this.clockTime - (this.lastCombat ?? -99) < 6 || (this.playerCtl.lockTarget && !this.playerCtl.lockTarget.dead);
     this.cameraCtl.update(dt);
     const focus = this.player.pos;
@@ -382,6 +408,7 @@ export class Game {
       if (score < bd) { bd = score; best = obj; }
     };
     for (const it of this.world.interactables) if (!it.disabled) consider(it.x, it.z, it.r, { kind: 'object', it });
+    for (const it of this.life?.extraInteractables() || []) consider(it.x, it.z, it.r, { kind: 'object', it });
     if (!p.riding) for (const h of this.riding.horses) if (!h.rider) consider(h.pos.x, h.pos.z, 2.2, { kind: 'horse', h });
     for (const c of this.entities.nearby(p.pos, 3)) {
       if (c === p || c.ai?.hidden) continue;
@@ -389,7 +416,9 @@ export class Game {
       if (c.ai?.surrendered) { consider(c.pos.x, c.pos.z, 2.2, { kind: 'surrender', c }); continue; }
       if (this.combat.hostile(p, c)) continue;
       if (c.combat.drawn && c.combat.target) continue;
-      consider(c.pos.x, c.pos.z, 2.4, { kind: 'talk', c });
+      if (this.law.canSteal(c)) consider(c.pos.x, c.pos.z, 2.4, { kind: 'steal', c });
+      else if (this.law.canPick(c)) consider(c.pos.x, c.pos.z, 2.0, { kind: 'pickpocket', c });
+      else consider(c.pos.x, c.pos.z, 2.4, { kind: 'talk', c });
     }
     let label = null;
     if (best) {
@@ -397,10 +426,15 @@ export class Game {
       else if (best.kind === 'loot') label = `Search the body of ${best.c.name}`;
       else if (best.kind === 'surrender') label = `Deal with ${best.c.name} (surrendered)`;
       else if (best.kind === 'horse') label = `Mount ${best.h.name}`;
+      else if (best.kind === 'pickpocket') label = `Pick ${best.c.name}'s pocket`;
+      else if (best.kind === 'steal') label = `Steal from ${best.c.name}'s stall`;
       else label = `Talk to ${best.c.name}${best.c.cn ? ' ' + best.c.cn : ''}`;
     }
-    this.ui.prompt(label);
+    const social = best && (best.kind === 'talk' || best.kind === 'pickpocket' || best.kind === 'steal') && !best.c.essential;
+    this.ui.prompt(label, social ? '<kbd>Q</kbd>Greet<kbd>T</kbd>Antagonize' : '');
     if (best && this.input.hit('KeyE')) this.interact(best);
+    if (social && this.input.hit('KeyQ')) this.social.greet(best.c);
+    if (social && this.input.hit('KeyT')) this.social.antagonize(best.c);
   }
 
   async interact(b) {
@@ -411,8 +445,13 @@ export class Game {
   }
 
   async interactInner(b) {
-    if (b.kind === 'horse') return this.riding.mountHorse(b.h);
+    if (b.kind === 'horse') {
+      if (b.h.owner === 'dealer') { const seen = this.law.crime('horseTheft'); b.h.owner = 'player'; if (!seen) this.ui.notify('You lead the dealer\'s horse away. No one saw.', 'vice'); }
+      return this.riding.mountHorse(b.h);
+    }
     if (b.kind === 'talk') return this.story.talk(b.c);
+    if (b.kind === 'pickpocket') return this.law.pickpocket(b.c);
+    if (b.kind === 'steal') return this.law.stealFrom(b.c);
     if (b.kind === 'loot') return this.loot(b.c);
     if (b.kind === 'surrender') return this.story.surrendered(b.c);
     const it = b.it;
@@ -423,6 +462,7 @@ export class Game {
       case 'fire': return this.rest(it);
       case 'notice': this.ui.notify('Official notices of the county are posted here.'); return;
       case 'chest': return this.lootChest(it);
+      case 'life': return this.life.interact(it);
       default: this.ui.notify(it.label);
     }
   }
@@ -440,6 +480,7 @@ export class Game {
   lootChest(it) {
     if (this.flags[`looted_${it.id}`]) { this.ui.notify('Empty.'); return; }
     this.flags[`looted_${it.id}`] = true;
+    this.law.crime('trespass');
     const rng = new Rng(it.id.length * 31 + Math.floor(this.clockTime));
     const coins = rng.int(40, 140);
     this.player.inventory.coins += coins;
@@ -471,6 +512,11 @@ export class Game {
     await this.ui.fade(1, 0.6);
     this.time.addHours(2);
     this.player.heal(20);
+    const inv = this.player.inventory, cooked = [];
+    for (const [raw, dish] of [['crucian', 'grilledFish'], ['carp', 'grilledFish'], ['catfish', 'grilledFish'], ['mandarinFish', 'grilledFish'], ['venison', 'roastMeat'], ['boarMeat', 'roastMeat'], ['hareMeat', 'roastMeat'], ['pheasant', 'roastMeat']]) {
+      while (inv.has(raw) && cooked.length < 4) { inv.remove(raw); inv.add(dish); cooked.push(itemDef(dish).name); }
+    }
+    if (cooked.length) this.ui.notify(`Cooked over the fire: ${cooked.join(', ')}.`, 'item');
     this.player.stamina = this.player.staminaMax;
     await wait(300);
     await this.ui.fade(0, 0.8);
@@ -544,10 +590,8 @@ export class Game {
       return;
     }
     if (killer === this.player) {
-      if (['civilian', 'han', 'militia'].includes(c.faction)) {
-        this.progression.addVirtue(-15, 'murder');
-        this.playerFactionHostility = new Set(['han']);
-        this.ui.notify('The guards will hunt you for this crime!', 'vice');
+      if (['civilian', 'han', 'militia'].includes(c.faction) && !c.tags.has('sparring')) {
+        if (!this.law.crime('murder', { victim: c })) this.progression.addVirtue(-15, 'murder');
       } else {
         const m = c.faction === 'yellowTurban' ? 6 : c.faction === 'bandit' ? 5 : 8;
         this.progression.addMerit(m + (c.tags.has('officer') ? 30 : 0));

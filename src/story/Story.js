@@ -171,6 +171,7 @@ export class Story {
     if (h && (await h(c)) !== false) return;
     const m = MISSIONS[this.mission];
     if (m?.talk && (await m.talk(this, this.g, c)) === true) return;
+    if (await this.g.life?.talk(c)) return;
     if (await this.side.talk(c)) return;
     await this.smalltalk(c);
   }
