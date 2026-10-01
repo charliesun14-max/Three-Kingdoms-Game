@@ -189,7 +189,21 @@ export function buildHumanoid(ap = {}) {
   const flare = longRobe ? 0.3 : 0.23;
   const skirtCol = ap.skirt ?? robe;
   const skirtProfile = [[0.155 * g, 1.02], [0.17 * g, 0.9], [0.2 * g, 0.75], [flare * g * 0.95, (0.75 + hemY) / 2], [flare * g, hemY + 0.02], [flare * g * 0.98, hemY]];
-  S.add(lathe(skirtProfile, 18, 1, 0.8), null, skirtCol, 0, (x, y) => {
+  // pleats: the cloth falls in soft vertical folds that deepen toward the hem
+  const skirtGeo = lathe(skirtProfile, 36, 1, 0.8);
+  {
+    const sp = skirtGeo.attributes.position, nf = longRobe ? 11 : 9, seedF = (ap.seed ?? 1) * 0.37;
+    for (let i = 0; i < sp.count; i++) {
+      const x = sp.getX(i), y = sp.getY(i), z = sp.getZ(i);
+      const t = Math.min(1, Math.max(0, (0.95 - y) / (0.95 - hemY)));
+      const ang = Math.atan2(x, z), r = Math.hypot(x, z / 0.8);
+      const fold = (Math.sin(ang * nf + seedF) * 0.7 + Math.sin(ang * (nf * 2 + 1) + seedF * 3) * 0.3) * 0.018 * t * t * (longRobe ? 1 : 0.6);
+      const k = r > 0.001 ? (r + fold) / r : 1;
+      sp.setXYZ(i, x * k, y, z * k);
+    }
+    skirtGeo.computeVertexNormals();
+  }
+  S.add(skirtGeo, null, skirtCol, 0, (x, y) => {
     const t = Math.min(1, Math.max(0, (0.98 - y) / (0.98 - hemY)));
     const side = Math.max(-1, Math.min(1, x / (0.2 * g)));
     const legW = Math.pow(t, 1.3) * 0.75;
