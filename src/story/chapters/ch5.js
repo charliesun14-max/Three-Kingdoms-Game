@@ -169,6 +169,7 @@ export const CHAPTER5 = {
         g.player.inventory.coins += Math.round(c.income() * 0.2);
         for (const ev of events) {
           if (ev.kind === 'event') await modal(g, ev.title, ev.text);
+          else if (ev.kind === 'decision') { const i = await modal(g, ev.title, ev.text, ev.options); const msg = ev.apply(i); if (msg) await modal(g, ev.title, msg); }
           else if (ev.kind === 'officer') {
             const pr = g.progression;
             const ok = (ev.need === 'virtue' ? pr.virtue : pr.renown) >= ev.min;

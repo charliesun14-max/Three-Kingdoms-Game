@@ -186,12 +186,41 @@ export class Campaign {
       if (a > d) { this.note(`${FACTIONS[f].name} seized ${tgt.name} from ${FACTIONS[tgt.owner].name}.`); tgt.owner = f; tgt.troops = Math.round(src.troops * 0.4); src.troops = Math.round(src.troops * 0.5); }
       else src.troops = Math.round(src.troops * 0.75);
     }
+    const dec = this.yearlyDecision();
+    if (dec) out.push(dec);
     this.year++;
     this.game.time.setDate(this.year, 1, 10, 10);
     // Red Cliffs
     if (!this.flags.chibi && (this.year >= 208 || this.owned().length >= 4)) out.push({ kind: 'chibi' });
     if (this.flags.chibiDone && !this.flags.final && this.prov.yu.owner !== 'player' && this.canAttack('yu')) out.push({ kind: 'finalReady' });
     return out;
+  }
+
+  // Governing: most years bring a choice that tests the treasury or the heart.
+  yearlyDecision() {
+    const mine = this.owned();
+    if (!mine.length || Math.random() > 0.7) return null;
+    const p = mine[Math.floor(Math.random() * mine.length)];
+    const pr = this.game.progression;
+    const pay = (n) => { if (this.gold < n) return false; this.gold -= n; return true; };
+    const pool = [
+      () => ({ title: `Flood in ${p.name} 水災`, text: `The rivers of ${p.name} burst their dykes. Villages float away like straw; the survivors crowd the county seats with nothing to eat.`, options: ['Open the granaries (500 coin)', 'Let the people fend for themselves'],
+        apply: (i) => { if (i === 0) { if (!pay(500)) { p.dev = Math.max(1, p.dev - 1); return 'The treasury is too empty to feed them. Many die; the province is poorer.'; } pr.addVirtue(2, 'relief of the flood'); pr.addRenown(2); this.note(`You fed the flood refugees of ${p.name}.`); return 'Rice gruel is ladled out at every county gate. In the villages they call you the Father and Mother of the people.'; } p.dev = Math.max(1, p.dev - 1); pr.addVirtue(-2); this.note(`Flood refugees starved in ${p.name}.`); return 'The dead are buried in the mud. The province will take years to recover.'; } }),
+      () => ({ title: `Locusts over ${p.name} 蝗災`, text: 'A cloud of locusts darkens the sky from horizon to horizon. Where it settles, not a blade of millet remains.', options: ['Hire men to dig trenches and burn the swarms (400 coin)', 'Pray at the altars of the soil'],
+        apply: (i) => { if (i === 0 && pay(400)) { this.note(`The locusts of ${p.name} were burned in their trenches.`); return 'Fires burn day and night along the field-edges. Half the harvest is saved.'; } if (Math.random() < 0.5) { p.dev = Math.max(1, p.dev - 1); return 'The prayers go unanswered. The harvest of the province is lost.'; } return 'A wind from the mountains carries the swarm out to sea. Heaven is merciful — this time.'; } }),
+      () => ({ title: `Plague in ${p.name} 疫`, text: 'A fever runs through the barracks of the garrison. A travelling physician — Hua Tuo of Pei, famed for his herbs and needles — offers his services.', options: ['Pay Hua Tuo (600 coin)', 'Quarantine the sick and wait'],
+        apply: (i) => { if (i === 0 && pay(600)) { pr.addRenown(2); this.note('Hua Tuo cured the fever in your garrison.'); return 'Hua Tuo boils his herbs in great cauldrons. Within a month the soldiers are back on the drill-field.'; } const lost = Math.round(p.troops * 0.25); p.troops -= lost; return `The fever burns itself out, but ${lost},000 soldiers are buried.`; } }),
+      () => ({ title: 'The Black Mountain Bandits 黑山賊', text: `Zhang Yan's Black Mountain bandits — tens of thousands of desperate men — raid the borders of ${p.name}.`, options: ['Send the army to crush them', 'Offer amnesty and enlist them (200 coin)'],
+        apply: (i) => { if (i === 1 && pay(200)) { p.troops += 6; pr.addVirtue(1); this.note('The Black Mountain bandits accepted amnesty and joined your army.'); return 'Zhang Yan himself kneels before your envoy. Six thousand hardened men join your banner.'; } p.troops = Math.max(3, p.troops - 3); this.game.progression.addMerit(60); return 'The mountain strongholds burn. The bandits scatter — but the campaign costs three thousand men.'; } }),
+      () => ({ title: 'A Filial and Incorruptible Man 孝廉', text: `The elders of ${p.name} recommend a young man famed for his devotion to his parents and his honesty. He would make a fine magistrate.`, options: ['Appoint him (300 coin)', 'There are no posts to spare'],
+        apply: (i) => { if (i === 0 && pay(300)) { p.dev = Math.min(6, p.dev + 1); this.note(`A filial and incorruptible man now governs in ${p.name}.`); return 'Within a year the courts are fair, the granaries full and the roads safe. The province prospers.'; } return 'He bows, and goes home to his parents.'; } }),
+      () => ({ title: 'Refugees from the North 流民', text: 'Thousands of refugees fleeing the wars in the north arrive at your borders with their oxen and their children.', options: ['Settle them on the waste lands (300 coin)', 'Turn them away'],
+        apply: (i) => { if (i === 0 && pay(300)) { p.dev = Math.min(6, p.dev + 1); p.troops += 3; pr.addVirtue(1); this.note(`Northern refugees were settled in ${p.name}.`); return 'The waste lands are ploughed for the first time in a generation. Their sons enlist in your army.'; } pr.addVirtue(-1); return 'The refugees trudge on, toward Liu Biao in Jing Province.'; } }),
+      () => ({ title: 'A Bumper Harvest 豐年', text: `The millet stands taller than a man in ${p.name}. The tax granaries overflow.`, options: ['Store it for war (+500 coin)', 'Remit a year of taxes to the people'],
+        apply: (i) => { if (i === 0) { this.gold += 500; return 'The war chest swells.'; } pr.addVirtue(2, 'remitting taxes'); pr.addRenown(1); return 'The people of the province burn incense for you in every village.'; } }),
+    ];
+    const ev = pool[Math.floor(Math.random() * pool.length)]();
+    return { kind: 'decision', ...ev };
   }
 
   // Defence against an invasion.
