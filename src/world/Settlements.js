@@ -904,6 +904,7 @@ function makeFlame(scale = 1) {
     g.userData.blaze = true;
   }
   g.userData.uni = uni;
+  g.userData.noAO = true;
   return g;
 }
 let _glow = null;

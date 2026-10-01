@@ -5,6 +5,16 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
+import { GTAOPass } from 'three/examples/jsm/postprocessing/GTAOPass.js';
+
+// Ground-truth AO that skips things whose shape lives in a custom vertex shader or alpha
+// (camera-following grass, leaf cards, water, sky, flames) — they would render wrongly in its normal pass.
+class AOPass extends GTAOPass {
+  overrideVisibility() {
+    super.overrideVisibility();
+    this.scene.traverse((o) => { if (o.userData.noAO) o.visible = false; });
+  }
+}
 
 const GradeShader = {
   uniforms: {
@@ -62,6 +72,13 @@ export class Engine {
 
     this.composer = new EffectComposer(this.renderer);
     this.composer.addPass(new RenderPass(this.scene, this.camera));
+    if (quality >= 2) {
+      this.ao = new AOPass(this.scene, this.camera, window.innerWidth, window.innerHeight);
+      this.ao.updateGtaoMaterial({ radius: 0.7, distanceExponent: 1.4, thickness: 1.2, scale: 1.1, samples: 12 });
+      this.ao.updatePdMaterial({ lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 6, rings: 2, samples: 12 });
+      this.ao.blendIntensity = 0.85;
+      this.composer.addPass(this.ao);
+    }
     if (quality >= 1) {
       this.bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth / 2, window.innerHeight / 2), 0.22, 0.6, 0.88);
       this.composer.addPass(this.bloom);

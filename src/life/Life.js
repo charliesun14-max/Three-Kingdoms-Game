@@ -8,6 +8,7 @@ import { randomName } from '../entities/Population.js';
 import { randomAppearance } from '../entities/Humanoid.js';
 import { Activities } from './Activities.js';
 import { Wildlife } from './Wildlife.js';
+import { Atmos } from '../world/Atmos.js';
 
 const PENTA = [0, 2, 4, 7, 9];
 
@@ -24,6 +25,7 @@ export class Life {
     this.nextChat = 5;
     this.act = new Activities(this);
     try { game.wildlife = new Wildlife(game); } catch (e) { console.warn('wildlife', e); game.wildlife = null; }
+    try { this.atmos = new Atmos(game); } catch (e) { console.warn('atmos', e); }
     for (const s of game.world.region.settlements) {
       try {
         if (s.type === 'walledTown') this.buildTown(s);
@@ -223,6 +225,7 @@ export class Life {
     for (const f of this.anims) f(t, dt);
     this.act.update(dt);
     this.g.wildlife?.update(dt);
+    this.atmos?.update(dt);
     // the qin player's music carries across the market
     for (const m of this.musicians) {
       const c = m.c, d = c.distTo(p);

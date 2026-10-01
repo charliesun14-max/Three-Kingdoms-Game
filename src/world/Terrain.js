@@ -30,6 +30,8 @@ export class Terrain {
       uSize: { value: hf.size },
       uSeason: { value: 0.0 }, // 0 summer .. 1 autumn
       uWetness: { value: 0 },
+      uCloudT: { value: 0 },
+      uCloudK: { value: 0 },
       uRockTint: { value: new THREE.Vector3(...(hf.region.rockTint || [1, 1, 1])) },
     };
     this.uniforms = uniforms;
@@ -46,6 +48,7 @@ uniform sampler2D tGrass, tDry, tLoess, tRock, tField, tRoad, tLitter, tMask, tW
 uniform float uHalf, uSize, uSeason;
 uniform vec3 uRockTint;
 uniform float uWetness;
+uniform float uCloudT, uCloudK;
 float h21(vec2 p){ return fract(sin(dot(p, vec2(127.1,311.7))) * 43758.5453); }
 float vnoise(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.0-2.0*f);
   return mix(mix(h21(i),h21(i+vec2(1,0)),f.x), mix(h21(i+vec2(0,1)),h21(i+vec2(1,1)),f.x), f.y); }
@@ -92,7 +95,14 @@ vec3 tex2(sampler2D t, vec2 p){
   col *= 0.92 + 0.16 * n1;
   col *= 1.0 - uWetness * 0.28;
   diffuseColor.rgb *= col;
+  // drifting cloud shadows (they only block the sun, so applied to direct light below)
+  vec2 cp = wp / 190.0 + vec2(uCloudT * 0.011, uCloudT * 0.004);
+  float cn = vnoise(cp) * 0.55 + vnoise(cp * 2.3 + 7.1) * 0.3 + vnoise(cp * 5.1 + 1.7) * 0.15;
+  float cloudSh = 1.0 - uCloudK * smoothstep(0.5, 0.68, cn);
 `)
+        .replace('#include <lights_fragment_end>', `#include <lights_fragment_end>
+  reflectedLight.directDiffuse *= cloudSh;
+  reflectedLight.directSpecular *= cloudSh;`)
         .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
   roughnessFactor = mix(0.95, 0.55, max(wet * 0.7, uWetness * 0.6));`);
     };

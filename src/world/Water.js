@@ -104,6 +104,7 @@ export class Water {
     g.computeBoundingSphere();
     // Encode flow speed via uv.y scale in shader (vUv.y small multiplier)
     const m = new THREE.Mesh(g, this.material);
+    m.userData.noAO = true;
     m.renderOrder = 2;
     scene.add(m);
     this.meshes.push(m);
@@ -118,6 +119,7 @@ export class Water {
       uv.setXY(i, 0.5 + Math.hypot(dx, dy), 0);
     }
     const m = new THREE.Mesh(g, this.pondMaterial);
+    m.userData.noAO = true;
     m.position.set(p.x, p.surface, p.z);
     m.renderOrder = 2;
     scene.add(m);

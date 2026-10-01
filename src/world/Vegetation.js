@@ -157,6 +157,7 @@ export class Vegetation {
           const geo = this.getTreeGeo(sp, v, lod);
           const wood = new THREE.InstancedMesh(geo.wood, mats.wood, list.length);
           const leaf = new THREE.InstancedMesh(geo.leaves, mats.leaf, list.length);
+          leaf.userData.noAO = true;
           list.forEach((t, i) => {
             p.set(t.x, this.hf.getHeight(t.x, t.z) - 0.15, t.z);
             q.setFromAxisAngle(up, t.r);
@@ -359,6 +360,7 @@ ${HEIGHT_SAMPLER}`)
     };
     mat.customProgramCacheKey = () => 'grassGPU';
     this.mesh = new THREE.Mesh(geo, mat);
+    this.mesh.userData.noAO = true;
     this.mesh.frustumCulled = false;
     this.mesh.receiveShadow = true;
     this.mesh.castShadow = false;
@@ -439,6 +441,7 @@ ${HEIGHT_SAMPLER}`)
     };
     mat.customProgramCacheKey = () => 'cropGPU';
     this.mesh = new THREE.Mesh(geo, mat);
+    this.mesh.userData.noAO = true;
     this.mesh.frustumCulled = false;
     this.mesh.receiveShadow = true;
     world.scene.add(this.mesh);

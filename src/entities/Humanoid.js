@@ -105,11 +105,23 @@ class SkinBuilder {
 
 // ---------------------------------------------------------------------------
 const matCache = new Map();
+// Soft rim light on characters so they separate from the landscape behind them (driven by daylight).
+export const CHAR_LIGHT = { uRim: { value: 0.08 }, uRimCol: { value: new THREE.Color(1.0, 0.93, 0.8) } };
+function withRim(mat, key) {
+  mat.onBeforeCompile = (sh) => {
+    Object.assign(sh.uniforms, CHAR_LIGHT);
+    sh.fragmentShader = 'uniform float uRim;\nuniform vec3 uRimCol;\n' + sh.fragmentShader.replace('#include <opaque_fragment>', `
+      outgoingLight += uRimCol * pow(1.0 - clamp(dot(normal, normalize(vViewPosition)), 0.0, 1.0), 3.0) * uRim;
+      #include <opaque_fragment>`);
+  };
+  mat.customProgramCacheKey = () => 'charRim' + key;
+  return mat;
+}
 function bodyMaterials() {
   if (matCache.has('body')) return matCache.get('body');
-  const cloth = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.92, map: Tex.cloth() });
-  const metal = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.42, metalness: 0.55, map: Tex.lamellar() });
-  const hair = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.55, metalness: 0.0 });
+  const cloth = withRim(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.92, map: Tex.cloth() }), 'c');
+  const metal = withRim(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.42, metalness: 0.55, map: Tex.lamellar() }), 'm');
+  const hair = withRim(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.55, metalness: 0.0 }), 'h');
   const res = [cloth, metal, hair];
   matCache.set('body', res);
   return res;

@@ -68,6 +68,7 @@ export class SkySystem {
       const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
     })();
     this.moon = new THREE.Sprite(new THREE.SpriteMaterial({ map: moonTex, fog: false, depthWrite: false, transparent: true }));
+    this.moon.userData.noAO = true;
     this.moon.scale.setScalar(420);
     scene.add(this.moon);
 
@@ -229,6 +230,7 @@ function makeSkyDome() {
       }`,
   });
   const mesh = new THREE.Mesh(new THREE.SphereGeometry(5000, 32, 16), mat);
+  mesh.userData.noAO = true;
   mesh.frustumCulled = false;
   mesh.renderOrder = -10;
   return mesh;

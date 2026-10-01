@@ -22,6 +22,7 @@ export class Trails {
       for (let i = 0; i < N - 1; i++) { const a = i * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
       g.setIndex(idx);
       const mesh = new THREE.Mesh(g, this.mat);
+      mesh.userData.noAO = true;
       mesh.frustumCulled = false;
       this.scene.add(mesh);
       it = { mesh, pts: [] };
