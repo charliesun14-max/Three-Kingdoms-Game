@@ -188,3 +188,18 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #000; color:
 .mg-btn { flex: 1 1 auto; padding: 8px 14px; background: rgba(214, 180, 110, .12); border: 1px solid rgba(214, 180, 110, .55); color: #f2e6c8; font-family: var(--serif); font-size: 15px; cursor: pointer; }
 .mg-btn:hover { background: rgba(214, 180, 110, .28); } .mg-btn.off { opacity: .35; cursor: default; }
 .mg-foot { font-size: 13px; opacity: .7; margin-top: 6px; }
+
+/* character creation */
+.creator { position: absolute; inset: 0; z-index: 40; display: flex; justify-content: flex-end; pointer-events: none; }
+.cr-panel { pointer-events: auto; width: min(560px, 96vw); height: 100%; overflow-y: auto; padding: 26px 30px; background: linear-gradient(90deg, rgba(18, 12, 7, 0), rgba(18, 12, 7, .9) 12%, rgba(18, 12, 7, .95)); color: #efe2c4; font-family: var(--serif); }
+.cr-title { font-size: 26px; color: var(--gold); margin-bottom: 6px; } .cr-title .cn { font-family: 'Ma Shan Zheng', serif; font-size: 34px; margin-right: 12px; }
+.cr-name { margin: 6px 0 14px; } .cr-name .big { font-family: 'Ma Shan Zheng', serif; font-size: 40px; color: #f6e2b0; } .muted { opacity: .65; font-size: 14px; }
+.cr-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 8px 0; font-size: 15px; } .cr-row > span:first-child { width: 110px; opacity: .8; }
+.cr-row select, .cr-row input { background: rgba(255, 255, 255, .08); color: #f2e6c8; border: 1px solid rgba(214, 180, 110, .5); padding: 4px 8px; font-family: var(--serif); font-size: 15px; }
+.cr-row select option { background: #1e1610; }
+.cr-opts { display: flex; flex-wrap: wrap; gap: 6px; } .cr-opts .btn { font-size: 14px; padding: 3px 10px; } .btn.on { background: rgba(214, 180, 110, .35); border-color: var(--gold); }
+.cr-sub { margin: 16px 0 8px; font-size: 18px; color: var(--gold); }
+.cr-bgs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.cr-bg { padding: 8px 10px; border: 1px solid rgba(214, 180, 110, .3); cursor: pointer; font-size: 14px; line-height: 1.35; } .cr-bg b { font-family: 'Ma Shan Zheng', serif; font-size: 18px; color: #f6e2b0; } .cr-bg div { margin-top: 4px; }
+.cr-bg.on { border-color: var(--gold); background: rgba(214, 180, 110, .14); }
+.cr-go { margin: 20px 0 10px; text-align: right; } .btn.big { font-size: 20px; padding: 8px 22px; }

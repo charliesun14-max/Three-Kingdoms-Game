@@ -88,7 +88,7 @@ export class Dialogue {
     });
   }
 
-  fmt(t) { return String(t).replace(/\{name\}/g, this.game.player?.name || 'friend'); }
+  fmt(t) { const s = this.game.flags.surname || { en: 'Qin', cn: '秦' }; return String(t).replace(/\{name\}/g, this.game.player?.name || 'friend').replace(/\{surname\}/g, s.en).replace(/\{surnameCn\}/g, s.cn); }
 
   pick(i) {
     const p = this.pending;

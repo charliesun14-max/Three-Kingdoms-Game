@@ -640,7 +640,7 @@ export class Activities {
       if (pick === ok) { right++; status.innerHTML = `<b>${ok}</b> — a fine stroke.`; } else status.innerHTML = `<b>${pick}</b>? The customer frowns: it should be <b>${ok}</b>.`;
       await mg.wait(900);
     }
-    const pay = right === words.length ? 6 : right >= words.length - 1 ? 4 : right >= 2 ? 2 : 0;
+    const pay = (right === words.length ? 6 : right >= words.length - 1 ? 4 : right >= 2 ? 2 : 0) + (g.flags.background === 'scholar' && right > 1 ? 3 : 0);
     p.inventory.coins += pay; if (pay) g.audio.play('coins');
     g.progression.gain('speech', 0.5 + right * 0.2);
     g.time.addHours(0.5);

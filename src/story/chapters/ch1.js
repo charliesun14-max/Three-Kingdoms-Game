@@ -13,14 +13,14 @@ const alive = (list) => list.filter((c) => !c.dead && !c.ai?.surrendered && !c.a
 function family(st, g) {
   const S = st.S;
   const home = S.playerHome;
-  const mother = st.actor('mother', { name: 'Mother', cn: '母親', title: 'Madam Qin', faction: 'civilian', appearance: { ...randomAppearance('woman', new Rng(11)), height: 1.56, robe: 0x5a4a3a, hair: 0x2a2420, face: { wrinkles: true } }, x: home.x + 1.5, z: home.z + 2, brain: { mode: 'idle' } });
-  const mei = st.actor('mei', { name: 'Qin Mei', cn: '秦梅', title: 'your younger sister', faction: 'civilian', appearance: { ...randomAppearance('woman', new Rng(12)), height: 1.48, robe: 0x7a4a4a, face: { smile: true } }, x: home.x - 2, z: home.z + 4, brain: { mode: 'wander' } });
+  const mother = st.actor('mother', { name: 'Mother', cn: '母親', title: `Madam ${st.g.flags.surname?.en || 'Qin'}`, faction: 'civilian', appearance: { ...randomAppearance('woman', new Rng(11)), height: 1.56, robe: 0x5a4a3a, hair: 0x2a2420, face: { wrinkles: true } }, x: home.x + 1.5, z: home.z + 2, brain: { mode: 'idle' } });
+  const mei = st.actor('mei', { name: `${st.g.flags.surname?.en || 'Qin'} Mei`, cn: `${st.g.flags.surname?.cn || '秦'}梅`, title: 'your younger sister', faction: 'civilian', appearance: { ...randomAppearance('woman', new Rng(12)), height: 1.48, robe: 0x7a4a4a, face: { smile: true } }, x: home.x - 2, z: home.z + 4, brain: { mode: 'wander' } });
   mei.ai.area = { x: home.x, z: home.z + 4, r: 5 };
   return { mother, mei };
 }
 
 function spawnFather(st, g, x, z) {
-  return st.actor('father', { name: 'Father', cn: '父親', title: 'Qin Fu, tenant farmer', faction: 'civilian', appearance: { ...randomAppearance('farmer', new Rng(13)), height: 1.7, beard: 'grey', hair: 0x6a6660, face: { wrinkles: true, stern: true } }, x, z, weapon: 'fists', brain: { mode: 'idle' } });
+  return st.actor('father', { name: 'Father', cn: '父親', title: `${st.g.flags.surname?.en || 'Qin'} Fu, tenant farmer`, faction: 'civilian', appearance: { ...randomAppearance('farmer', new Rng(13)), height: 1.7, beard: 'grey', hair: 0x6a6660, face: { wrinkles: true, stern: true } }, x, z, weapon: 'fists', brain: { mode: 'idle' } });
 }
 
 function elderWang(st) {
@@ -143,7 +143,7 @@ export const CHAPTER1 = {
       st.talkHandlers.set('elderWang', async () => {
         g.dialogue.begin();
         if (!done(g, 'q_home', 'tax') && g.player.inventory.has('taxMillet')) {
-          await st.say('elderWang', 'Ah, the Qin boy. You bring your family\'s millet? Good, good. Set it by the others.');
+          await st.say('elderWang', 'Ah, the {surname} boy. You bring your family\'s millet? Good, good. Set it by the others.');
           g.player.inventory.remove('taxMillet');
           await st.say('elderWang', 'You see this mulberry? When Liu Bei was a boy he played beneath it and said, “One day I shall ride in a carriage with a canopy of feathers like this tree.” His uncle cuffed him — such words could get the whole clan executed!');
           const r = await st.choose('elderWang', 'Hah. The boy still dreams. He studied under the great scholar Lu Zhi, you know, alongside Gongsun Zan. And now he weaves mats.', [
@@ -161,7 +161,7 @@ export const CHAPTER1 = {
       st.talkHandlers.set('liuBei', async () => {
         g.dialogue.begin();
         if (!done(g, 'q_home', 'liubei')) {
-          await st.say('liuBei', 'Ah — you are the Qin family\'s son, from Lousang. Selling sandals too? Then we are rivals today!');
+          await st.say('liuBei', 'Ah — you are the {surname} family\'s son, from Lousang. Selling sandals too? Then we are rivals today!');
           await st.say('liuBei', 'I am Liu Bei. My mother and I weave mats and sandals by the east wall of the village. A humble trade, but honest.');
           const r = await st.choose('liuBei', 'Tell me — how do the people of Lousang fare this spring?', [
             { t: 'We go hungry, but we endure.', v: 0 },

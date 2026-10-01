@@ -36,6 +36,7 @@ import { Law } from './life/Law.js';
 import { Life } from './life/Life.js';
 import { Minigames } from './life/Minigames.js';
 import { loadAssets } from './core/Assets.js';
+import { Creation, BACKGROUNDS } from './ui/Creation.js';
 import { Horse } from './entities/Horse.js';
 import { Weather } from './world/Weather.js';
 
@@ -165,7 +166,7 @@ export class Game {
     this.titleCam = { t: 0 };
     this.ui.showTitle(hasSave, {
       continue: async () => { this.audio.init(); this.ui.hideTitle(); await this.loadGame(); },
-      new: async () => { this.audio.init(); this.ui.hideTitle(); await this.newGame({}); },
+      new: async () => { this.audio.init(); this.ui.hideTitle(); await new Creation(this).open(); await this.newGame({}); },
       settings: () => this.showSettings(),
       about: () => this.showAbout(),
     });
@@ -205,12 +206,21 @@ export class Game {
     const R = this.world.region;
     const st = R.places.start;
     const pl = new Character(this, {
-      id: 'player', name: this.playerName || 'Qin Mu', cn: '秦牧', faction: 'player', role: 'player', x: st.x, z: st.z, yaw: Math.PI,
-      appearance: { skin: 0xc99a70, hair: 0x15100c, robe: 0x6e5e48, trousers: 0x5a4c3a, outfit: 'peasant', headwear: 'wrap', headCloth: 0x4a3a2a, beard: 'stubble', height: 1.76, build: 1.02, face: { stern: false } },
-      weapon: 'fists', stats: { str: 9, agi: 8, vit: 9, blade: 1, polearm: 2, unarmed: 3, block: 2, speech: 5, leadership: 1, stealth: 3 },
+      id: 'player', name: this.playerName || 'Qin Mu', cn: this.playerName ? this.playerCn : '秦牧', faction: 'player', role: 'player', x: st.x, z: st.z, yaw: Math.PI,
+      appearance: this.playerLook || { skin: 0xc99a70, hair: 0x15100c, robe: 0x6e5e48, trousers: 0x5a4c3a, outfit: 'peasant', headwear: 'wrap', headCloth: 0x4a3a2a, beard: 'stubble', height: 1.76, build: 1.02, face: { stern: false } },
+      weapon: 'fists', stats: { str: 9, agi: 8, vit: 9, blade: 1, polearm: 2, unarmed: 3, block: 2, archery: 1, speech: 5, leadership: 1, stealth: 3 },
     });
     pl.inventory.coins = 23;
     pl.inventory.add('milletCake', 3).add('sandals', 6).add('bandage', 1);
+    // upbringing chosen at character creation
+    const bg = BACKGROUNDS[this.playerBackground || 'farmer'];
+    for (const [k, v] of Object.entries(bg.stats)) pl.stats[k] = (pl.stats[k] || 0) + v;
+    for (const [k, v] of Object.entries(bg.items || {})) pl.inventory.add(k, v);
+    pl.inventory.coins += bg.coins || 0;
+    pl.background = this.playerBackground || 'farmer';
+    this.flags.surname = this.playerSurname || this.flags.surname || { en: 'Qin', cn: '秦' };
+    this.flags.background = pl.background;
+    pl.hpMax = pl.computeHpMax?.() ?? pl.hpMax; pl.hp = pl.hpMax;
     this.entities.add(pl);
     this.player = pl;
     this.playerCtl = new PlayerController(this, pl);
@@ -319,6 +329,7 @@ export class Game {
 
   tick(dt) {
     const inp = this.input;
+    if (this.state === 'creator') { this.creator?.tick(dt); return; }
     if (this.state === 'title') {
       this.titleCam.t += dt;
       const t = this.titleCam.t * 0.02;

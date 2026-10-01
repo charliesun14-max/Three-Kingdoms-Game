@@ -158,10 +158,10 @@ export const CHAPTER7 = {
         const d = await st.choose('player', 'Name the dynasty that begins today:', [
           { t: 'Great Zhou 大周 — to return to the golden age of the sages', v: 0 },
           { t: 'Great Pei 大沛 — after the land that first trusted me', v: 1 },
-          { t: 'Great Qin 大秦 — after my own clan', v: 2 },
+          { t: `Great ${g.flags.surname?.en || 'Qin'} 大${g.flags.surname?.cn || '秦'} — after my own clan`, v: 2 },
           { t: 'Great Jin 晉 — “to advance”', v: 3 },
         ]);
-        dynasty = [{ cn: '周', name: 'Zhou' }, { cn: '沛', name: 'Pei' }, { cn: '秦', name: 'Qin' }, { cn: '晉', name: 'Jin' }][d];
+        dynasty = [{ cn: '周', name: 'Zhou' }, { cn: '沛', name: 'Pei' }, { cn: g.flags.surname?.cn || '秦', name: g.flags.surname?.en || 'Qin' }, { cn: '晉', name: 'Jin' }][d];
         const e = await st.choose('player', 'And the first era of your reign shall be called:', [
           { t: 'Taiping 太平 — “Great Peace”, the dream the Yellow Turbans died for', v: 0 },
           { t: 'Tianshou 天授 — “Granted by Heaven”', v: 1 },

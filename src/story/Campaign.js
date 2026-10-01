@@ -36,6 +36,7 @@ export const TITLES = [
 export class Campaign {
   constructor(game) {
     this.game = game;
+    FACTIONS.player.cn = game.flags.surname?.cn || '秦';
     this.year = 199;
     this.prov = {};
     for (const p of PROVINCES) {
