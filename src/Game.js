@@ -283,7 +283,12 @@ export class Game {
     if (!this.autopilot || this.frames % 60 === 0) this.engine.render(dt);
     this.input.endFrame();
     const stopAt = this.params.has('frames') ? +this.params.get('frames') : Infinity;
-    if (this.frames >= stopAt && (!this.shotWait || this.shotReady)) { this.done = true; return; }
+    if (this.frames >= stopAt && (!this.shotWait || this.shotReady)) {
+      this.done = true;
+      // a staging script that arrives after the stop can still ask for more frames
+      if (!this.shotReady) { const poll = () => { if (this.shotWait) { this.done = false; this.loop(); } else setTimeout(poll, 250); }; setTimeout(poll, 250); }
+      return;
+    }
     requestAnimationFrame(() => this.loop());
   }
 

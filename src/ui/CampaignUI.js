@@ -3,6 +3,8 @@ import { FACTIONS, ADJ } from '../story/Campaign.js';
 
 // Rough outline of the Han realm in normalised map space (x east, y south).
 const OUTLINE = [[0.86, 0.05], [0.95, 0.12], [0.9, 0.2], [0.86, 0.26], [0.9, 0.3], [0.86, 0.36], [0.84, 0.42], [0.86, 0.5], [0.83, 0.58], [0.82, 0.66], [0.78, 0.74], [0.7, 0.8], [0.62, 0.88], [0.55, 0.95], [0.45, 0.96], [0.38, 0.9], [0.3, 0.84], [0.2, 0.76], [0.16, 0.66], [0.18, 0.55], [0.12, 0.46], [0.05, 0.36], [0.02, 0.24], [0.1, 0.2], [0.22, 0.24], [0.32, 0.18], [0.42, 0.12], [0.52, 0.1], [0.62, 0.08], [0.72, 0.04]];
+const OFFICER_NAMES = { chenDeng: 'Chen Deng 陳登', zhaoYun: 'Zhao Yun 趙雲', xuShu: 'Xu Shu 徐庶', zangBa: 'Zang Ba 臧霸' };
+const officerName = (id) => OFFICER_NAMES[id] || id.replace(/([A-Z])/g, ' $1').replace(/^./, (c) => c.toUpperCase());
 const YELLOW = [[0.14, 0.32], [0.24, 0.29], [0.33, 0.25], [0.38, 0.17], [0.44, 0.14], [0.47, 0.22], [0.45, 0.32], [0.5, 0.36], [0.58, 0.35], [0.66, 0.31], [0.74, 0.28], [0.82, 0.27]];
 const YANGTZE = [[0.2, 0.64], [0.28, 0.61], [0.36, 0.64], [0.44, 0.61], [0.52, 0.58], [0.58, 0.61], [0.64, 0.58], [0.7, 0.56], [0.76, 0.55], [0.83, 0.56]];
 
@@ -79,13 +81,13 @@ export class CampaignUI {
     ctx.font = '38px "Ma Shan Zheng", serif'; ctx.textAlign = 'center';
     ctx.fillText('東 海', W * 0.93, H * 0.5);
     // rivers
-    const river = (pts, name) => {
+    const river = (pts, name, li = Math.floor(pts.length / 2), dx = 30, dy = 22) => {
       ctx.strokeStyle = 'rgba(60,90,110,.85)'; ctx.lineWidth = 3.5; ctx.beginPath();
       pts.forEach(([x, y], i) => (i ? ctx.lineTo(x * W, y * H) : ctx.moveTo(x * W, y * H))); ctx.stroke();
       ctx.fillStyle = 'rgba(40,70,90,.9)'; ctx.font = '20px "Ma Shan Zheng", serif';
-      const m = pts[Math.floor(pts.length / 2)]; ctx.fillText(name, m[0] * W + 30, m[1] * H + 22);
+      const m = pts[li]; ctx.fillText(name, m[0] * W + dx, m[1] * H + dy);
     };
-    river(YELLOW, '黃河'); river(YANGTZE, '長江');
+    river(YELLOW, '黃河', 9, 0, -12); river(YANGTZE, '長江');
     // provinces
     for (const id of ids) {
       const p = c.prov[id];
@@ -146,7 +148,7 @@ export class CampaignUI {
       <div class="stat"><span>Treasury</span><b>${c.gold.toLocaleString()} thousand coins (+${c.income()}/yr)</b></div>
       <div class="stat"><span>Soldiers</span><b>${c.troops()}k</b></div>
       <div class="stat"><span>Allies</span><b>${[...c.allies].map((f) => FACTIONS[f].name).join(', ') || '—'}</b></div>
-      <div class="stat"><span>Officers</span><b>${c.officers.join(', ')}</b></div>`;
+      <div class="stat"><span>Officers</span><b>${c.officers.map(officerName).join(', ') || '—'}</b></div>`;
     if (this.sel) {
       const p = c.prov[this.sel], f = FACTIONS[p.owner];
       html += `<h3>${p.name} Province ${p.cn}</h3>
