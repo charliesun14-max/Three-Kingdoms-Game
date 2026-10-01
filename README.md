@@ -70,6 +70,9 @@ A desktop browser with WebGL2 and a dedicated GPU is recommended. You can change
   - fishing: buy a bamboo rod and fish at any water's edge, from crucian carp up to the legendary golden carp;
   - services: hot meals at the inn (well fed: faster stamina), the barber (choose your beard), the tailor (commission a robe in any dye and cut), and the horse dealer outside the south gate;
   - charity and prayer: alms for beggars, who know the street rumours, and incense at the Earth God shrine (blessing: luck at games and slow healing).
+- Street encounters: a purse-snatcher to chase down (then return the purse, or keep it), a lost child to walk back to their mother, a belligerent drunk, and a thug shaking down a vendor.
+- Horse races: a six-flag course outside each county town against two riders, with a prize for the winner.
+- Townsfolk shelter under the eaves when it pours, and the night watch walks the streets with paper lanterns.
 - Hunting:
   - prey: sika deer (stags carry antlers), wild boar that charge, hares, and pheasants that burst into flight;
   - a single tiger haunts the most remote hills of each region;

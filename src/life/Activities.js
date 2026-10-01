@@ -270,6 +270,7 @@ export class Activities {
       case 'pickSack': return this.pickSack();
       case 'dropSack': return this.dropSack();
       case 'skin': return this.g.wildlife.skin(it.data.a);
+      case 'race': return this.race(it);
       default: return false;
     }
   }
@@ -479,6 +480,94 @@ export class Activities {
     if (R.score >= 30) g.progression.addRenown(0.5);
   }
 
+  // ---- horse racing outside the south gate ---------------------------------------------------
+  raceCourse(town, id) {
+    const g = this.g, hf = g.world.hf, R = g.world.region;
+    const ok = (x, z) => hf.waterAt(x, z) === null && hf.slope(x, z) < 0.22 && Math.abs(x) < hf.half - 40 && Math.abs(z) < hf.half - 40 && !R.settlements.some((s) => Math.abs(s.x - x) < s.w / 2 + 6 && Math.abs(s.z - z) < s.d / 2 + 6);
+    const clearPath = (a, b) => { for (let k = 1; k < 12; k++) { const x = a.x + (b.x - a.x) * k / 12, z = a.z + (b.z - a.z) * k / 12; if (!ok(x, z)) return false; } return true; };
+    // try a ring of directions around the town walls until a clear, dry loop of six flags fits
+    for (const rad of [80, 60, 100, 50]) for (let k = 0; k < 16; k++) {
+      const rot = k * Math.PI / 8;
+      const off = Math.max(town.w, town.d) / 2 + rad + 18;
+      const cx = town.x + Math.sin(rot) * off, cz = town.z + Math.cos(rot) * off;
+      const pts = [];
+      for (let i = 0; i < 6; i++) { const a = rot + Math.PI + (i / 6) * Math.PI * 2; pts.push({ x: cx + Math.sin(a) * rad, z: cz + Math.cos(a) * rad }); }
+      if (!pts.every((p) => ok(p.x, p.z)) || !pts.every((p, i) => clearPath(p, pts[(i + 1) % 6]))) continue;
+      pts.forEach((p, i) => this.life.place(PROPS.flag(i === 0 ? 0xe8c040 : 0xb02818), p.x + 2, p.z, 0, 0.2));
+      this.station(id, pts[0].x, pts[0].z, 5, 'Horse race 賽馬 — enter on horseback', 'race', { pts });
+      return;
+    }
+  }
+  async race(it) {
+    const g = this.g, p = g.player, st = g.story, pts = it.data.pts;
+    if (this.racing) return true;
+    if (!g.riding.mount) { g.ui.notify('You must be on horseback to race.', 'item'); return true; }
+    g.dialogue.begin();
+    const r = await st.choose({ name: 'Race steward', cn: '賽官' }, 'Once around the six flags and back to the yellow banner. Twenty coins to enter; the winner takes a hundred.', [
+      { t: 'Enter the race. (20 coins)', v: 1, if: () => p.inventory.coins >= 20 }, { t: 'Not today.', v: 0 },
+    ]);
+    g.dialogue.end();
+    if (!r) return true;
+    p.inventory.coins -= 20;
+    const start = pts[0], next = pts[1], yaw = Math.atan2(next.x - start.x, next.z - start.z);
+    const side = (k) => ({ x: start.x + Math.cos(yaw) * k * 3, z: start.z - Math.sin(yaw) * k * 3 });
+    const me = g.riding.mount;
+    Object.assign(me.pos, { ...side(0), y: g.world.groundHeight(start.x, start.z) }); me.yaw = yaw; me.speed = 0;
+    const racers = [-1, 1].map((k, i) => {
+      const s = side(k * 1.2);
+      const h = g.riding.spawn({ coat: ['black', 'grey'][i], name: 'Race horse', x: s.x, z: s.z, yaw });
+      h.owner = 'race';
+      const rider = this.life.npc('rider', 'farmer', s.x, s.z, [{ from: 0, to: 24, x: s.x, z: s.z, act: 'idle' }]);
+      rider.name = ['Ma Chao the Younger', 'Swift Li', 'Old Horse Gao'][Math.floor(Math.random() * 3)] + (i ? '' : ' of the north');
+      rider.riding = h; h.rider = rider; rider.model.anim.setPose('ride');
+      return { h, rider, idx: 1, skill: 0.9 + Math.random() * 0.08, done: false };
+    });
+    this.racing = { pts, racers, me: { idx: 1, done: false }, state: 'count', t: 0, finish: [], qid: `race_${Math.floor(g.clockTime)}` };
+    const R = this.racing;
+    g.quests.start({ id: R.qid, title: 'Horse Race', cn: '賽馬', desc: 'Ride around the six flags and back to the yellow banner.', objectives: [{ id: 'flags', text: 'Ride through the flags', count: pts.length, marker: () => pts[R.me.idx % pts.length] }], autoFinish: false });
+    for (const [n, w] of [['三 Three', 0], ['二 Two', 1000], ['一 One', 2000], ['Ride! 馳!', 3000]]) setTimeout(() => g.ui.subtitle('Race steward', n, 1), w);
+    setTimeout(() => { R.state = 'run'; g.audio.play('drum'); }, 3000);
+    return true;
+  }
+  raceUpdate(dt) {
+    const R = this.racing, g = this.g;
+    if (!R) return;
+    const me = g.riding.mount;
+    const pts = R.pts, N = pts.length;
+    if (R.state === 'count') { if (me) me.speed = 0; for (const o of R.racers) o.h.speed = 0; }
+    for (const o of R.racers) {
+      const h = o.h;
+      if (R.state === 'run' && !o.done) {
+        const tg = pts[o.idx % N];
+        const want = Math.atan2(tg.x - h.pos.x, tg.z - h.pos.z);
+        let da = want - h.yaw; while (da > Math.PI) da -= Math.PI * 2; while (da < -Math.PI) da += Math.PI * 2;
+        h.drive(dt, 1, Math.max(-1, Math.min(1, da * 2.2)), Math.abs(da) < 0.9);
+        h.speed = Math.min(h.speed, 11.5 * o.skill);
+        if (Math.hypot(tg.x - h.pos.x, tg.z - h.pos.z) < 7) { o.idx++; if (o.idx > N) { o.done = true; R.finish.push(o.rider.name); } }
+      } else if (o.done) h.drive(dt, 0, 0, false);
+      // keep the rider in the saddle
+      h.root.updateMatrixWorld(true);
+      const v = h.saddleWorld(new THREE.Vector3());
+      o.rider.pos.set(v.x, v.y - 0.93, v.z); o.rider.yaw = h.yaw;
+      o.rider.model.root.position.copy(o.rider.pos); o.rider.model.root.rotation.y = h.yaw;
+    }
+    if (R.state === 'run' && !R.me.done && me) {
+      const tg = pts[R.me.idx % N];
+      if (Math.hypot(tg.x - me.pos.x, tg.z - me.pos.z) < 8) {
+        R.me.idx++; g.quests.progress(R.qid, 'flags', 1); g.audio.play('tick');
+        if (R.me.idx > N) { R.me.done = true; R.finish.push('you'); }
+      }
+    }
+    if (R.state === 'run' && (R.me.done || !me)) {
+      const place = R.finish.indexOf('you') + 1;
+      if (place === 1) { g.player.inventory.coins += 100; g.audio.play('cheer'); g.progression.addRenown(1); g.ui.notify('You win the race! +100 coins.', 'merit'); }
+      else g.ui.notify(me ? `You finish ${place === 2 ? 'second' : 'third'}. ${R.finish[0]} takes the prize.` : 'You left the race.', 'item');
+      g.quests.finish(R.qid);
+      R.state = 'over';
+      setTimeout(() => { for (const o of R.racers) { this.g.entities.remove(o.rider); const hs = this.g.riding.horses; hs.splice(hs.indexOf(o.h), 1); o.h.root.parent?.remove(o.h.root); } this.racing = null; }, 15000);
+    }
+  }
+
   // ---- granary work: carry sacks from the cart into the store ----------------------
   async foreman(c) {
     const g = this.g, st = g.story;
@@ -674,6 +763,7 @@ export class Activities {
       if (R.endAt && t > R.endAt) this.endRange();
       else if (Math.hypot(p.pos.x - R.it.data.x, p.pos.z - R.it.data.z) > 10) this.endRange();
     }
+    this.raceUpdate(dt);
     // carrying a sack: slow and unarmed
     if (this.job?.carrying) { if (p.combat.drawn) p.draw(false); p.speedMul = 0.6; }
     else if (p.speedMul === 0.6) p.speedMul = 1;

@@ -156,6 +156,7 @@ export class Life {
     const dealer = this.npc('horsedealer', 'merchant', hx, hz, this.day(7, 19, hx, hz, 'stand', { rot: -Math.PI / 2 }));
     dealer.title = 'horse dealer';
     this.act.horseLine(hx + 3, hz, dealer);
+    this.act.raceCourse(s, `${s.id}_race`);
     const [fx, fz] = this.free(mx + 8, mz - 19, 0.6);
     const fm = this.npc('foreman', 'merchant', fx, fz, this.day(7, 18, fx, fz, 'stand', { rot: Math.PI }));
     fm.title = 'granary foreman';

@@ -134,6 +134,10 @@ export const PROPS = {
     for (const [x, z] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) B.box('darkwood', x * 0.4, 0, z * 0.2, 0.05, 0.3, 0.05);
     B.box('cloth', 0.15, 0.34, 0, 0.25, 0.02, 0.18, { color: 0xe8dcc0 });
   }),
+  flag: (color = 0xb02818) => built((B) => {
+    B.cyl('darkwood', 0, 0, 0, 0.05, 4.2, { seg: 6 });
+    B.box('cloth', 0.45, 3.2, 0, 0.9, 0.9, 0.02, { color });
+  }),
   bowl: () => built((B) => { B.cyl('pottery', 0, 0, 0, 0.07, 0.05, { r2: 0.11, seg: 12, color: 0x6a4a3a }); }),
   ring: (r = 2.2) => built((B) => {
     // low woven fence ring for the cock pit
