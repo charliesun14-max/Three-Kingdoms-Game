@@ -65,12 +65,20 @@ export class Entities {
     if (Math.random() < dt) for (const c of this.list) if (c.dead && !c.tags.has('cast') && this.game.clockTime - (c.deathTime || 0) > 240) { this.remove(c); break; }
     this.rebuild();
     const pl = this.game.player;
+    this.frame = (this.frame || 0) + 1;
     for (const c of this.list) {
-      const far = pl && Math.hypot(c.pos.x - pl.pos.x, c.pos.z - pl.pos.z) > 170;
+      const dist = pl ? Math.hypot(c.pos.x - pl.pos.x, c.pos.z - pl.pos.z) : 0;
+      const far = dist > 170;
       c.model.root.visible = !far && !(c.ai && c.ai.hidden);
       if (far && c !== pl && !c.tags.has('alwaysActive')) continue;
-      if (c.ai && !this.game.cutscene?.freezeAI) c.ai.update(dt);
-      c.update(dt);
+      // level of detail: idle townsfolk further off think and animate less often (time is accumulated)
+      c._acc = (c._acc || 0) + dt;
+      const busy = c === pl || c.combat.target || c.combat.drawn || c.ai?.script || c.ai?.override?.chase || c.tags.has('alwaysActive') || this.game.cutscene;
+      const lod = busy ? 1 : c.ai?.hidden ? 6 : dist > 60 ? 3 : dist > 25 ? 2 : 1;
+      if (lod > 1 && (this.frame + (c._slot ?? (c._slot = Math.floor(Math.random() * 6)))) % lod) continue;
+      const step = Math.min(c._acc, 0.2); c._acc = 0;
+      if (c.ai && !this.game.cutscene?.freezeAI) c.ai.update(step);
+      c.update(step);
     }
     this.separate();
   }
