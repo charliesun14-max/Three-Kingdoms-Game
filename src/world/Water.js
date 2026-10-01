@@ -1,5 +1,6 @@
 // River ribbon + ponds with an animated fresnel/specular water shader.
 import * as THREE from 'three';
+import { assets } from '../core/Assets.js';
 
 const vert = `
 varying vec3 vW; varying vec2 vUv;
@@ -15,6 +16,16 @@ void main(){
 const frag = `
 uniform float uTime; uniform vec3 uSunDir; uniform vec3 uSunCol; uniform vec3 uSky; uniform vec3 uHorizon;
 uniform vec3 uDeep; uniform vec3 uShallow; uniform float uDay; uniform float uFlow;
+uniform sampler2D tNormal; uniform float uHasN;
+uniform sampler2D tHeight; uniform float uHalf; uniform float uCell; uniform float uN;
+// terrain height under the water (bilinear over the heightfield) -> water depth for shore fades
+float bedAt(vec2 w){
+  vec2 g = clamp((w + uHalf) / uCell, vec2(0.0), vec2(uN - 1.001));
+  ivec2 i = ivec2(floor(g)); vec2 f = fract(g);
+  float a = texelFetch(tHeight, i, 0).r, b = texelFetch(tHeight, i + ivec2(1,0), 0).r;
+  float c = texelFetch(tHeight, i + ivec2(0,1), 0).r, d = texelFetch(tHeight, i + ivec2(1,1), 0).r;
+  return mix(mix(a,b,f.x), mix(c,d,f.x), f.y);
+}
 varying vec3 vW; varying vec2 vUv;
 #include <fog_pars_fragment>
 float h21(vec2 p){ return fract(sin(dot(p, vec2(127.1,311.7))) * 43758.5453); }
@@ -30,20 +41,33 @@ void main(){
   float e = 0.15;
   float h0 = hgt(p);
   vec3 n = normalize(vec3(hgt(p - vec2(e,0.0)) - hgt(p + vec2(e,0.0)), 0.5, hgt(p - vec2(0.0,e)) - hgt(p + vec2(0.0,e))));
+  if (uHasN > 0.5) {
+    // scanned ripple normals, two layers drifting against each other (world-space, tangent z = up)
+    vec2 q = vW.xz;
+    vec3 a = texture2D(tNormal, q * 0.09 + vec2(uTime * 0.021, uTime * 0.013)).xyz * 2.0 - 1.0;
+    vec3 b = texture2D(tNormal, q * 0.23 - vec2(uTime * 0.017, -uTime * 0.026)).xyz * 2.0 - 1.0;
+    vec2 d = (a.xy + b.xy * 0.6);
+    float fade = 1.0 / (1.0 + length(cameraPosition - vW) * 0.012);
+    n = normalize(n + vec3(d.x, 0.0, d.y) * (0.12 + 0.22 * fade));
+  }
   vec3 V = normalize(cameraPosition - vW);
-  float fres = pow(1.0 - max(dot(n, V), 0.0), 4.0) * 0.85 + 0.08;
+  float depth = vW.y - bedAt(vW.xz);
+  float fres = pow(1.0 - max(dot(n, V), 0.0), 5.0) * 0.72 + 0.03;
   vec3 R = reflect(-V, n);
   vec3 sky = mix(uHorizon, uSky, clamp(R.y * 1.6, 0.0, 1.0));
-  float edge = clamp(abs(vUv.x - 0.5) * 2.0, 0.0, 1.0);
-  vec3 water = mix(uDeep, uShallow, edge * edge);
-  vec3 col = mix(water, sky, fres);
+  // colour by depth: silty shallows over the bed, dark green-brown in the channel
+  float deep = smoothstep(0.1, 2.4, depth);
+  vec3 water = mix(uShallow * 1.15, uDeep, deep);
+  vec3 col = mix(water, sky * 0.85, fres);
   vec3 H = normalize(uSunDir + V);
-  float spec = pow(max(dot(n, H), 0.0), 220.0) * 3.5 * uDay;
+  float spec = pow(max(dot(n, H), 0.0), 600.0) * 2.2 * uDay;
   col += uSunCol * spec;
-  // foam flecks near banks
-  float foam = smoothstep(0.86, 1.0, edge) * smoothstep(0.55, 0.8, vn(p * 2.0));
-  col = mix(col, vec3(0.8,0.78,0.7) * (0.3 + 0.7 * uDay), foam * 0.35);
-  gl_FragColor = vec4(col, mix(0.82, 0.55, edge));
+  // lazy foam lines where the water thins out over the banks
+  float shore = 1.0 - smoothstep(0.05, 0.5, depth);
+  float foam = shore * smoothstep(0.5, 0.85, vn(p * 2.0 + vec2(0.0, uTime * 0.3)));
+  col = mix(col, vec3(0.78,0.76,0.7) * (0.3 + 0.7 * uDay), foam * 0.3);
+  float alpha = mix(0.55, 0.9, deep) * smoothstep(0.0, 0.25, depth);
+  gl_FragColor = vec4(col, alpha);
   #include <tonemapping_fragment>
   #include <colorspace_fragment>
   #include <fog_fragment>
@@ -62,7 +86,12 @@ export class Water {
       uShallow: { value: new THREE.Color(0.22, 0.27, 0.2) },
       uDay: { value: 1 },
       uFlow: { value: 1 },
+      tNormal: { value: null },
+      uHasN: { value: 0 },
+      tHeight: { value: hf.heightTexture() }, uHalf: { value: hf.half }, uCell: { value: hf.cell }, uN: { value: hf.N },
     }]);
+    const wn = assets.texture('water', 'normal');
+    if (wn) { this.uniforms.tNormal.value = wn; this.uniforms.uHasN.value = 1; }
     this.material = new THREE.ShaderMaterial({
       uniforms: this.uniforms, vertexShader: vert, fragmentShader: frag,
       transparent: true, fog: true, depthWrite: false,
@@ -70,6 +99,7 @@ export class Water {
     this.pondMaterial = this.material.clone();
     this.pondMaterial.uniforms = THREE.UniformsUtils.clone(this.uniforms);
     this.pondMaterial.uniforms.uFlow.value = 0;
+    for (const k of ['tNormal', 'tHeight']) this.pondMaterial.uniforms[k] = this.uniforms[k]; // share the GPU textures
     this.meshes = [];
     if (hf.riverPts) this.buildRiver(scene);
     for (const p of hf.region.ponds || []) this.buildPond(p, scene);
@@ -94,7 +124,8 @@ export class Water {
       }
       if (k > 0) {
         const r0 = (k - 1) * 5, r1 = k * 5;
-        for (let s = 0; s < 4; s++) idx.push(r0 + s, r1 + s, r0 + s + 1, r0 + s + 1, r1 + s, r1 + s + 1);
+        // wound so the faces point up (the water material is single-sided)
+        for (let s = 0; s < 4; s++) idx.push(r0 + s, r0 + s + 1, r1 + s, r0 + s + 1, r1 + s + 1, r1 + s);
       }
     }
     const g = new THREE.BufferGeometry();

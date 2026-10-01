@@ -48,6 +48,8 @@ If you'd rather not keep the files in Git at all, the desktop game also loads an
 
 Characters keep their procedural skeleton, animation, clothing and hairstyles, but their **heads and hands can come from scanned models** (the `characters` section: `maleHead`, `femaleHead`, `maleHandL`, `maleHandR`). Each head is measured on load (crown, chin, nose tip), fitted to the skeleton's head and trimmed at the collar; hands are placed at the wrists. Skin textures are prepared by `node tools/assets/skin-textures.mjs` (beard shadow removed or thinned to stubble, irises and lips made natural, the tone normalised to a neutral that the game tints per character). Horses stay procedural.
 
+**Fab/Unreal scene exports often lack their textures.** An FBX exported from an Unreal scene usually carries only the textures of a few materials. The rest are 1×1 placeholder PNGs, and the build skips those. A mesh whose colour map is a placeholder renders untextured, so prefer packs that ship a `textures/` folder, or the separate Megascans downloads of the same assets. Of the Faymere river village, only the scanned flagstones (laid as paths through farmyards and up to shrines) and the water normal map (river ripples) arrived with real textures.
+
 ## Good free sources (check each licence)
 
 - Poly Haven: CC0 textures and models.

@@ -22,6 +22,7 @@ const LAMP = `${DL}/China_lantern-25e905a6/fbx/chinalamp_extracted/ChinaLamp_Mat
 const TRENCH = `${DL}/Military_Trenches_Ground_Patch_Rock_S_03-4906428e/fbx/mid/military_trenches_ground_extracted/Military_Trenches_Ground_Patch_Rock_S_03_ydzkbhu_Mid_2K_`;
 const GROUND = `${DL}/Ground-fbf8a1a7/fbx/ground-house-in-the-wood_extracted/textures/Ground024_2K_`;
 const GV = `${DL}/Grass_Vegitation_Mix-e351d09f/fbx/grass-vegitation-mix_extracted/textures`;
+const FAY = `${DL}/Faymere_River_Village_A_Forgotten_Medieval_Gem-6e579cff/fbx/fbx_whisperwind_village__extracted/FBX Whisperwind Village 5.5`;
 const CUP = `${DL}/chinese_cup-10fd1206/blender/chinese-cup_extracted/textures`;
 
 // Megascans materials exported from the village scene: MI_<name>_<id>_2K -> <name>_BaseColor.PNG etc.
@@ -65,6 +66,8 @@ const MODELS = [
   ['models/trees/broadleaf.glb', 'veg/mobile_tree.glb', 2048, (m) => (m.includes('Leaf') ? { base: `${RAW}/veg/T_Mobile_Trees_Leaf.png`, alpha: true } : { base: `${RAW}/veg/T_Mobile_Trees_Trunk.png`, normal: `${RAW}/veg/T_Mobile_Trees_Trunk_normal.png` })],
   ['models/trees/gv_bush.glb', 'veg/gv_bush.glb', 1024, (m) => ({ base: `${GV}/${m.replace(/\.\d+$/, '')}.png`, alpha: true })],
   ['models/trees/gv_flower.glb', 'veg/gv_flower.glb', 1024, (m) => ({ base: `${GV}/${m.replace(/\.\d+$/, '')}.png`, alpha: true })],
+  // Faymere river village: the only meshes that ship with real textures (sources: tools/blender/export_mesh.py)
+  ['models/props/step_stones.glb', 'fay/stepstones.glb', 512, () => ({ base: `${FAY}/MI_sgyvB_BaseColor_0.png`, normal: `${FAY}/MI_sgyvB_Normal_0.png` })],
   // character skin parts (skin atlases prepared by tools/assets/skin-textures.mjs)
   ['models/characters/male_head.glb', 'char/male_head_lo.glb', 2048, () => SKIN],
   ['models/characters/female_head.glb', 'char/female_head.glb', 1024, () => ({ base: `${RAW}/char/skin_female.png`, normal: `${RAW}/char/Female_3_Body_normal.png`, mr: `${RAW}/char/skin_female_orm.png` })],
@@ -80,6 +83,7 @@ const TEXTURES = [
   ['textures/ground024_normal.webp', `${GROUND}Normal.jpg`, 2048, 92],
   ['textures/ground024_rough.webp', `${GROUND}Roughness.jpg`, 1024, 85],
   ['textures/forest_floor_color.webp', `${VILLAGE}/brown_mud_leaves_01_diff.PNG`, 2048, 88],
+  ['textures/water_normal.webp', `${FAY}/M_Water_Ocean_Normal_0.png`, 1024, 94],
   ['textures/forest_floor_normal.webp', `${VILLAGE}/brown_mud_leaves_01_nor_gl.PNG`, 2048, 92],
 ];
 

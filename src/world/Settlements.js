@@ -205,6 +205,36 @@ export class Settlements {
     }
     for (const b of this.region.bridges || []) this.buildBridge(b);
     this.B.build(this.group);
+    this.buildStepStones();
+  }
+
+  // Scanned flagstones laid as a path between two local points of a building frame (x, z, rot).
+  stonePath(x, z, rot, ax, az, bx, bz) {
+    if (!assets.has('props', 'stepStones')) return;
+    const rng = new Rng(Math.abs(Math.floor(x * 13 + z * 7)) + 5); // own stream: leaves the layout RNG untouched
+    (this.stepStones ||= []);
+    const len = Math.hypot(bx - ax, bz - az), n = Math.max(2, Math.round(len / 1.05));
+    const dir = Math.atan2(bx - ax, bz - az);
+    for (let i = 0; i <= n; i++) {
+      const t = i / n, side = rng.range(-0.14, 0.14);
+      const lx = ax + (bx - ax) * t + Math.cos(dir) * side, lz = az + (bz - az) * t - Math.sin(dir) * side;
+      const [wx, wz] = this.lw(x, z, rot, lx, lz);
+      const k = rng.range(0.4, 0.5);
+      this.stepStones.push({ x: wx, z: wz, y: this.ground(wx, wz) - 0.36 * k * 0.62, r: rot + dir + rng.range(-0.35, 0.35), k });
+    }
+  }
+
+  buildStepStones() {
+    const list = this.stepStones || [];
+    const parts = list.length ? assets.parts('props', 'stepStones') : null;
+    if (!parts) return;
+    const m = new THREE.Matrix4(), q = new THREE.Quaternion(), p = new THREE.Vector3(), sc = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0);
+    for (const part of parts) {
+      const im = new THREE.InstancedMesh(part.geometry, part.material, list.length);
+      list.forEach((st, i) => { m.compose(p.set(st.x, st.y, st.z), q.setFromAxisAngle(up, st.r), sc.setScalar(st.k)); im.setMatrixAt(i, m); });
+      im.receiveShadow = true; im.castShadow = false; im.computeBoundingSphere();
+      this.group.add(im);
+    }
   }
 
   buildBridge(b) {
@@ -256,6 +286,8 @@ export class Settlements {
     if (rng.chance(0.3)) { const [a, b] = px(xr - 2.2, zf - 3); this.prop(cart, a, b, rot + rng.range(-0.5, 0.5), 1.4); }
     const [gx, gz] = px(0, zf + 1.2);
     house.yardGate = { x: gx, z: gz };
+    // flagstone path from the door across the yard to the gate
+    if (o.path !== false) this.stonePath(x, z, rot, -w * 0.18, d / 2 + 0.9, 0, zf + 0.2);
     return house;
   }
 
@@ -283,6 +315,7 @@ export class Settlements {
     sh.roof('roofTile', 0, 2.0, -0.2, 2.4, 1.8, 0.9, { type: 'gable', overhang: 0.35, lift: 0.2, nu: 5, nv: 3 });
     sh.box('dark', 0, 0.4, 0.71, 1.0, 1.1, 0.02);
     this.collide(s.x + 40, s.z + 12, 3.2, 2.6, -Math.PI / 2);
+    this.stonePath(s.x + 40, s.z + 12, -Math.PI / 2, 0, 2.0, 0, 7.5);
     this.spot('shrine', s.x + 38, s.z + 12);
     // Other farmsteads around the lanes
     const plots = [
