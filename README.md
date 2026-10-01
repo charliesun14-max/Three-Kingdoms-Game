@@ -24,6 +24,9 @@ A desktop browser with WebGL2 and a dedicated GPU is recommended. You can change
 | Block / perfect parry | Right mouse. Block just before the blow lands (the green light in the combat star) for a **perfect parry**, then strike at once for a **riposte** |
 | Dodge · switch target | Space · Tab |
 | Interact · talk · loot | E |
+| Greet · antagonize the person in front of you | Q · T |
+| Pick a pocket · rob a stall | Sneak (C) behind them, then E |
+| Whistle for your horse | H |
 | Bandage · medicine · eat | 1 · 2 · 3 |
 | Order your squad (follow / charge / hold) | G |
 | Inventory · Journal · Map · Character · Menu | I · J · M · P · Esc |
