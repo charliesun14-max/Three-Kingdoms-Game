@@ -1,6 +1,7 @@
 // Procedural, tileable canvas textures (no external image assets needed).
 import * as THREE from 'three';
 import { Rng } from '../core/Rng.js';
+import { assets } from '../core/Assets.js';
 
 // Tileable value noise on a wrapping lattice.
 class TileNoise {
@@ -78,7 +79,8 @@ function colorField(seed, size, fn) {
 
 const cache = new Map();
 function cached(key, gen) {
-  if (!cache.has(key)) cache.set(key, gen());
+  // an image listed under "textures" in the asset manifest replaces the generated one
+  if (!cache.has(key)) cache.set(key, assets.texture(key) || gen());
   return cache.get(key);
 }
 

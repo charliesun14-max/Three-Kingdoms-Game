@@ -35,6 +35,7 @@ import { Social } from './life/Social.js';
 import { Law } from './life/Law.js';
 import { Life } from './life/Life.js';
 import { Minigames } from './life/Minigames.js';
+import { loadAssets } from './core/Assets.js';
 import { Horse } from './entities/Horse.js';
 import { Weather } from './world/Weather.js';
 
@@ -69,6 +70,8 @@ export class Game {
     this.time = new GameTime();
     const p = this.params;
     if (p.has('hour')) this.time.hour = +p.get('hour');
+    this.ui.loading('Unpacking art assets…', 0.02);
+    await loadAssets(this.engine.renderer, (f) => this.ui.loading('Unpacking art assets…', 0.02 + f * 0.03));
     this.ui.loading('Shaping the land of Zhuo…', 0.05);
     await wait(30);
     await this.loadRegion('zhuo');

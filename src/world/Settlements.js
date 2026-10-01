@@ -7,6 +7,10 @@ import {
   altar, banner, campfireBase, bridge,
 } from './Buildings.js';
 import { bannerTexture, signTexture } from './TextureGen.js';
+import { assets } from '../core/Assets.js';
+
+// asset-manifest names for the procedural props (function names do not survive minification)
+const PROP_NAME = new Map([[well, 'well'], [haystack, 'haystack'], [jars, 'jars'], [cart, 'cart'], [millstone, 'millstone'], [firewood, 'firewood'], [table, 'table'], [stall, 'stall'], [weaponRack, 'weaponRack'], [dummy, 'dummy'], [campfireBase, 'campfire'], [fence, 'fence'], [tent, 'tent'], [commandTent, 'commandTent'], [altar, 'altar']]);
 
 export class Settlements {
   constructor(world) {
@@ -59,7 +63,17 @@ export class Settlements {
     }[kind];
     const [w, d] = dims;
     const B = this.site(x, z, rot, w + 1, d + 1);
-    if (kind === 'farmhouse') farmhouse(B, opts);
+    // a building model from the asset manifest takes the place of the procedural archetype
+    const variant = Math.abs(Math.floor(x * 7 + z * 13)) % Math.max(1, assets.variants('buildings', kind));
+    const model = assets.instance('buildings', kind, variant);
+    if (model) {
+      const sz = assets.model('buildings', kind, variant).size;
+      if (assets.model('buildings', kind, variant).entry.fit !== false) model.scale.set(w / Math.max(0.1, sz.x), (w / Math.max(0.1, sz.x) + d / Math.max(0.1, sz.z)) / 2, d / Math.max(0.1, sz.z));
+      model.position.set(x, this.ground(x, z, w + 1, d + 1), z);
+      model.rotation.y = rot;
+      this.group.add(model);
+    }
+    else if (kind === 'farmhouse') farmhouse(B, opts);
     else if (kind === 'tiled') tiledHouse(B, opts);
     else if (kind === 'twoStorey') twoStorey(B, opts);
     else if (kind === 'watchtower') watchtower(B, opts);
@@ -72,7 +86,9 @@ export class Settlements {
 
   prop(fn, x, z, rot = 0, collideR = 0, ...args) {
     const B = this.site(x, z, rot, 1, 1);
-    fn(B, ...args);
+    const model = PROP_NAME.has(fn) ? assets.instance('props', PROP_NAME.get(fn), Math.abs(Math.floor(x + z))) : null;
+    if (model) { model.position.set(x, this.ground(x, z), z); model.rotation.y = rot; this.group.add(model); }
+    else fn(B, ...args);
     if (collideR) this.world.colliders.addCircle(x, z, collideR, { kind: 'prop' });
   }
 

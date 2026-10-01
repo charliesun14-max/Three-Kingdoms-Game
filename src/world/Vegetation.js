@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { Rng } from '../core/Rng.js';
 import { buildTree, treeMaterials, allTreeUniforms } from './TreeFactory.js';
 import { smoothPolyline } from '../core/MathUtil.js';
+import { assets } from '../core/Assets.js';
 import { Tex } from './TextureGen.js';
 
 const TILE = 200;
@@ -153,6 +154,18 @@ export class Vegetation {
         const [sp, vs] = gk.split('|');
         const v = +vs;
         const mats = treeMaterials(sp);
+        // a tree model from the asset manifest: instance each of its material parts
+        const parts = assets.parts('trees', sp, v);
+        if (parts && parts.length) {
+          for (const lod of [0, 1]) for (const part of parts) {
+            const im = new THREE.InstancedMesh(part.geometry, part.material, list.length);
+            list.forEach((t, i) => { p.set(t.x, this.hf.getHeight(t.x, t.z) - 0.05, t.z); q.setFromAxisAngle(up, t.r); s.setScalar(t.s); m.compose(p, q, s); im.setMatrixAt(i, m); });
+            im.castShadow = lod === 0; im.receiveShadow = true; im.computeBoundingSphere();
+            if (part.material.transparent || part.material.alphaTest > 0) im.userData.noAO = true;
+            (lod === 0 ? tile.lod0 : tile.lod1).add(im);
+          }
+          continue;
+        }
         for (const lod of [0, 1]) {
           const geo = this.getTreeGeo(sp, v, lod);
           const wood = new THREE.InstancedMesh(geo.wood, mats.wood, list.length);

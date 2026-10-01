@@ -3,6 +3,7 @@
 // can aim them along a direction in character space.
 import * as THREE from 'three';
 import { Batch } from '../world/Buildings.js';
+import { assets } from '../core/Assets.js';
 
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 
@@ -164,3 +165,10 @@ export const WEAR = {
   basket: { bone: 'chest', pos: [0, -0.27, 0.28], rot: [0, 0, 0] },
   sack: { bone: 'chest', pos: [-0.25, 0.25, -0.2], rot: [0.25, 0.5, 0.45], scale: 0.8 },
 };
+
+// Models named in the asset manifest's "props" section replace these procedural props.
+// Hand props must have their grip at the origin with the handle running along +Y (use rotX/rotZ in the manifest).
+for (const key of Object.keys(PROPS)) {
+  const gen = PROPS[key];
+  PROPS[key] = (...a) => assets.instance('props', key) || gen(...a);
+}

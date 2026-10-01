@@ -1,0 +1,55 @@
+{
+  "_comment": "Copy to manifest.json and list only what you have. Anything not listed stays procedural. Paths are relative to public/assets/.",
+  "textures": {
+    "grass": "textures/grass_diffuse.jpg",
+    "dryGrass": "textures/dry_grass.jpg",
+    "loess": "textures/loess_soil.jpg",
+    "rock": "textures/rock.jpg",
+    "road": "textures/dirt_road.jpg",
+    "field": "textures/ploughed_field.jpg",
+    "litter": "textures/forest_floor.jpg",
+    "roofTile": "textures/roof_tiles.jpg",
+    "thatch": "textures/thatch.jpg",
+    "mudBrick": "textures/mud_brick.jpg",
+    "plaster": "textures/lime_plaster.jpg",
+    "wood": "textures/weathered_wood.jpg",
+    "stone": "textures/stone_blocks.jpg"
+  },
+  "trees": {
+    "pine": [{ "file": "models/trees/pine_a.glb" }, { "file": "models/trees/pine_b.glb" }],
+    "elm": { "file": "models/trees/elm.glb", "scale": 1.0 },
+    "willow": "models/trees/willow.glb",
+    "peach": "models/trees/peach_blossom.glb",
+    "poplar": "models/trees/poplar.glb",
+    "jujube": "models/trees/jujube.glb",
+    "mulberry": "models/trees/mulberry.glb",
+    "shrub": "models/trees/bush.glb"
+  },
+  "buildings": {
+    "farmhouse": { "file": "models/buildings/farmhouse.glb", "fit": true },
+    "tiled": [{ "file": "models/buildings/tiled_house_a.glb" }, { "file": "models/buildings/tiled_house_b.glb" }],
+    "twoStorey": { "file": "models/buildings/two_storey.glb", "rotY": 180 },
+    "watchtower": { "file": "models/buildings/watchtower.glb", "fit": false, "scale": 1.0 }
+  },
+  "props": {
+    "well": "models/props/well.glb",
+    "jars": "models/props/wine_jars.glb",
+    "cart": "models/props/cart.glb",
+    "haystack": "models/props/haystack.glb",
+    "stall": "models/props/market_stall.glb",
+    "table": "models/props/low_table.glb",
+    "firewood": "models/props/woodpile.glb",
+    "millstone": "models/props/millstone.glb",
+    "weaponRack": "models/props/weapon_rack.glb",
+    "dummy": "models/props/training_dummy.glb",
+    "campfire": "models/props/campfire.glb",
+    "tent": "models/props/tent.glb",
+    "commandTent": "models/props/command_tent.glb",
+    "broom": { "file": "models/props/broom.glb", "rotX": 0 },
+    "basket": "models/props/basket.glb",
+    "pot": "models/props/touhu_pot.glb",
+    "target": "models/props/archery_target.glb",
+    "qin": "models/props/guqin.glb",
+    "lantern": "models/props/paper_lantern.glb"
+  }
+}
