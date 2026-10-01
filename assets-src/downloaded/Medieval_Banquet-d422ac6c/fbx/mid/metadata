@@ -1,0 +1,162 @@
+{
+	"assetNamespace": "fab",
+	"listing":
+	{
+		"averageRating": 4.6200000000000001,
+		"createdAt": "",
+		"description": "<p><span>A feast fit for a king.&nbsp;</span></p><p></p><p><span>Host a grand medieval banquet with this detailed asset pack. From the ornate table setting to the delicious food and drink, platters of bread to roasted meats and goblets of wine, this collection provides everything you need to create authentic and visually stunning banquet scenes.</span></p><p></p><p><span><strong>The Medieval Banquet pack contains:&nbsp;</strong></span></p><ul><li><p><span>77 Assets</span></p></li></ul><p></p><p><span><u>File Formats</u></span></p><ul><li><p><span>Multi-Format Support: 3D assets are available in FBX + JPG format types, ensuring seamless integration with any game engine or DCC tool, including: Unreal Engine, Unity, Godot, Blender, Maya, and 3DS Max.</span></p></li><li><p><span>Scene file Compatible with Unreal Engine 5.4-5.6</span></p></li></ul><p></p><p><span><u>Textures and Materials</u></span></p><ul><li><p><span>Texture Resolutions: 1K, 2K, 4K, 8K</span></p></li><li><p><span>Texture Formats: JPG</span></p></li></ul><p></p><p><a target=\"_blank\" href=\"https://www.youtube.com/watch?v=7NuAMvU8hog\" rel=\"noopener noreferrer nofollow\"><u>Showcase Video</u></a></p><p></p><p><span><em>Note: Assets in the scene file showcased here are artistic interpretations of what can be achieved with the pack's contents.&nbsp;</em></span></p><p><span><em>*Example scenes showcased may not utilize every asset from the pack.</em></span></p><p><span><em>*Some 3D assets in the scenes may not use all available texture maps.</em></span></p><p><span><em>*Rendered images may include background elements (e.g., sky features) for visualization only that are not included in the pack.</em></span></p><p></p><p><span>Create high-quality 3D experiences and worlds with Quixel Megascans. Browse thousands of photorealistic assets and environments, including materials, 3D assets, plants, decals, and more available </span><a target=\"_blank\" href=\"https://www.fab.com/sellers/Quixel\" rel=\"noopener noreferrer nofollow\"><span><u>here</u></span></a><span> on Fab.</span></p><p></p><p><span>For any questions or support regarding Quixel content, please get in touch </span><a target=\"_blank\" href=\"https://support.fab.com/s/?ProductOrigin=1PC\" rel=\"noopener noreferrer nofollow\"><span><u>here</u></span></a><span>.</span></p>",
+		"isAiForbidden": true,
+		"isAiGenerated": false,
+		"lastUpdatedAt": "",
+		"listingType": "3d-model",
+		"media": "https://media.fab.com/image_previews/gallery_images/d29b7f11-10c6-44c2-a79f-5ebd9e853a4e/c179259a-e6ff-42a3-bba5-676ceb39cb4e.jpg",
+		"publishedAt": "2026-08-18T13:01:43.945177Z",
+		"reviewCount": 13,
+		"thumbnail": "https://media.fab.com/image_previews/gallery_images/c1d401f0-9afa-4f5d-a4d3-5eb9a53e1753/1cbc500e-0335-4886-9a69-05acb3422fdb.jpg",
+		"title": "Medieval Banquet",
+		"uid": "d422ac6c-ce50-4273-8d4a-2ac594a3a2b2",
+		"updatedAt": "",
+		"user":
+		{
+			"coverImageUrl": "https://cdn1.epicgames.com/fab/seller/o-cbf5bbfdb340d6a839b5520cb31328/cover/67dbdb8f.jpg",
+			"profileImageUrl": "https://cdn1.epicgames.com/fab/seller/o-cbf5bbfdb340d6a839b5520cb31328/profile/39e5dabd.png",
+			"sellerName": "Quixel Megascans",
+			"uid": "45ea3429-f62c-4f17-aa15-5bb9dfcd0079"
+		},
+		"tags": [
+			{
+				"name": "Antique",
+				"slug": "antique",
+				"uid": "05c128da-c923-4f5d-b84b-fde612ae6bd4"
+			},
+			{
+				"name": "Pig",
+				"slug": "pig",
+				"uid": "5bec4910-e9e7-4da5-8a57-db0182084c4d"
+			},
+			{
+				"name": "Meal",
+				"slug": "meal",
+				"uid": "6b84b9f0-eee7-4928-b333-cbcd4bcc6d38"
+			},
+			{
+				"name": "Historical",
+				"slug": "historical",
+				"uid": "80a06e67-194b-4da6-89c7-4ef1e0c28184"
+			},
+			{
+				"name": "Medieval",
+				"slug": "medieval",
+				"uid": "8869d28f-20ec-4f2e-9e92-d505e24c701d"
+			},
+			{
+				"name": "Level",
+				"slug": "level",
+				"uid": "8f2cd337-060b-438b-8d2d-62808026db6f"
+			},
+			{
+				"name": "Fruit",
+				"slug": "fruit",
+				"uid": "907cb827-366e-4a57-a3ec-ca53a232193f"
+			},
+			{
+				"name": "Banquet",
+				"slug": "banquet",
+				"uid": "a907155f-d242-48cb-9ddb-54759ccb96a2"
+			},
+			{
+				"name": "Dinner",
+				"slug": "dinner",
+				"uid": "aaddff0b-96ad-4107-8642-b3d06d93be9d"
+			},
+			{
+				"name": "Bread",
+				"slug": "bread",
+				"uid": "bb1f0edb-c9ba-4704-a8c2-1f5c95821f14"
+			},
+			{
+				"name": "Prop",
+				"slug": "prop",
+				"uid": "c4f4f70b-31aa-41e7-b857-70631ffdeb3f"
+			},
+			{
+				"name": "Feudal",
+				"slug": "feudal",
+				"uid": "d1839879-7d5a-4c21-a4ad-aa8217d601ac"
+			},
+			{
+				"name": "Pie",
+				"slug": "pie",
+				"uid": "e0b7d906-31da-4163-96bc-bbae88d8a7e7"
+			},
+			{
+				"name": "Food",
+				"slug": "food",
+				"uid": "e17750e5-eb64-4cf7-8f6d-b390b1947b63"
+			},
+			{
+				"name": "Meat",
+				"slug": "meat",
+				"uid": "f3f200c8-6c7e-4d73-8632-27122a0d469d"
+			},
+			{
+				"name": "Feast",
+				"slug": "feast",
+				"uid": "f53a620f-c7e3-4987-8b01-cf4912ed121f"
+			}
+		],
+		"category":
+		{
+			"name": "Medieval",
+			"path": "environments/medieval",
+			"slug": "environments--medieval",
+			"uid": "2da560e9-e640-4217-aadb-1deead200265"
+		},
+		"assetFormats": [
+			{
+				"assetFormatType":
+				{
+					"name": "Unreal Engine",
+					"groupName": "Game Engine Formats",
+					"code": "unreal-engine",
+					"icon": "unreal-engine",
+					"extensions": [
+						"uasset",
+						"uproject",
+						"uplugin"
+					]
+				}
+			},
+			{
+				"assetFormatType":
+				{
+					"name": "FBX",
+					"groupName": "3D Exchange Formats",
+					"code": "fbx",
+					"icon": "cube",
+					"extensions": [
+						"fbx"
+					]
+				}
+			}
+		],
+		"_PluginMetas":
+		{
+			"apiDataVersion": "0.0.1",
+			"entitlementUid": "052139a1-51bc-4ca6-b588-0fcf4a208155",
+			"cacheSize": 0,
+			"downloaded": []
+		}
+	},
+	"target": "",
+	"quality": "mid",
+	"format": "fbx",
+	"fileId": "9b2f64a1-de5a-4c3f-980d-1e25b13d44be",
+	"platformIncluded": "",
+	"distributionPointBaseUrls": [],
+	"distributionMethod": "",
+	"entitlementUid": "052139a1-51bc-4ca6-b588-0fcf4a208155",
+	"invertedNormal": false,
+	"isConverted": false,
+	"isQuixel": true
+}
