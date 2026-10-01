@@ -18,17 +18,49 @@ Open the repository's **Releases** page and download the build for your system:
 
 The builds are made by the **Desktop builds** workflow (`.github/workflows/desktop.yml`). To publish a new release, push a version tag: `git tag v1.0.0 && git push origin v1.0.0`. To get a test build without a release, open the Actions tab, choose *Desktop builds → Run workflow*, and download the files from the run page.
 
-### From the source code
+### Easiest way: double-click a launcher
 
-You need [Node.js](https://nodejs.org) 20 or newer (and [Git LFS](https://git-lfs.com) if the repository holds art assets).
+1. Install **Node.js** (the "LTS" version) from https://nodejs.org. Just run the installer; you don't need to open Node.js afterwards.
+2. Download the game:
+   - On the repository's GitHub page, switch to the branch `claude/three-kingdoms-rpg-n2iewf`.
+   - Click **Code → Download ZIP**, then unzip it.
+3. Open the unzipped folder and double-click the launcher for your system:
+   - **Windows:** `Play-Windows.bat`
+   - **macOS:** `Play-Mac.command`. The first time, right-click it and choose *Open*.
+   - **Linux:** `play-linux.sh`
+
+The first launch downloads the game's tools (a few minutes). After that the game opens in its own window in seconds.
+
+> The setup commands below go in a **terminal**: *Command Prompt* or *PowerShell* on Windows, *Terminal* on macOS. Don't type them into the "Node.js" app or a browser console. Those are JavaScript prompts, and they answer with errors such as `Uncaught SyntaxError: Invalid or unexpected token`.
+
+### From a terminal
+
+You need [Node.js](https://nodejs.org) 20 or newer, and [Git LFS](https://git-lfs.com) if the repository holds art assets.
+
+Get the code:
 
 ```bash
-git clone https://github.com/charliesun14-max/Three-Kingdoms-Game.git
+git clone -b claude/three-kingdoms-rpg-n2iewf https://github.com/charliesun14-max/Three-Kingdoms-Game.git
 cd Three-Kingdoms-Game
 npm install
-npm run dev          # play in the browser at http://127.0.0.1:5173
-npm run desktop      # or play in the desktop window
-npm run dist:win     # build the downloadable game yourself (also dist:mac, dist:linux); output goes to release/
+```
+
+Play in a desktop window:
+
+```bash
+npm run desktop
+```
+
+Or play in your browser at http://127.0.0.1:5173:
+
+```bash
+npm run dev
+```
+
+Build the downloadable game yourself. The output goes to `release/`; use `dist:mac` or `dist:linux` for the other systems:
+
+```bash
+npm run dist:win
 ```
 
 A dedicated GPU is recommended. You can change the graphics quality (Low/Medium/High) in the Esc menu. In the desktop app, F11 or Alt+Enter toggles fullscreen.

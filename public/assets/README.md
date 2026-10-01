@@ -18,10 +18,9 @@ GitHub's web page only accepts uploads up to **25 MB**, and plain Git rejects an
 - Run `npm run assets:optimize`. It writes compressed copies (Meshopt geometry, WebP textures capped at 2048 px) into `public/assets/` and prints the size before and after.
 - Add `-- --texture-size 4096` for hero assets, or `-- --texture-size 1024` for small props.
 
-**2. Use Git LFS for whatever is still big.** This repository's `.gitattributes` already sends `.glb`, `.gltf`, `.bin`, `.fbx`, `.blend`, `.ktx2`, `.hdr`/`.exr`, the images in this folder and everything in `assets-src/` to Git LFS, which takes files up to 2 GB each. Install it once from https://git-lfs.com, then commit as usual:
+**2. Use Git LFS for whatever is still big.** This repository's `.gitattributes` already sends `.glb`, `.gltf`, `.bin`, `.fbx`, `.blend`, `.ktx2`, `.hdr`/`.exr`, the images in this folder and everything in `assets-src/` to Git LFS, which takes files up to 2 GB each. Install it from https://git-lfs.com and run `git lfs install` once in a terminal. Then commit as usual:
 
 ```bash
-git lfs install                  # once per computer
 git add public/assets assets-src
 git commit -m "Add temple and pine models"
 git push
