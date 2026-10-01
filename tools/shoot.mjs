@@ -20,7 +20,7 @@ try {
   await page.waitForFunction(() => window.__game.done || window.__err, null, { timeout: 400000, polling: 1000 });
 } catch (e) { logs.push('TIMEOUT ' + e.message); }
 fs.mkdirSync('screenshots/tmp', { recursive: true });
-await page.screenshot({ path: `screenshots/tmp/${name}.png`, timeout: 120000 });
+await page.screenshot({ path: `screenshots/tmp/${name}.png`, timeout: 400000 });
 console.log(`shot ${name} in ${((Date.now() - t0) / 1000).toFixed(1)}s`);
 console.log([...new Set(logs.filter((l) => !l.includes('GPU stall') && !l.includes('[vite]')))].slice(0, 12).join('\n'));
 await browser.close();
