@@ -119,6 +119,7 @@ export class CharacterModel {
 
   update(dt, state) {
     this.anim.update(dt, state);
+    if (state.ground) this.footIK(state);
     if (this.propMesh) {
       this.propMesh.visible = this.sheathed;
       const hold = HOLD[this.propKind];
@@ -154,6 +155,45 @@ export class CharacterModel {
         this.solveArmIK('L', _b);
       }
     }
+  }
+
+  // Feet planted on uneven ground: drop the hips to the lower foot, then bend each leg to its own ground.
+  footIK(st) {
+    const B = this.bones, a = this.anim;
+    if (a.lie > 0.05 || a.poseW > 0.3 || (st.speed || 0) > 3.2) return;
+    this.root.updateMatrixWorld(true);
+    const fl = B.footL.getWorldPosition(_t1), fr = B.footR.getWorldPosition(_t2);
+    const ry = this.root.position.y;
+    const dL = st.ground(fl.x, fl.z) - ry, dR = st.ground(fr.x, fr.z) - ry;
+    if (Math.abs(dL) < 0.025 && Math.abs(dR) < 0.025) return;
+    const drop = Math.min(0.3, Math.max(0, -Math.min(dL, dR)));
+    B.hips.position.y -= drop / this.scale;
+    this.root.updateMatrixWorld(true);
+    for (const [side, d] of [['L', dL], ['R', dR]]) {
+      const foot = B['foot' + side].getWorldPosition(_p1);
+      foot.y += d + drop;
+      this.solveIK(B['thigh' + side], B['knee' + side], B['foot' + side], foot, _co.set(0, 0.25, 1));
+    }
+  }
+
+  // Analytic two-bone IK; pole is a direction in character space the middle joint bends toward.
+  solveIK(sh, el, hd, target, pole) {
+    const S = sh.getWorldPosition(_s1), a = el.position.length() * this.scale, b = hd.position.length() * this.scale;
+    _t1.subVectors(target, S);
+    let d = _t1.length();
+    const maxd = (a + b) * 0.999;
+    if (d > maxd) { _t1.multiplyScalar(maxd / d); d = maxd; }
+    if (d < 0.05) return;
+    const dirT = _t2.copy(_t1).normalize();
+    const P = _e2.copy(pole).applyQuaternion(this.root.getWorldQuaternion(_qr));
+    P.addScaledVector(dirT, -P.dot(dirT)).normalize();
+    const ang = Math.acos(Math.max(-1, Math.min(1, (a * a + d * d - b * b) / (2 * a * d))));
+    const E = _e1.copy(S).addScaledVector(dirT, Math.cos(ang) * a).addScaledVector(P, Math.sin(ang) * a);
+    this.aimBone(sh, el.position, _d1.subVectors(E, S));
+    sh.updateMatrixWorld(true);
+    const Ew = el.getWorldPosition(_t3);
+    this.aimBone(el, hd.position, _d2.subVectors(_t2.copy(S).add(_t1), Ew));
+    el.updateMatrixWorld(true);
   }
 
   // Analytic two-bone IK: rotate shoulder & elbow so the hand reaches target (world).

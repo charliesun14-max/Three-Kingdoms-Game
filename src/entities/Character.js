@@ -270,6 +270,9 @@ export class Character {
     st.blocking = this.combat.blocking;
     st.dead = this.dead;
     st.sneak = this.sneak;
+    // plant feet on slopes for anyone close enough to see it
+    const cam = g.engine.camera.position;
+    st.ground = !this.dead && Math.abs(cam.x - this.pos.x) + Math.abs(cam.z - this.pos.z) < 35 ? world.groundHeight.bind(world) : null;
     this.updateLook(dt);
     this.model.update(dt, st);
   }
