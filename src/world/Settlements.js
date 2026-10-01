@@ -380,6 +380,12 @@ export class Settlements {
       ? this.place('tiled', yx, yz - 10, 0, { w: 26, d: 12, h: 5, lacquer: true, platform: 2.0, rise: 4.2, id: 'palace_hall' })
       : this.place('tiled', yx, yz - 8, 0, { w: 18, d: 9, h: 3.8, lacquer: true, platform: 1.1, rise: 3.0, id: 'yamen_hall' });
     this.spot('yamenHall', hall.door.x, hall.door.z + 1.5);
+    // stone lanterns before the hall steps
+    for (const sx of [-1, 1]) {
+      const lx = hall.door.x + sx * (s.palace ? 7 : 5), lz = hall.door.z + 2.5;
+      const l = assets.instance('props', 'stoneLantern');
+      if (l) { l.scale.setScalar(s.palace ? 1.5 : 1.25); l.position.set(lx, this.ground(lx, lz), lz); this.group.add(l); this.world.colliders.addCircle(lx, lz, 0.35, { kind: 'prop' }); }
+    }
     this.place('tiled', yx - 18, yz + 8, Math.PI / 2, { w: 10, d: 5, gable: true, id: 'yamen_west' });
     this.place('tiled', yx + 18, yz + 8, -Math.PI / 2, { w: 10, d: 5, gable: true, id: 'yamen_east' });
     const wt = this.site(yx + 22, yz - 20, 0, 4, 4);

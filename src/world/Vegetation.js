@@ -19,6 +19,7 @@ export class Vegetation {
     this.group.name = 'vegetation';
     world.scene.add(this.group);
     this.geoCache = new Map();
+    this.lodNear = world.engine.quality >= 3 ? 420 : 260;
   }
 
   canPlace(x, z, clearance = 2.5, allowSettlement = false) {
@@ -57,7 +58,17 @@ export class Vegetation {
 
   addRock(x, z, s, kind = 0) {
     this.rocks.push({ x, z, s, r: Math.random() * 6.28, kind, tilt: Math.random() });
-    if (s > 0.8) this.world.colliders.addCircle(x, z, s * 0.8, { kind: 'rock' });
+    if (s > 0.8) this.world.colliders.addCircle(x, z, s * (kind === 'crag' ? 0.7 : 0.8), { kind: 'rock' });
+  }
+
+  // scanned scatter models (stumps, fallen trunks, dead trees): instanced with the rocks
+  addProp(kind, x, z, s, collideR = 0.6) {
+    const r = Math.random() * 6.28;
+    this.rocks.push({ x, z, s, r, kind, tilt: 0, prop: true });
+    if (kind === 'fallenPine') {
+      const m = assets.model('scatter', kind);
+      if (m) this.world.colliders.addBox(x, z, (m.size.x * s) / 2 * 0.85, 0.5 * s, -r, { kind: 'rock' });
+    } else this.world.colliders.addCircle(x, z, collideR * s, { kind: 'rock' });
   }
 
   scatter() {
@@ -72,6 +83,11 @@ export class Vegetation {
         const fall = 1 - Math.max(0, (d - f.r * 0.55) / (f.r * 0.45));
         if (fall <= 0 || rng.next() > f.density * fall) continue;
         if (!this.canPlace(px, pz, 1.2)) continue;
+        // now and then a stump or a fallen trunk instead of a living tree (scanned models only)
+        if (rng.next() < 0.06 && (assets.has('scatter', 'stump') || assets.has('scatter', 'fallenPine'))) {
+          this.addProp(rng.next() < 0.5 ? 'stump' : 'fallenPine', px, pz, rng.range(0.85, 1.15));
+          continue;
+        }
         this.addTree(rng.pick(f.mix), px, pz, rng.range(0.8, 1.2));
       }
     }
@@ -112,6 +128,21 @@ export class Vegetation {
         const side = rng.sign(), off = road.w / 2 + 3.5;
         const px = b[0] - (dz / L) * off * side, pz = b[1] + (dx / L) * off * side;
         if (this.canPlace(px, pz, 1.5)) this.addTree(rng.pick(['poplar', 'elm', 'willow']), px, pz, rng.range(0.85, 1.1));
+      }
+    }
+    // Crags on steep high ground, and a few dead trees in the open
+    if (assets.has('rocks', 'crag')) {
+      for (let z = -hf.half; z < hf.half; z += 48) for (let x = -hf.half; x < hf.half; x += 48) {
+        const px = x + rng.range(0, 48), pz = z + rng.range(0, 48);
+        if (hf.slope(px, pz) < 0.32 || hf.getHeight(px, pz) < 30 || rng.next() > 0.3) continue;
+        if (hf.maskAt(px, pz, 0) > 0.02 || hf.maskAt(px, pz, 1) > 0.02 || hf.maskAt(px, pz, 2) > 0.05 || hf.waterAt(px, pz) !== null) continue;
+        this.addRock(px, pz, rng.range(5, 11), 'crag');
+      }
+    }
+    if (assets.has('scatter', 'deadTree')) {
+      for (let z = -hf.half; z < hf.half; z += 70) for (let x = -hf.half; x < hf.half; x += 70) {
+        const px = x + rng.range(0, 70), pz = z + rng.range(0, 70);
+        if (rng.next() < 0.22 && this.canPlace(px, pz, 3)) this.addProp('deadTree', px, pz, rng.range(0.7, 1.0), 0.25);
       }
     }
     // Rocks: mountains & slopes & scattered stones
@@ -197,6 +228,9 @@ export class Vegetation {
   }
 
   buildRocks() {
+    const SMALL = ['small', 'smallB', 'smallC'].filter((k) => assets.has('rocks', k));
+    const BIG = ['big', 'bigB', 'bigC', 'bigD'].filter((k) => assets.has('rocks', k));
+    if (SMALL.length || BIG.length) return this.buildScannedRocks(SMALL.length ? SMALL : BIG, BIG.length ? BIG : SMALL);
     const geos = [0, 1, 2].map((k) => {
       const g = new THREE.IcosahedronGeometry(1, 2);
       const pos = g.attributes.position;
@@ -230,11 +264,77 @@ export class Vegetation {
     }
   }
 
+  // Megascans-style rock and deadwood models, instanced per 200 m tile: full set near the camera,
+  // only the large pieces (without shadows) further out.
+  buildScannedRocks(SMALL, BIG) {
+    const hf = this.hf;
+    const tint = new THREE.Color(...(hf.region.rockTint || [1, 1, 1]).map((v) => Math.pow(v, 0.6)));
+    const buckets = new Map();
+    for (const r of this.rocks) {
+      const h = Math.abs(Math.floor(r.x * 3.1 + r.z * 7.7));
+      const section = r.prop ? 'scatter' : 'rocks';
+      const key = r.prop ? r.kind : r.kind === 'crag' ? 'crag' : r.s < 0.9 ? SMALL[h % SMALL.length] : BIG[h % BIG.length];
+      const v = h % Math.max(1, assets.variants(section, key));
+      const model = assets.model(section, key, v);
+      if (!model) continue;
+      const ti = Math.floor((r.x + hf.half) / TILE), tj = Math.floor((r.z + hf.half) / TILE);
+      const tk = `${ti},${tj}`;
+      if (!buckets.has(tk)) buckets.set(tk, { ti, tj, groups: new Map() });
+      const gk = `${section}|${key}|${v}`;
+      const g = buckets.get(tk).groups;
+      if (!g.has(gk)) g.set(gk, { section, key, v, model, list: [] });
+      g.get(gk).list.push(r);
+    }
+    const m = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new THREE.Vector3(), p = new THREE.Vector3(), col = new THREE.Color();
+    const up = new THREE.Vector3(0, 1, 0);
+    this.rockTiles = [];
+    for (const b of buckets.values()) {
+      const tile = { near: new THREE.Group(), far: new THREE.Group(), cx: (b.ti + 0.5) * TILE - hf.half, cz: (b.tj + 0.5) * TILE - hf.half, lod: -1 };
+      for (const grp of b.groups.values()) {
+        const { model, list } = grp;
+        const ext = Math.max(model.size.x, model.size.z, 0.01);
+        const parts = assets.parts(grp.section, grp.key, grp.v);
+        if (!parts?.length) continue;
+        const mats = list.map((r) => {
+          // rocks: r.s is a radius in metres; scatter props: r.s is a plain scale factor
+          const k = r.prop ? r.s * (model.entry.k || 1) : (r.s * 2 * (r.kind === 'crag' ? 1 : 1.25)) / ext;
+          const rad = (ext * k) / 2;
+          // sink into the lowest ground under the footprint so slopes never show a gap
+          let y = hf.getHeight(r.x, r.z);
+          for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) y = Math.min(y, hf.getHeight(r.x + dx * rad * 0.7, r.z + dz * rad * 0.7));
+          p.set(r.x, y - model.size.y * k * (r.prop ? 0.02 : 0.1), r.z);
+          q.setFromAxisAngle(up, r.r);
+          sc.setScalar(k);
+          return m.compose(p, q, sc).clone();
+        });
+        const isBig = grp.section === 'rocks' && grp.key !== 'small' && !SMALL.includes(grp.key) || grp.key === 'crag' || grp.key === 'deadTree';
+        for (const far of isBig ? [false, true] : [false]) for (const part of parts) {
+          const im = new THREE.InstancedMesh(part.geometry, part.material, list.length);
+          list.forEach((r, i) => {
+            im.setMatrixAt(i, mats[i]);
+            const t = 0.9 + ((Math.abs(Math.floor(r.x * 13 + r.z * 5)) % 100) / 100) * 0.2;
+            im.setColorAt(i, col.copy(grp.section === 'rocks' ? tint : col.setRGB(1, 1, 1)).multiplyScalar(t));
+          });
+          im.castShadow = !far; im.receiveShadow = true; im.computeBoundingSphere();
+          (far ? tile.far : tile.near).add(im);
+        }
+      }
+      this.group.add(tile.near, tile.far);
+      tile.far.visible = false;
+      this.rockTiles.push(tile);
+    }
+  }
+
   update(dt, camPos, time) {
+    if (this.rockTiles) for (const t of this.rockTiles) {
+      const d = Math.hypot(camPos.x - t.cx, camPos.z - t.cz);
+      const lod = d < this.lodNear * 0.8 ? 0 : d < 1600 ? 1 : 2;
+      if (lod !== t.lod) { t.lod = lod; t.near.visible = lod === 0; t.far.visible = lod === 1; }
+    }
     for (const u of allTreeUniforms()) u.uTime.value = time;
     for (const tile of this.tiles.values()) {
       const d = Math.hypot(camPos.x - tile.cx, camPos.z - tile.cz);
-      const lod = d < 260 ? 0 : d < 1400 ? 1 : 2;
+      const lod = d < this.lodNear ? 0 : d < 1400 ? 1 : 2;
       if (lod !== tile.lod) {
         tile.lod = lod;
         tile.lod0.visible = lod === 0;
@@ -303,8 +403,8 @@ class GrassField {
     this.world = world;
     const hf = world.hf;
     const q = world.engine.quality;
-    this.spacing = opts.spacing ?? (q >= 2 ? 0.34 : q === 1 ? 0.42 : 0.6);
-    this.radius = opts.radius ?? (q >= 2 ? 46 : q === 1 ? 34 : 24);
+    this.spacing = opts.spacing ?? (q >= 3 ? 0.3 : q >= 2 ? 0.34 : q === 1 ? 0.42 : 0.6);
+    this.radius = opts.radius ?? (q >= 3 ? 64 : q >= 2 ? 46 : q === 1 ? 34 : 24);
     const n = Math.floor((this.radius * 2) / this.spacing);
     const geo = bladeClump(opts.blades ?? 9, 3, 0.022, 7, false);
     const offs = new Float32Array(n * n * 2);
@@ -392,7 +492,7 @@ class CropField {
     const hf = world.hf;
     const q = world.engine.quality;
     this.spacing = q >= 1 ? 0.36 : 0.55;
-    this.radius = q >= 2 ? 60 : q === 1 ? 45 : 30;
+    this.radius = q >= 3 ? 80 : q >= 2 ? 60 : q === 1 ? 45 : 30;
     const n = Math.floor((this.radius * 2) / this.spacing);
     const geo = bladeClump(3, 4, 0.03, 13, true);
     // Add a drooping seed head (as extra quads) to each clump

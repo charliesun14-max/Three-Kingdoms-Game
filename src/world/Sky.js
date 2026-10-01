@@ -13,10 +13,11 @@ export class SkySystem {
     this.sun = new THREE.DirectionalLight(0xfff1dc, 3.0);
     this.sun.castShadow = true;
     const sc = this.sun.shadow.camera;
-    const S = 70;
+    const S = engine.quality >= 3 ? 95 : 70;
     sc.left = -S; sc.right = S; sc.top = S; sc.bottom = -S;
     sc.near = 1; sc.far = 600;
-    this.sun.shadow.mapSize.set(engine.quality >= 2 ? 4096 : 2048, engine.quality >= 2 ? 4096 : 2048);
+    const sm = engine.quality >= 3 ? 8192 : engine.quality >= 2 ? 4096 : 2048;
+    this.sun.shadow.mapSize.set(sm, sm);
     this.sun.shadow.bias = -0.0004;
     this.sun.shadow.normalBias = 0.04;
     scene.add(this.sun);
@@ -169,6 +170,7 @@ export class SkySystem {
     this.elev = elev;
     this.dayFactor = day;
     this.nightFactor = night;
+    this.engine.setSun?.(this.sunDir, day * (1 - ov * 0.85) * (1 - this.weather.rain * 0.8));
     this.updateEnv(hour);
   }
 

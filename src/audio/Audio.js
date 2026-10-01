@@ -1,4 +1,6 @@
-// Procedural audio: combat foley, ambience, and generative guqin/drum music (no asset files).
+// Procedural audio: combat foley, ambience, and generative guqin/drum music. Recorded music tracks
+// listed under "music" in the asset manifest take over the peace and combat moods when present.
+import { assets } from '../core/Assets.js';
 const PENTA = [0, 2, 4, 7, 9]; // gong shang jue zhi yu
 
 export class Audio {
@@ -35,6 +37,49 @@ export class Audio {
     this.noiseBuf = this.makeNoise(2);
     this.startAmbience();
     this.enabled = true;
+    this.tracks = {};
+    this.track = null; // { name, src, gain }
+    this.peaceRest = 20; // seconds of generative music before the first recorded piece
+    this.loadMusic();
+  }
+
+  async loadMusic() {
+    const man = assets.manifest?.music;
+    if (!man) return;
+    for (const [mood, files] of Object.entries(man)) {
+      for (const f of Array.isArray(files) ? files : [files]) {
+        try {
+          const r = await fetch('./assets/' + f);
+          if (!r.ok) continue;
+          this.tracks[mood] = await this.ctx.decodeAudioData(await r.arrayBuffer());
+          break; // first format this browser can decode (Opus, then MP3)
+        } catch { /* try the next format */ }
+      }
+    }
+  }
+
+  playTrack(name, loop, fadeIn = 2.5) {
+    const c = this.ctx, buf = this.tracks[name];
+    if (!buf || this.track?.name === name) return;
+    this.stopTrack(2);
+    const src = c.createBufferSource(); src.buffer = buf; src.loop = loop;
+    const gain = c.createGain(); gain.gain.setValueAtTime(0.0001, c.currentTime);
+    gain.gain.exponentialRampToValueAtTime(name === 'combat' ? 1.5 : 1.25, c.currentTime + fadeIn);
+    src.connect(gain); gain.connect(this.music); src.start();
+    const t = { name, src, gain, end: loop ? Infinity : c.currentTime + buf.duration };
+    src.onended = () => { if (this.track === t) this.track = null; };
+    this.track = t;
+  }
+
+  stopTrack(fade = 3) {
+    const t = this.track;
+    if (!t) return;
+    const c = this.ctx;
+    t.gain.gain.cancelScheduledValues(c.currentTime);
+    t.gain.gain.setValueAtTime(Math.max(0.0001, t.gain.gain.value), c.currentTime);
+    t.gain.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + fade);
+    t.src.stop(c.currentTime + fade + 0.1);
+    this.track = null;
   }
   resume() { if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume(); }
   setVolume(v) { this.volume = v; if (this.master) this.master.gain.value = v; }
@@ -337,6 +382,21 @@ export class Audio {
     this.music.gain.setTargetAtTime(this.game.dialogue?.active ? 0.16 : 0.34, c.currentTime, 0.6);
     const combat = this.game.inCombat;
     const mood = combat ? 'combat' : this.musicMood;
+    // recorded score: battle music loops while fighting; the peace theme plays now and then,
+    // with stretches of sparse generative guqin in between (as open-world scores do)
+    if (this.tracks?.combat || this.tracks?.peace) {
+      if (mood === 'combat' && this.tracks.combat) { this.combatHold = 6; this.playTrack('combat', true, 1.2); return; }
+      if (this.track?.name === 'combat') {
+        this.combatHold -= dt;
+        if (this.combatHold > 0) return;
+        this.stopTrack(4); this.peaceRest = 25 + Math.random() * 30;
+      }
+      if (mood === 'peace' && this.tracks.peace) {
+        if (this.track?.name === 'peace') return;
+        this.peaceRest -= dt;
+        if (this.peaceRest <= 0) { this.playTrack('peace', false, 4); this.peaceRest = this.tracks.peace.duration + 80 + Math.random() * 100; return; }
+      } else if (this.track) this.stopTrack(3);
+    }
     this.nextNote -= dt;
     const root = 146.83; // D3
     if (mood === 'combat') {

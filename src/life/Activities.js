@@ -1,5 +1,6 @@
 // Things to do in town: games of skill and chance, odd jobs, fishing, prayer, services and performers.
 import * as THREE from 'three';
+import { assets } from '../core/Assets.js';
 import { PROPS } from './Props.js';
 import { Batch, firewood } from '../world/Buildings.js';
 import { BARKS, pick } from './barkLines.js';
@@ -94,6 +95,8 @@ export class Activities {
     B.cyl('bronze', 0, 0.5, 0.95, 0.22, 0.25, { r2: 0.28, seg: 12, color: 0x7a5a30 });
     const grp = new THREE.Group(); B.build(grp); this.life.group.add(grp);
     this.g.world.colliders.addBox(x, z, 1.2, 0.9, 0, { kind: 'wall' });
+    // stone lanterns either side of the shrine
+    for (const sx of [-1.9, 1.9]) this.life.asset('props', 'stoneLantern', x + sx, z + 1.2, 0, 0.3);
     // incense smoke
     const smoke = new THREE.Mesh(new THREE.PlaneGeometry(0.25, 1.4), new THREE.MeshBasicMaterial({ color: 0xd8d0c8, transparent: true, opacity: 0.25, depthWrite: false, side: THREE.DoubleSide }));
     smoke.position.set(x, this.g.world.groundHeight(x, z) + 1.5, z + 0.95);
@@ -151,7 +154,11 @@ export class Activities {
     const g = this.g;
     const coats = [['bay', 900], ['chestnut', 1000], ['grey', 1300], ['black', 1500]];
     const B = new Batch(); B.frame(x, g.world.groundHeight(x, z), z, 0);
-    B.box('darkwood', 0, 0, -3.5, 0.15, 1.1, 0.15); B.box('darkwood', 0, 0, 5, 0.15, 1.1, 0.15); B.box('darkwood', 0, 1.0, 0.75, 0.12, 0.1, 8.6);
+    if (assets.has('props', 'bollard')) {
+      // weathered hitching posts carrying the tether rail
+      for (const pz of [-3.5, 0.75, 5]) this.life.asset('props', 'bollard', x, z + pz, 0, 0.15);
+    } else { B.box('darkwood', 0, 0, -3.5, 0.15, 1.1, 0.15); B.box('darkwood', 0, 0, 5, 0.15, 1.1, 0.15); }
+    B.box('darkwood', 0, 1.0, 0.75, 0.12, 0.1, 8.6);
     const grp = new THREE.Group(); B.build(grp); this.life.group.add(grp);
     dealer.forSale = coats.map(([coat, price], i) => {
       const h = g.riding.spawn({ coat, name: `${coat[0].toUpperCase()}${coat.slice(1)} horse`, x: x + 1.6, z: z - 2.5 + i * 2.3, yaw: Math.PI / 2 });

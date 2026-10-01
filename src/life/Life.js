@@ -1,6 +1,7 @@
 // Town and village life for a region: working people with their tools, performers, beggars,
 // the market cockpit, and the street behaviour around the player (hawking, gossip, rain, curfew).
 import * as THREE from 'three';
+import { assets } from '../core/Assets.js';
 import { Rng } from '../core/Rng.js';
 import { PROPS } from './Props.js';
 import { BARKS, pick } from './barkLines.js';
@@ -68,6 +69,11 @@ export class Life {
     this.group.add(mesh);
     if (collideR) this.g.world.colliders.addCircle(x, z, collideR, { kind: 'prop' });
     return mesh;
+  }
+  // a model from the asset manifest, if there is one (else nothing is placed)
+  asset(section, key, x, z, rot = 0, collideR = 0, v = 0) {
+    const o = assets.instance(section, key, v);
+    return o ? this.place(o, x, z, rot, collideR) : null;
   }
   npc(role, look, x, z, schedule, extra = {}) {
     const female = look === 'woman';
@@ -147,6 +153,11 @@ export class Life {
     const tt = { x: cx - 36, z: cz - 4.3 };
     const sm = this.npc('strongman', 'farmer', tt.x + 0.9, tt.z, this.day(11, 23, tt.x + 0.9, tt.z, 'drink', { rot: -Math.PI / 2 }), { appearance: { ...randomAppearance('farmer', R), bare: true, build: 1.3, height: 1.86, beard: 'bristly' } });
     sm.name = R.pick(['Big Niu', 'Iron Arm Zhao', 'Ox-Head Wang']); sm.title = 'tavern strongman';
+    // benches outside the tavern and around the market square
+    for (const [bx, bz, br] of [[cx - 40.5, cz - 3.2, 0], [cx - 31.5, cz - 3.2, 0], [mx - 22, mz + 6, Math.PI / 2], [mx + 22, mz - 6, -Math.PI / 2]]) {
+      const [px, pz] = this.free(bx, bz, 1.0);
+      this.asset('props', 'bench', px, pz, br, 0.5);
+    }
     // services: barber, horse dealer, granary foreman
     const [bx, bz] = this.free(mx + 10, mz + 16, 0.8);
     this.place(PROPS.stool(), bx + 0.8, bz, 0, 0.3);
@@ -183,6 +194,17 @@ export class Life {
     this.act.woodpile(wx, wz, `${s.id}_wood`);
     this.npc('farmer', 'farmer', wx + 2.2, wz + 1, this.day(7, 12, wx + 2.2, wz + 1, 'chop', { rot: -Math.PI / 2 }));
     this.act.shrine(...this.free(s.x + s.w / 2 - 8, s.z - s.d / 2 + 8, 1.6), `${s.id}_shrine`);
+    // a dry-stone pen at the edge of the village
+    if (assets.has('props', 'stoneWall')) {
+      const a = R.range(0, Math.PI * 2), r = Math.max(s.w, s.d) / 2 + 6;
+      const [px, pz] = this.free(s.x + Math.cos(a) * r, s.z + Math.sin(a) * r, 6);
+      const rot = -a + Math.PI / 2, c = Math.cos(rot), sn = Math.sin(rot);
+      for (const [lx, lz, lr] of [[-4, 0, 0], [0, 0, 0], [4, 0, 0], [6, 2.1, Math.PI / 2], [6, 6.1, Math.PI / 2]]) {
+        const wx = px + lx * c + lz * sn, wz = pz - lx * sn + lz * c;
+        const w = this.asset('props', 'stoneWall', wx, wz, rot + lr);
+        if (w) this.g.world.colliders.addBox(wx, wz, 2, 0.35, -(rot + lr), { kind: 'wall' });
+      }
+    }
     // an old man fishing if there is water near the village
     const hf = this.g.world.hf;
     for (let k = 0; k < 60; k++) {

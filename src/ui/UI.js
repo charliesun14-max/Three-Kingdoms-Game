@@ -435,7 +435,7 @@ export class UI {
     body.innerHTML = `<h2>System 選</h2>
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin:12px 0 20px"><span class="btn" id="m-resume">Resume</span><span class="btn" id="m-save">Save game</span><span class="btn" id="m-load">Load last save</span><span class="btn" id="m-title">Quit to title</span>${window.desktop ? '<span class="btn" id="m-full">Fullscreen (F11)</span><span class="btn" id="m-assets">Open my assets folder</span><span class="btn" id="m-quit">Quit to desktop</span>' : ''}</div>
       <h3>Settings</h3>
-      <div class="stat"><span>Graphics quality</span><span><span class="btn" data-q="0">Low</span> <span class="btn" data-q="1">Medium</span> <span class="btn" data-q="2">High</span> (current: ${['Low', 'Medium', 'High'][g.quality]}, reloads)</span></div>
+      <div class="stat"><span>Graphics quality</span><span><span class="btn" data-q="0">Low</span> <span class="btn" data-q="1">Medium</span> <span class="btn" data-q="2">High</span> <span class="btn" data-q="3">Ultra</span> (current: ${['Low', 'Medium', 'High', 'Ultra'][g.quality]}, reloads)</span></div>
       <div class="stat"><span>Mouse sensitivity</span><input type="range" min="0.5" max="2" step="0.1" value="${s.sens}" id="m-sens"></div>
       <div class="stat"><span>Master volume</span><input type="range" min="0" max="1" step="0.05" value="${s.volume}" id="m-vol"></div>
       <div class="stat"><span>Street chatter (speech above heads)</span><span><span class="btn" data-t="barks">${s.barks === false ? 'Off' : 'On'}</span></span></div>

@@ -1,33 +1,48 @@
-# Large art files are stored with Git LFS (https://git-lfs.com), which lifts GitHub's
-# 100 MB per-file limit. Run `git lfs install` once; after that, adding these files works as usual.
-*.glb filter=lfs diff=lfs merge=lfs -text
-*.gltf filter=lfs diff=lfs merge=lfs -text
-*.bin filter=lfs diff=lfs merge=lfs -text
-*.fbx filter=lfs diff=lfs merge=lfs -text
-*.blend filter=lfs diff=lfs merge=lfs -text
-*.ktx2 filter=lfs diff=lfs merge=lfs -text
-*.hdr filter=lfs diff=lfs merge=lfs -text
-*.exr filter=lfs diff=lfs merge=lfs -text
-public/assets/**/*.jpg filter=lfs diff=lfs merge=lfs -text
-public/assets/**/*.jpeg filter=lfs diff=lfs merge=lfs -text
-public/assets/**/*.png filter=lfs diff=lfs merge=lfs -text
-public/assets/**/*.webp filter=lfs diff=lfs merge=lfs -text
+# Raw art downloads in assets-src/ are stored with Git LFS (https://git-lfs.com), which lifts
+# GitHub's 100 MB per-file limit. Run `git lfs install` once; after that, adding files works as usual.
+# Upper-case extensions are listed too: macOS matches these patterns case-insensitively, Linux does not.
+# The optimised copies the game ships (public/assets/, built by npm run assets:build) are small and
+# are kept as ordinary git files so every build machine and the game itself can use them directly.
+assets-src/**/*.glb filter=lfs diff=lfs merge=lfs -text
+assets-src/**/*.gltf filter=lfs diff=lfs merge=lfs -text
+assets-src/**/*.bin filter=lfs diff=lfs merge=lfs -text
+assets-src/**/*.fbx filter=lfs diff=lfs merge=lfs -text
+assets-src/**/*.obj filter=lfs diff=lfs merge=lfs -text
+assets-src/**/*.mtl filter=lfs diff=lfs merge=lfs -text
+assets-src/**/*.blend filter=lfs diff=lfs merge=lfs -text
+assets-src/**/*.usd filter=lfs diff=lfs merge=lfs -text
+assets-src/**/*.usdz filter=lfs diff=lfs merge=lfs -text
+assets-src/**/*.usdc filter=lfs diff=lfs merge=lfs -text
+assets-src/**/*.ktx2 filter=lfs diff=lfs merge=lfs -text
+assets-src/**/*.hdr filter=lfs diff=lfs merge=lfs -text
+assets-src/**/*.exr filter=lfs diff=lfs merge=lfs -text
 assets-src/**/*.jpg filter=lfs diff=lfs merge=lfs -text
 assets-src/**/*.jpeg filter=lfs diff=lfs merge=lfs -text
 assets-src/**/*.png filter=lfs diff=lfs merge=lfs -text
 assets-src/**/*.tga filter=lfs diff=lfs merge=lfs -text
 assets-src/**/*.tif filter=lfs diff=lfs merge=lfs -text
 assets-src/**/*.tiff filter=lfs diff=lfs merge=lfs -text
-assets-src/**/*.exr filter=lfs diff=lfs merge=lfs -text
 assets-src/**/*.webp filter=lfs diff=lfs merge=lfs -text
-assets-src/**/*.obj filter=lfs diff=lfs merge=lfs -text
-assets-src/**/*.mtl filter=lfs diff=lfs merge=lfs -text
-assets-src/**/*.usd filter=lfs diff=lfs merge=lfs -text
-assets-src/**/*.usdz filter=lfs diff=lfs merge=lfs -text
-assets-src/**/*.usdc filter=lfs diff=lfs merge=lfs -text
 assets-src/**/*.zip filter=lfs diff=lfs merge=lfs -text
 assets-src/**/*.7z filter=lfs diff=lfs merge=lfs -text
 assets-src/**/*.uasset filter=lfs diff=lfs merge=lfs -text
+assets-src/**/*.unitypackage filter=lfs diff=lfs merge=lfs -text
+assets-src/**/*.GLB filter=lfs diff=lfs merge=lfs -text
+assets-src/**/*.GLTF filter=lfs diff=lfs merge=lfs -text
+assets-src/**/*.BIN filter=lfs diff=lfs merge=lfs -text
+assets-src/**/*.FBX filter=lfs diff=lfs merge=lfs -text
+assets-src/**/*.OBJ filter=lfs diff=lfs merge=lfs -text
+assets-src/**/*.BLEND filter=lfs diff=lfs merge=lfs -text
+assets-src/**/*.HDR filter=lfs diff=lfs merge=lfs -text
+assets-src/**/*.EXR filter=lfs diff=lfs merge=lfs -text
+assets-src/**/*.JPG filter=lfs diff=lfs merge=lfs -text
+assets-src/**/*.JPEG filter=lfs diff=lfs merge=lfs -text
+assets-src/**/*.PNG filter=lfs diff=lfs merge=lfs -text
+assets-src/**/*.TGA filter=lfs diff=lfs merge=lfs -text
+assets-src/**/*.TIF filter=lfs diff=lfs merge=lfs -text
+assets-src/**/*.TIFF filter=lfs diff=lfs merge=lfs -text
+assets-src/**/*.WEBP filter=lfs diff=lfs merge=lfs -text
+assets-src/**/*.ZIP filter=lfs diff=lfs merge=lfs -text
 
 # Launchers keep the line endings their systems need
 *.bat text eol=crlf
