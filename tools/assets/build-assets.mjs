@@ -7,10 +7,10 @@
 // Run: node tools/assets/build-assets.mjs   (or npm run assets:build)
 import { NodeIO, Logger } from '@gltf-transform/core';
 import { ALL_EXTENSIONS, EXTTextureWebP } from '@gltf-transform/extensions';
-import { dedup, prune, weld, meshopt } from '@gltf-transform/functions';
+import { dedup, prune, weld, meshopt, textureCompress } from '@gltf-transform/functions';
 import { MeshoptEncoder } from 'meshoptimizer';
 import sharp from 'sharp';
-import { existsSync, mkdirSync, statSync } from 'node:fs';
+import { existsSync, mkdirSync, statSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
 const DL = 'assets-src/downloaded';
@@ -31,6 +31,14 @@ function megascans(mat) {
   const f = (s) => `${VILLAGE}/${base}_${s}.PNG`;
   if (!existsSync(f('BaseColor'))) return null;
   return { base: f('BaseColor'), normal: f('Normal'), mr: f('MetallicRoughness'), ao: f('Occlusion') };
+}
+
+// Medieval Banquet (Megascans): one folder per asset, maps named <id>_2K_<Map>.jpg
+const BANQUET = `${DL}/Medieval_Banquet-d422ac6c/fbx/mid/medieval_banquet_mid_extracted`;
+function banquet(id) {
+  const f = (...names) => names.map((n) => `${BANQUET}/${id}/${id}_2K_${n}.jpg`).find((x) => existsSync(x));
+  const alpha = f('Opacity');
+  return () => ({ base: f('BaseColor', 'Basecolor', 'Albedo'), normal: f('Normal'), orm: { r: f('AO'), g: f('Roughness') }, alpha: alpha || false });
 }
 
 // [output, raw glb, max texture size, texture resolver (material name -> maps)]
@@ -74,6 +82,21 @@ const MODELS = [
   ['models/characters/male_hand_a.glb', 'char/male_hand_a.glb', 1024, () => SKIN],
   ['models/characters/male_hand_b.glb', 'char/male_hand_b.glb', 1024, () => SKIN],
 ];
+// banquet pieces that suit a Han-dynasty market or feast (sources: tools/assets/banquet.py)
+const FOOD = {
+  apple_a: 'td3nedtla', apple_b: 'tefadiqla', apple_c: 'tehuccela', apple_d: 'tgzoahbpa', pear_a: 'teeceidla', pear_b: 'tezbbgrra',
+  melon: 'uifgadahw', grapes_a: 'wjbgdiz', grapes_b: 'xk4gejl', walnut: 'tkzjbiciw', hazelnut: 'tkzhccbhw', fish: 'weflciqaa',
+  sausage_a: 'wenkejdaa', sausage_b: 'wi0heax', sausage_c: 'wi0ifgr', sausage_d: 'wjojcfp', sausage_e: 'wewjbdtaa',
+  meat_a: 'wjokfjq', meat_b: 'wktpfaks', meat_c: 'wktqbjzs', meat_d: 'weukfcwaa', meat_e: 'weuhdcyaa',
+  fowl_a: 'wktnfbds', fowl_b: 'wd5ffbnaa', joint_a: 'weojfdjaa', joint_b: 'webjdcvaa', roast_pig: 'wdzmcjeaa',
+  bread_a: 'whplfip', bread_b: 'whplffy', bread_c: 'whplehh', bread_d: 'whplejz', bun: 'whpmact',
+  bowl: 'wh0ncbf', plate_wood: 'xixsfgd', plate_dark: 'xixlcj1mw', knife: 'xiyoaab', trough: 'ukqocheaw', flask: 'tjuhabova',
+};
+for (const [name, id] of Object.entries(FOOD)) MODELS.push([`models/food/${name}.glb`, `banquet/${id}.glb`, 512, banquet(id)]);
+
+if (process.env.PREVIEW_BANQUET) {
+  for (const id of readdirSync(BANQUET)) if (existsSync(join(RAW, `banquet/${id}.glb`))) MODELS.push([`preview/banquet/${id}.glb`, `banquet/${id}.glb`, 512, banquet(id)]);
+}
 const SKIN = { base: `${RAW}/char/skin_male_clean.png`, normal: `${RAW}/char/skin_male_normal.png`, orm: null, mr: `${RAW}/char/skin_male_orm.png` };
 
 // Tileable ground textures: [output, source, size, quality]
@@ -121,7 +144,11 @@ for (const [out, raw, size, resolve] of MODELS) {
   for (const mat of doc.getRoot().listMaterials()) {
     const maps = resolve(mat.getName());
     if (!maps) continue;
-    if (real(maps.base)) mat.setBaseColorTexture(await tex(maps.base, () => webp(maps.base, size, QUALITY.base))).setBaseColorFactor([1, 1, 1, 1]);
+    // "alpha" may name a separate opacity map, merged into the colour map's alpha channel
+    const withAlpha = async () => sharp(maps.base).resize(size, size, { fit: 'fill' }).removeAlpha()
+      .joinChannel(await sharp(maps.alpha).resize(size, size, { fit: 'fill' }).greyscale().raw().toBuffer(), { raw: { width: size, height: size, channels: 1 } })
+      .webp({ quality: QUALITY.base }).toBuffer();
+    if (real(maps.base)) mat.setBaseColorTexture(await tex(maps.base, () => (typeof maps.alpha === 'string' ? withAlpha() : webp(maps.base, size, QUALITY.base)))).setBaseColorFactor([1, 1, 1, 1]);
     // cut-out foliage: alpha-tested, both sides lit
     if (maps.alpha) mat.setAlphaMode('MASK').setAlphaCutoff(0.45).setDoubleSided(true);
     if (real(maps.normal)) mat.setNormalTexture(await tex(maps.normal, () => webp(maps.normal, size, QUALITY.normal)));
@@ -131,6 +158,22 @@ for (const [out, raw, size, resolve] of MODELS) {
     else if (real(maps.ao)) mat.setOcclusionTexture(await tex(maps.ao, () => webp(maps.ao, size, QUALITY.orm)));
   }
   await doc.transform(dedup(), prune(), weld(), meshopt({ encoder: MeshoptEncoder, level: 'medium' }));
+  const dest = join(OUT, out);
+  mkdirSync(dirname(dest), { recursive: true });
+  await io.write(dest, doc);
+  console.log(`✓ ${out}  ${(statSync(dest).size / 1024).toFixed(0)} KB`);
+}
+
+// already-textured downloads (glTF with embedded maps): textures to WebP at a capped size, meshopt geometry
+const READY = [
+  ['models/props/roof_tiles.glb', `${DL}/Clay_Roof_Tile_Pile___Free_Photogrammetry_3D_Asset-dba7df01/glb/converted/source.glb`, 1024],
+];
+for (const [out, src, size] of READY) {
+  if (only && !out.includes(only)) continue;
+  if (!real(src)) { console.warn(`! ${src} missing`); continue; }
+  const doc = await io.read(src);
+  doc.setLogger(new Logger(Logger.Verbosity.ERROR));
+  await doc.transform(dedup(), prune(), weld(), textureCompress({ encoder: sharp, targetFormat: 'webp', resize: [size, size] }), meshopt({ encoder: MeshoptEncoder, level: 'medium' }));
   const dest = join(OUT, out);
   mkdirSync(dirname(dest), { recursive: true });
   await io.write(dest, doc);

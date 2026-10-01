@@ -35,7 +35,7 @@ for (const f of files) {
   const o = g.scene; o.scale.setScalar(scale);
   let tris = 0;
   o.traverse((m) => { if (m.isMesh) { m.castShadow = m.receiveShadow = true; tris += (m.geometry.index ? m.geometry.index.count : m.geometry.attributes.position.count) / 3; } });
-  if (q.get('fit')) { const b0 = new THREE.Box3().setFromObject(o); o.scale.multiplyScalar(+q.get('fit') / Math.max(1e-6, b0.max.y - b0.min.y)); }
+  if (q.get('fit')) { const b0 = new THREE.Box3().setFromObject(o); { const s0 = b0.getSize(new THREE.Vector3()); o.scale.multiplyScalar(+q.get('fit') / Math.max(1e-6, q.get('fitmax') ? Math.max(s0.x, s0.y, s0.z) : s0.y)); } }
   const b = new THREE.Box3().setFromObject(o), s = b.getSize(new THREE.Vector3());
   o.position.set(x + s.x / 2 - (b.min.x + s.x / 2), -b.min.y, -(b.min.z + s.z / 2));
   scene.add(o);

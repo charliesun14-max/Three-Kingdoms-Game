@@ -137,6 +137,10 @@
     },
     "stepStones": {
       "file": "models/props/step_stones.glb"
+    },
+    "roofTiles": {
+      "file": "models/props/roof_tiles.glb",
+      "height": 1.05
     }
   },
   "music": {
@@ -179,6 +183,138 @@
     "jujube": {
       "file": "models/trees/broadleaf.glb",
       "height": 6
+    }
+  },
+  "food": {
+    "apple": [
+      {
+        "file": "models/food/apple_a.glb"
+      },
+      {
+        "file": "models/food/apple_b.glb"
+      },
+      {
+        "file": "models/food/apple_c.glb"
+      },
+      {
+        "file": "models/food/apple_d.glb"
+      }
+    ],
+    "bowl": {
+      "file": "models/food/bowl.glb"
+    },
+    "bread": [
+      {
+        "file": "models/food/bread_a.glb"
+      },
+      {
+        "file": "models/food/bread_b.glb"
+      },
+      {
+        "file": "models/food/bread_c.glb"
+      },
+      {
+        "file": "models/food/bread_d.glb"
+      }
+    ],
+    "bun": {
+      "file": "models/food/bun.glb"
+    },
+    "fish": {
+      "file": "models/food/fish.glb"
+    },
+    "flask": {
+      "file": "models/food/flask.glb"
+    },
+    "fowl": [
+      {
+        "file": "models/food/fowl_a.glb"
+      },
+      {
+        "file": "models/food/fowl_b.glb"
+      }
+    ],
+    "grapes": [
+      {
+        "file": "models/food/grapes_a.glb"
+      },
+      {
+        "file": "models/food/grapes_b.glb"
+      }
+    ],
+    "hazelnut": {
+      "file": "models/food/hazelnut.glb"
+    },
+    "joint": [
+      {
+        "file": "models/food/joint_a.glb"
+      },
+      {
+        "file": "models/food/joint_b.glb"
+      }
+    ],
+    "knife": {
+      "file": "models/food/knife.glb"
+    },
+    "meat": [
+      {
+        "file": "models/food/meat_a.glb"
+      },
+      {
+        "file": "models/food/meat_b.glb"
+      },
+      {
+        "file": "models/food/meat_c.glb"
+      },
+      {
+        "file": "models/food/meat_d.glb"
+      },
+      {
+        "file": "models/food/meat_e.glb"
+      }
+    ],
+    "melon": {
+      "file": "models/food/melon.glb"
+    },
+    "pear": [
+      {
+        "file": "models/food/pear_a.glb"
+      },
+      {
+        "file": "models/food/pear_b.glb"
+      }
+    ],
+    "plate_dark": {
+      "file": "models/food/plate_dark.glb"
+    },
+    "plate_wood": {
+      "file": "models/food/plate_wood.glb"
+    },
+    "roast_pig": {
+      "file": "models/food/roast_pig.glb"
+    },
+    "sausage": [
+      {
+        "file": "models/food/sausage_a.glb"
+      },
+      {
+        "file": "models/food/sausage_b.glb"
+      },
+      {
+        "file": "models/food/sausage_c.glb"
+      },
+      {
+        "file": "models/food/sausage_d.glb"
+      },
+      {
+        "file": "models/food/sausage_e.glb"
+      }
+    ],
+    "trough": {
+      "file": "models/food/trough.glb"
+    },
+    "walnut": {
+      "file": "models/food/walnut.glb"
     }
   }
 }

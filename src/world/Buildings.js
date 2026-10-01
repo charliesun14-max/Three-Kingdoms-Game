@@ -642,7 +642,10 @@ export function table(B, w = 1.6, d = 0.8) {
   for (const [x, z] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) B.box('darkwood', x * (w / 2 - 0.08), 0, z * (d / 2 - 0.08), 0.08, 0.62, 0.08);
 }
 
-export function stall(B, color = 0xa05030) {
+// Market stall. goods: true = procedural produce; false = empty baskets for scanned produce;
+// 'bare' = no counter baskets (meat, fish, cooked food lie on the boards). Either way the basket
+// positions (local x, rim y, z, radius) are returned so the caller can fill them.
+export function stall(B, color = 0xa05030, goods = true) {
   const V = (x, y, z) => new THREE.Vector3(x, y, z);
   for (const [x, z] of [[-1.5, 1.1], [1.5, 1.1], [-1.5, -1.1], [1.5, -1.1]]) B.cyl('wood', x, 0, z, 0.06, z > 0 ? 2.2 : 2.6, { seg: 5 });
   B.quad('cloth', [V(-1.8, 2.2, 1.5), V(1.8, 2.2, 1.5), V(1.8, 2.65, -1.3), V(-1.8, 2.65, -1.3)], null, color);
@@ -651,19 +654,29 @@ export function stall(B, color = 0xa05030) {
   // goods heaped on the counter and in baskets at its foot
   const rng = new Rng(Math.floor(color % 9973));
   const PRODUCE = [0x5a8a32, 0x6e9a3a, 0xe8e2d0, 0xb02a1a, 0xd8a030, 0x7a4a8a, 0xc87a2a, 0x8a6a3a];
+  const baskets = { counter: [], foot: [] };
   for (let i = 0; i < 4; i++) {
     const x = -1.05 + i * 0.7, c = rng.pick(PRODUCE);
-    B.cyl('straw', x, 0.91, 0.7, 0.27, 0.16, { r2: 0.3, seg: 10 });
-    for (let k = 0; k < 6; k++) B.sphere('pottery', x + rng.range(-0.14, 0.14), 1.08 + rng.range(0, 0.05), 0.7 + rng.range(-0.12, 0.12), rng.range(0.06, 0.1), { color: c, seg: 6 });
+    if (goods !== 'bare') B.cyl('straw', x, 0.91, 0.7, 0.27, 0.16, { r2: 0.3, seg: 10 });
+    baskets.counter.push([x, goods === 'bare' ? 0.91 : 1.07, 0.7, 0.24]);
+    for (let k = 0; k < 6; k++) { const px = x + rng.range(-0.14, 0.14), py = 1.08 + rng.range(0, 0.05), pz = 0.7 + rng.range(-0.12, 0.12), r = rng.range(0.06, 0.1); if (goods === true) B.sphere('pottery', px, py, pz, r, { color: c, seg: 6 }); }
   }
   for (let i = 0; i < 3; i++) {
     const x = -1.2 + i * 1.2 + rng.range(-0.15, 0.15), c = rng.pick(PRODUCE);
     B.cyl('straw', x, 0, 1.45, 0.3, 0.42, { r2: 0.36, seg: 10 });
-    for (let k = 0; k < 7; k++) B.sphere('pottery', x + rng.range(-0.18, 0.18), 0.45 + rng.range(0, 0.06), 1.45 + rng.range(-0.18, 0.18), rng.range(0.07, 0.11), { color: c, seg: 6 });
+    baskets.foot.push([x, 0.42, 1.45, 0.3]);
+    for (let k = 0; k < 7; k++) { const px = x + rng.range(-0.18, 0.18), py = 0.45 + rng.range(0, 0.06), pz = 1.45 + rng.range(-0.18, 0.18), r = rng.range(0.07, 0.11); if (goods) B.sphere('pottery', px, py, pz, r, { color: c, seg: 6 }); }
   }
   // bolts of cloth and a stack of bowls on the counter
-  B.cyl('cloth', 1.0, 0.92, 0.45, 0.09, 0.9, { rz: Math.PI / 2, seg: 8, color: rng.pick([0x8a2a1a, 0x2a4a6a, 0xd8c8a0]) });
-  for (let k = 0; k < 4; k++) B.cyl('pottery', -1.25, 0.91 + k * 0.05, 0.42, 0.11, 0.05, { r2: 0.14, seg: 10, color: 0x6a4a32 });
+  const bolt = rng.pick([0x8a2a1a, 0x2a4a6a, 0xd8c8a0]);
+  if (goods === true) {
+    B.cyl('cloth', 1.0, 0.92, 0.45, 0.09, 0.9, { rz: Math.PI / 2, seg: 8, color: bolt });
+    for (let k = 0; k < 4; k++) B.cyl('pottery', -1.25, 0.91 + k * 0.05, 0.42, 0.11, 0.05, { r2: 0.14, seg: 10, color: 0x6a4a32 });
+  } else {
+    // a pole across the front posts for hanging goods
+    B.beam('wood', V(-1.5, 1.95, 1.1), V(1.5, 1.95, 1.1), 0.03);
+  }
+  return baskets;
 }
 
 export function weaponRack(B) {

@@ -100,7 +100,7 @@ export async function loadAssets(renderer, onProgress = () => {}) {
   const ktx2 = new KTX2Loader().setTranscoderPath('./decoders/basis/').detectSupport(renderer);
   const gltf = new GLTFLoader().setDRACOLoader(draco).setKTX2Loader(ktx2).setMeshoptDecoder(MeshoptDecoder);
   const jobs = [];
-  for (const section of ['props', 'trees', 'buildings', 'rocks', 'scatter', 'characters']) {
+  for (const section of ['props', 'trees', 'buildings', 'rocks', 'scatter', 'characters', 'food']) {
     for (const [key, val] of Object.entries(man[section] || {})) {
       const list = Array.isArray(val) ? val : [val];
       list.forEach((raw, i) => {

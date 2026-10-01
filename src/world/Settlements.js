@@ -205,14 +205,34 @@ export class Settlements {
     }
     for (const b of this.region.bridges || []) this.buildBridge(b);
     this.B.build(this.group);
-    this.buildStepStones();
+    this.buildInstances();
+  }
+
+  // Small scanned models (flagstones, food, tableware...) are collected here and drawn at the end as one
+  // InstancedMesh per model part. Rotation is yaw plus optional tilt; y is absolute.
+  inst(section, key, x, y, z, yaw = 0, scale = 1, v = null, tilt = null) {
+    const n = assets.variants(section, key);
+    if (!n) return null;
+    this._iv = (this._iv || 0) + 1;
+    const k = `${section}|${key}|${(v ?? this._iv) % n}`;
+    (this.instances ||= new Map());
+    if (!this.instances.has(k)) this.instances.set(k, []);
+    this.instances.get(k).push({ x, y, z, yaw, s: scale, tx: tilt ? tilt[0] : 0, tz: tilt ? tilt[1] : 0 });
+    return assets.model(section, key, (v ?? this._iv) % n).size;
+  }
+
+  // A dresser for a local frame (x, z, rot, base y): put(section, key, lx, ly, lz, yaw, ...) in frame coordinates.
+  dresser(fx, fz, frot, fy) {
+    return (section, key, lx, ly, lz, yaw = 0, scale = 1, v = null, tilt = null) => {
+      const [wx, wz] = this.lw(fx, fz, frot, lx, lz);
+      return this.inst(section, key, wx, fy + ly, wz, frot + yaw, scale, v, tilt);
+    };
   }
 
   // Scanned flagstones laid as a path between two local points of a building frame (x, z, rot).
   stonePath(x, z, rot, ax, az, bx, bz) {
     if (!assets.has('props', 'stepStones')) return;
     const rng = new Rng(Math.abs(Math.floor(x * 13 + z * 7)) + 5); // own stream: leaves the layout RNG untouched
-    (this.stepStones ||= []);
     const len = Math.hypot(bx - ax, bz - az), n = Math.max(2, Math.round(len / 1.05));
     const dir = Math.atan2(bx - ax, bz - az);
     for (let i = 0; i <= n; i++) {
@@ -220,20 +240,104 @@ export class Settlements {
       const lx = ax + (bx - ax) * t + Math.cos(dir) * side, lz = az + (bz - az) * t - Math.sin(dir) * side;
       const [wx, wz] = this.lw(x, z, rot, lx, lz);
       const k = rng.range(0.4, 0.5);
-      this.stepStones.push({ x: wx, z: wz, y: this.ground(wx, wz) - 0.36 * k * 0.62, r: rot + dir + rng.range(-0.35, 0.35), k });
+      this.inst('props', 'stepStones', wx, this.ground(wx, wz) - 0.36 * k * 0.62, wz, rot + dir + rng.range(-0.35, 0.35), k);
     }
   }
 
-  buildStepStones() {
-    const list = this.stepStones || [];
-    const parts = list.length ? assets.parts('props', 'stepStones') : null;
-    if (!parts) return;
-    const m = new THREE.Matrix4(), q = new THREE.Quaternion(), p = new THREE.Vector3(), sc = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0);
-    for (const part of parts) {
-      const im = new THREE.InstancedMesh(part.geometry, part.material, list.length);
-      list.forEach((st, i) => { m.compose(p.set(st.x, st.y, st.z), q.setFromAxisAngle(up, st.r), sc.setScalar(st.k)); im.setMatrixAt(i, m); });
-      im.receiveShadow = true; im.castShadow = false; im.computeBoundingSphere();
-      this.group.add(im);
+  // Fill a market stall with scanned goods. kind: fruit | orchard | cooked | fish | meat | butcher
+  dressStall(x, z, rot, baskets, kind, seed) {
+    const rng = new Rng(seed * 31 + 7);
+    const put = this.dresser(x, z, rot, this.ground(x, z, 3, 3));
+    const F = (key) => assets.has('food', key);
+    // a heap in a basket: a few items of one kind sitting in/above the rim
+    const heap = ([bx, by, bz, br], key, n, drop = 0.07) => {
+      for (let i = 0; i < n; i++) {
+        const a = rng.range(0, Math.PI * 2), r = Math.sqrt(rng.next()) * br * 0.7;
+        // heaped above the rim: lower layer at the rim, later items stacked on top toward the centre
+        const layer = i / n, rr = r * (1 - layer * 0.6);
+        put('food', key, bx + Math.cos(a) * rr, by - drop * 0.3 + layer * 0.09, bz + Math.sin(a) * rr, rng.range(0, 6.28), rng.range(0.9, 1.1), null, [rng.range(-0.4, 0.4), rng.range(-0.4, 0.4)]);
+      }
+    };
+    // goods hung from the front pole
+    const hang = (keys, n) => {
+      for (let i = 0; i < n; i++) {
+        const key = rng.pick(keys);
+        const sz = assets.model('food', key, 0)?.size;
+        put('food', key, -1.25 + (i + 0.5) * (2.5 / n) + rng.range(-0.05, 0.05), 1.93 - (sz ? sz.y : 0.25), 1.1, rng.range(-0.4, 0.4));
+      }
+    };
+    const C = baskets.counter, Ft = baskets.foot;
+    if (kind === 'fruit' || kind === 'orchard') {
+      const counter = kind === 'fruit' ? ['apple', 'pear', 'apple', 'pear'] : ['grapes', 'walnut', 'hazelnut', 'grapes'];
+      C.forEach((b, i) => { const k = counter[i]; if (F(k)) heap(b, k, k === 'grapes' ? 3 : k === 'walnut' || k === 'hazelnut' ? 22 : 12, k === 'grapes' ? 0.02 : 0.07); });
+      Ft.forEach((b, i) => { const k = i === 1 ? 'melon' : kind === 'fruit' ? 'apple' : 'pear'; if (F(k)) heap(b, k, k === 'melon' ? 4 : 16, 0.1); });
+    } else if (kind === 'cooked') {
+      C.forEach(([bx, by, bz], i) => {
+        if (F('plate_wood')) put('food', 'plate_wood', bx, by + 0.005, bz, 0, 1.0);
+        const k = ['fowl', 'bread', 'joint', 'bun'][i];
+        if (F(k)) for (let j = 0; j < (k === 'bun' ? 5 : k === 'bread' ? 2 : 1); j++) put('food', k, bx + rng.range(-0.06, 0.06), by + 0.025 + j * 0.02, bz + rng.range(-0.06, 0.06), rng.range(0, 6.28));
+      });
+      Ft.forEach((b) => F('bread') && heap(b, 'bread', 5, 0.12));
+    } else if (kind === 'fish') {
+      if (F('trough')) put('food', 'trough', 0, 0.91, 0.7, 0, 1.0);
+      C.forEach(([bx, by, bz]) => { if (F('fish')) for (let j = 0; j < 3; j++) put('food', 'fish', bx + rng.range(-0.08, 0.08), by + 0.04 + j * 0.03, bz + rng.range(-0.12, 0.12), rng.range(1.2, 1.9)); });
+      Ft.forEach((b) => F('fish') && heap(b, 'fish', 6, 0.12));
+    } else if (kind === 'meat' || kind === 'butcher') {
+      const pig = kind === 'butcher' && F('roast_pig');
+      if (pig) put('food', 'roast_pig', 0, 0.91, 0.72, rng.range(-0.08, 0.08), 0.95);
+      C.forEach(([bx, by, bz], i) => { if (pig && (i === 1 || i === 2)) return; const k = ['meat', 'meat', 'joint', 'meat'][i]; if (F(k)) put('food', k, bx, by, bz, rng.range(0, 6.28), 1, i + seed); });
+      if (F('knife')) put('food', 'knife', pig ? 0.75 : 0.35, 0.92, 0.42, 0.3);
+      if (F('sausage') || F('meat')) hang(['sausage', 'sausage', 'meat'].filter(F), kind === 'butcher' ? 7 : 5);
+      Ft.forEach((b) => F('sausage') && heap(b, 'sausage', 3, 0.12));
+    }
+  }
+
+  // Lay a feast on a table frame (top at 0.7 m): plates of roast fowl and joints, bowls, bread and cups.
+  dressTable(x, z, rot, w, d, seed, feast = false) {
+    const rng = new Rng(seed * 17 + 3);
+    const put = this.dresser(x, z, rot, this.ground(x, z, w, d));
+    const top = 0.7, F = (k) => assets.has('food', k);
+    if (feast && F('roast_pig')) {
+      if (F('trough')) put('food', 'trough', 0, top, 0, 0, 1.15);
+      put('food', 'roast_pig', 0, top + 0.03, 0, rng.range(-0.1, 0.1), 0.95);
+    } else {
+      for (const sx of [-1, 1]) {
+        const px = sx * w * 0.24;
+        if (F('plate_dark')) put('food', 'plate_dark', px, top, 0, 0, 1.1);
+        const k = rng.pick(['fowl', 'joint', 'meat']);
+        if (F(k)) put('food', k, px, top + 0.02, 0, rng.range(0, 6.28), 0.9);
+      }
+      if (F('bread')) put('food', 'bread', 0, top, -d * 0.2, rng.range(0, 6.28));
+      if (F('grapes')) put('food', 'grapes', 0, top, d * 0.2, rng.range(0, 6.28));
+    }
+    // bowls and cups along both long sides
+    for (const sz of [-1, 1]) for (const sx of [-1, 1]) {
+      const bx = sx * w * 0.36, bz = sz * d * 0.34;
+      if (F('bowl')) put('food', 'bowl', bx, top, bz, rng.range(0, 6.28), 0.8);
+      if (assets.has('props', 'cup')) put('props', 'cup', bx + sx * -0.16, top, bz, rng.range(0, 6.28), 1);
+    }
+    if (F('knife')) put('food', 'knife', w * 0.08, top, d * 0.36, 1.3);
+  }
+
+  tilePile(fx, fz, frot, lx, lz, yaw = 0) {
+    const [wx, wz] = this.lw(fx, fz, frot, lx, lz);
+    this.inst('props', 'roofTiles', wx, this.ground(wx, wz, 1.4, 1.4) - 0.04, wz, frot + yaw);
+    this.world.colliders.addCircle(wx, wz, 0.75, { kind: 'prop' });
+  }
+
+  buildInstances() {
+    const m = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), p = new THREE.Vector3(), sc = new THREE.Vector3();
+    for (const [k, list] of this.instances || []) {
+      const [section, key, v] = k.split('|');
+      const parts = assets.parts(section, key, +v);
+      if (!parts) continue;
+      const flat = section === 'props' && key === 'stepStones';
+      for (const part of parts) {
+        const im = new THREE.InstancedMesh(part.geometry, part.material, list.length);
+        list.forEach((it, i) => { m.compose(p.set(it.x, it.y, it.z), q.setFromEuler(e.set(it.tx, it.yaw, it.tz, 'YXZ')), sc.setScalar(it.s)); im.setMatrixAt(i, m); });
+        im.receiveShadow = true; im.castShadow = !flat; im.computeBoundingSphere();
+        this.group.add(im);
+      }
     }
   }
 
@@ -288,6 +392,8 @@ export class Settlements {
     house.yardGate = { x: gx, z: gz };
     // flagstone path from the door across the yard to the gate
     if (o.path !== false) this.stonePath(x, z, rot, -w * 0.18, d / 2 + 0.9, 0, zf + 0.2);
+    // spare roof tiles stacked against the gable end of some houses (own RNG stream: layout unchanged)
+    if (assets.has('props', 'roofTiles') && new Rng(Math.abs(Math.floor(x * 7 - z * 11)) + 3).chance(0.35)) this.tilePile(x, z, rot, w / 2 + 1.0, -d / 2 + 1.0, Math.PI / 2);
     return house;
   }
 
@@ -471,6 +577,7 @@ export class Settlements {
     for (const [dx, dz] of [[-44, -5.5], [-36, -5.5]]) {
       const tb = this.site(cx + dx, cz + dz, 0, 1.6, 0.8);
       table(tb, 1.6, 0.8);
+      this.dressTable(cx + dx, cz + dz, 0, 1.6, 0.8, dx);
       this.collide(cx + dx, cz + dz, 1.6, 0.8);
     }
     this.spot('tavernTable', cx - 36, cz - 4.3);
@@ -499,7 +606,9 @@ export class Settlements {
       const x = i < 6 ? mx - 16 + (i % 3) * 16 : mx - 8 + (i % 3) * 16, z = mz + row * 9;
       const rot = row < 0 ? 0 : Math.PI;
       const st = this.site(x, z, rot, 3, 3);
-      stall(st, stallColors[i % 6]);
+      const kind = assets.has('food', 'apple') ? ['fruit', 'cooked', 'fish', 'orchard', null, 'meat'][i % 6] : null;
+      const baskets = stall(st, stallColors[i % 6], !kind || (kind === 'fruit' || kind === 'orchard' ? false : 'bare'));
+      if (kind) this.dressStall(x, z, rot, baskets, kind, i);
       jars(st, 2, i + 3);
       this.collide(x, z, 3.4, 2.8, rot);
       const [sx, sz] = this.lw(x, z, rot, 0, -0.6);
@@ -638,6 +747,7 @@ export class Settlements {
     this.spot('zhangFeiHall', hall.door.x, hall.door.z + 1);
     this.place('tiled', mx - 14, mz + 6, Math.PI / 2, { w: 9, d: 5, gable: true, id: 'zf_west' });
     this.place('farmhouse', mx + 14, mz + 7, -Math.PI / 2, { w: 8, d: 5, id: 'zf_storehouse' });
+    if (assets.has('props', 'roofTiles')) { this.tilePile(mx + 14, mz + 7, -Math.PI / 2, 5.4, -1.2, 0.3); this.tilePile(mx + 14, mz + 7, -Math.PI / 2, 5.6, 0.6, -0.2); }
     const wt = this.site(mx + 17, mz - 13, 0, 4, 4);
     watchtower(wt, { levels: 3, base: 3.8 });
     this.collide(mx + 17, mz - 13, 4.6, 4.6);
@@ -646,7 +756,9 @@ export class Settlements {
     // butcher's stall & wine jars outside the gate
     const bx = mx - 9, bz = mz + d / 2 + 5;
     const st = this.site(bx, bz, 0, 3, 3);
-    stall(st, 0x6a2a1a);
+    const butcher = assets.has('food', 'meat');
+    const bb = stall(st, 0x6a2a1a, butcher ? 'bare' : true);
+    if (butcher) this.dressStall(bx, bz, 0, bb, 'butcher', 40);
     jars(st, 3, 77);
     this.collide(bx, bz, 3.4, 2.8);
     this.spot('butcherStall', bx, bz - 0.6 + 1.8, Math.PI);
@@ -666,6 +778,8 @@ export class Settlements {
     // a few mats/tables around the altar for the oath feast
     const t1 = this.site(ox - 3.5, oz + 2, Math.PI / 2, 1.6, 0.8); table(t1, 1.6, 0.8);
     const t2 = this.site(ox + 3.5, oz + 2, Math.PI / 2, 1.6, 0.8); table(t2, 1.6, 0.8);
+    this.dressTable(ox - 3.5, oz + 2, Math.PI / 2, 1.6, 0.8, 1, true);
+    this.dressTable(ox + 3.5, oz + 2, Math.PI / 2, 1.6, 0.8, 2);
     this.collide(ox - 3.5, oz + 2, 0.8, 1.6); this.collide(ox + 3.5, oz + 2, 0.8, 1.6);
   }
 
