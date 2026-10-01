@@ -246,7 +246,8 @@ export class Heightfield {
       for (let z = Math.floor(st.z - hd - 10); z <= st.z + hd + 10; z++) for (let x = Math.floor(st.x - hw - 10); x <= st.x + hw + 10; x++) {
         const dx = Math.max(0, Math.abs(x - st.x) - hw), dz = Math.max(0, Math.abs(z - st.z) - hd);
         const d = Math.hypot(dx, dz) + 6 * this.noise2.noise(x / 14, z / 14);
-        let v = (1 - smoothstep(-6, 8, d)) * inner;
+        // walled towns are packed earth right up to the walls; villages fade out at their edges
+        let v = (1 - smoothstep(-6, 8, d - (st.type === 'walledTown' ? 12 : 0))) * inner;
         const patch = this.noise.noise(x / 9, z / 9) * 0.5 + 0.5;
         v *= st.type === 'walledTown' ? 0.95 : 0.35 + 0.65 * patch;
         if (v > 0) setMax(x + 0.5, z + 0.5, 2, v * 255);

@@ -3,6 +3,8 @@ import * as THREE from 'three';
 import { Tex } from './TextureGen.js';
 import { assets } from '../core/Assets.js';
 
+const mix = (a, b, t) => a + (b - a) * t;
+
 export class Terrain {
   constructor(hf, scene, quality = 1) {
     this.hf = hf;
@@ -40,6 +42,7 @@ export class Terrain {
       tLitterR: { value: assets.texture('litter', 'roughness') },
       tMud: { value: assets.texture('mud') },
       tMudN: { value: assets.texture('mud', 'normal') },
+      tTown: { value: Tex.packedEarth() },
     };
     const defines = {};
     if (this.quality >= 2) defines.DETAIL_NORMALS = '';
@@ -59,7 +62,7 @@ export class Terrain {
 varying vec3 vWPos;
 varying vec3 vWNorm;
 uniform sampler2D tGrass, tDry, tLoess, tRock, tField, tRoad, tLitter, tMask, tWet;
-uniform sampler2D tLitterN, tLitterR, tMud, tMudN;
+uniform sampler2D tLitterN, tLitterR, tMud, tMudN, tTown;
 // partial-derivative blend of a tangent-space normal onto another, by weight
 vec3 blendN(vec3 a, vec3 b, float w) {
   b = normalize(mix(vec3(0.0, 0.0, 1.0), b, w));
@@ -99,13 +102,19 @@ vec3 tex2(sampler2D t, vec2 p){
   vec3 col = mix(grass, dry, dryAmt * 0.45);
   float bare = smoothstep(0.7, 0.9, n2 * 0.7 + n3 * 0.3) * 0.35;
   col = mix(col, loess, bare);
-  // high altitude: sparser, rockier soil
-  float alt = smoothstep(45.0, 90.0, vWPos.y + n1 * 12.0);
-  col = mix(col, mix(dry, loess, 0.5), alt * 0.6);
+  // hills: under the hillside woods the ground turns to dark leaf litter and moss
+  float alt = smoothstep(30.0, 60.0, vWPos.y + n1 * 12.0);
+  float wood = alt * smoothstep(0.42, 0.68, n1 * 0.7 + n2 * 0.3);
+  col = mix(col, litter * vec3(0.78, 0.84, 0.7), wood * 0.7);
+  wLitter = max(wLitter, wood * 0.7);
+  col = mix(col, mix(grass, dry, 0.35) * 0.92, alt * (1.0 - wood) * 0.35);
   col = mix(col, litter, m.a * 0.85);
-  wLitter = m.a * 0.85;
+  wLitter = max(wLitter, m.a * 0.85);
   col = mix(col, field, m.g);
-  col = mix(col, loess * vec3(0.95,0.93,0.9), m.b * 0.9);
+  vec3 town = mix(texture2D(tTown, wp * 0.24).rgb, texture2D(tTown, wp * 0.061 + 0.4).rgb, 0.3);
+  town = mix(town, loess * vec3(0.95, 0.93, 0.9), 0.25 + 0.3 * n2);
+  col = mix(col, town, m.b * 0.92);
+  float wTown = m.b * 0.92 * (1.0 - m.r);
   col = mix(col, road, m.r);
   wLitter *= (1.0 - m.g) * (1.0 - m.b * 0.9) * (1.0 - m.r);
   // rock on steep slopes
@@ -153,6 +162,14 @@ vec3 tex2(sampler2D t, vec2 p){
   #ifdef HAS_MUD_N
     tn = blendN(tn, texture2D(tMudN, wp * 0.21).xyz * 2.0 - 1.0, wMud);
   #endif
+    // packed earth: pebbles and ruts in relief
+    if (wTown > 0.02) {
+      vec2 tu = wp * 0.24; float e2 = 0.004;
+      float t0 = dot(texture2D(tTown, tu).rgb, vec3(0.333));
+      float tx = dot(texture2D(tTown, tu + vec2(e2, 0.0)).rgb, vec3(0.333));
+      float ty = dot(texture2D(tTown, tu + vec2(0.0, e2)).rgb, vec3(0.333));
+      tn = blendN(tn, vec3((t0 - tx) * 6.0, (t0 - ty) * 6.0, 1.0), wTown);
+    }
     // rock faces: relief from the rock texture's own luminance (finite differences, mip-filtered)
     if (rk > 0.01) {
       float e = 0.006;
@@ -235,8 +252,11 @@ vec3 tex2(sampler2D t, vec2 p){
         if (r === 0) h = hf.getHeight(Math.max(-hf.half, Math.min(hf.half, x)), Math.max(-hf.half, Math.min(hf.half, z))) - 2;
         if (r === segR) h = -40;
         pos.push(x, h, z);
-        const c = 0.28 + 0.18 * ridge;
-        col.push(c * 0.9, c * 0.98, c * 0.82);
+        // dark forest on the flanks, paler rock and meadow toward the crests
+        const crest = Math.min(1, Math.max(0, (h - 60) / 120));
+        const fr = 0.5 + 0.5 * n.fbm(x / 300, z / 300, 3);
+        const forest = (1 - crest) * (fr > 0.42 ? 1 : 0.55);
+        col.push(mix(0.2, 0.42, crest) * (1 - forest * 0.45), mix(0.26, 0.4, crest) * (1 - forest * 0.25), mix(0.14, 0.32, crest) * (1 - forest * 0.4));
       }
     }
     for (let r = 0; r < segR; r++) for (let a = 0; a < segA; a++) {
@@ -248,7 +268,18 @@ vec3 tex2(sampler2D t, vec2 p){
     g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
     g.setIndex(idx);
     g.computeVertexNormals();
-    const m = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1, color: 0x8a8a6a });
+    const m = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1, color: 0xffffff });
+    // canopy speckle so the far forests have texture before the haze takes them
+    m.onBeforeCompile = (sh) => {
+      sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vHP;').replace('#include <worldpos_vertex>', '#include <worldpos_vertex>\nvHP = (modelMatrix * vec4(transformed,1.0)).xyz;');
+      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', `#include <common>
+varying vec3 vHP;
+float hh(vec2 p){ return fract(sin(dot(p, vec2(127.1,311.7))) * 43758.5453); }
+float hn(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.0-2.0*f); return mix(mix(hh(i),hh(i+vec2(1,0)),f.x), mix(hh(i+vec2(0,1)),hh(i+vec2(1,1)),f.x), f.y); }`)
+        .replace('#include <color_fragment>', `#include <color_fragment>
+  float sp = hn(vHP.xz * 0.09) * 0.6 + hn(vHP.xz * 0.33) * 0.4;
+  diffuseColor.rgb *= 0.78 + 0.42 * sp;`);
+    };
     const mesh = new THREE.Mesh(g, m);
     mesh.receiveShadow = false;
     mesh.name = 'horizon';

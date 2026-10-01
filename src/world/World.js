@@ -22,6 +22,7 @@ export class World {
     this.hf = new Heightfield(this.region);
     onProgress('Raising the earth…', 0.3);
     this.terrain = new Terrain(this.hf, this.scene, engine.quality);
+    engine.atmosBase = this.hf.region.baseHeight ?? 10;
     this.water = new Water(this.hf, this.scene);
     this.sky = new SkySystem(engine);
     onProgress('Building villages and walls…', 0.45);

@@ -51,5 +51,13 @@ export function materials() {
     ground: std({ map: Tex.loess(), color: 0xd0c0a0 }),
     vcol: std({ vertexColors: true, roughness: 0.9 }),
   };
+  // surface relief from each texture's own shading: tiles, thatch straws, wood grain, mortar
+  const relief = { plaster: 0.6, rammed: 2.6, mudbrick: 1.0, brick: 1.6, wood: 1.1, darkwood: 1.1, roofTile: 2.2, thatch: 2.4, stone: 1.8, straw: 2.0, ground: 1.0, door: 0.8 };
+  for (const [k, sc] of Object.entries(relief)) {
+    const m = M[k];
+    if (!m?.map) continue;
+    m.bumpMap = m.map;
+    m.bumpScale = sc;
+  }
   return M;
 }

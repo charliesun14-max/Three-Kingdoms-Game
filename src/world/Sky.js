@@ -171,6 +171,22 @@ export class SkySystem {
     this.dayFactor = day;
     this.nightFactor = night;
     this.engine.setSun?.(this.sunDir, day * (1 - ov * 0.85) * (1 - this.weather.rain * 0.8));
+    // atmosphere: fog takes the horizon colour, haze the sky's blue, and it all thickens with weather
+    // matched to what the sky dome itself shows at the horizon, so far hills melt into the sky
+    const lum = lerp(0.05, 0.92, day) * (1 - ov * 0.25);
+    this._fogC = (this._fogC || new THREE.Color()).copy(fc).multiplyScalar(lum * 0.8);
+    // distant ranges settle into a blue that stays darker than the sky behind them
+    this._hazeC = (this._hazeC || new THREE.Color()).copy(hor).lerp(zen, 0.5).multiplyScalar(lum * 0.62);
+    this._sunC = (this._sunC || new THREE.Color()).copy(sunCol).multiplyScalar(lum * 0.9 * (1 - ov * 0.7));
+    const base = this.engine.atmosBase ?? 0;
+    this.engine.setAtmosphere?.({
+      uSunDir: this.sunDir, uSunCol: this._sunC, uFogCol: this._fogC, uHazeCol: this._hazeC,
+      uDensity: 0.0007 * (1 + ov * 1.6 + this.weather.rain * 2.0 + golden * 0.3 + night * 0.5),
+      uFalloff: 0.03, uBaseY: base,
+      uMistY: base + 9 + 8 * (1 - day) + 4 * golden, uMist: 0.0026 * (0.35 + 0.9 * (1 - day) + 0.35 * golden + ov * 0.6),
+      uHaze: 0.00026 * (1 + ov * 0.8),
+    });
+    if (this.engine.atmos) scene.fog.density *= 0.35; // the post pass does most of the fogging now
     this.updateEnv(hour);
   }
 
@@ -215,18 +231,25 @@ function makeSkyDome() {
         // mie glow + sun disk
         col += uSunCol * (pow(mu, 8.0) * 0.25 + pow(mu, 64.0) * 0.6) * (1.0 - uOvercast * 0.7);
         col += uSunCol * smoothstep(0.9996, 0.99985, mu) * 20.0 * (1.0 - uOvercast);
-        // clouds on a virtual plane
-        if (d.y > 0.01) {
-          vec2 cp = d.xz / (d.y + 0.08) * 1.4 + vec2(uTime * 0.004, uTime * 0.0015);
-          float c = fbm(cp * 1.3);
-          float cov = mix(0.56, 0.3, uOvercast);
-          float cloud = smoothstep(cov, cov + 0.28, c) * smoothstep(0.01, 0.2, d.y);
-          float shade = fbm(cp * 1.3 + normalize(uSun).xz * 0.06);
-          vec3 lit = mix(uHorizon * 1.15 + uSunCol * 0.35, uSunCol * 0.9 + 0.25, pow(mu, 4.0) * 0.5);
-          vec3 dark = uHorizon * 0.55 + uZenith * 0.2;
-          vec3 cc = mix(lit, dark, smoothstep(0.35, 0.8, shade - c + 0.5) * 0.8);
+        // cumulus on a virtual plane: domain-warped shapes, self-shadowed toward the sun, bright rims
+        if (d.y > 0.0) {
+          vec2 cp = d.xz / (d.y + 0.12) * 1.1 + vec2(uTime * 0.004, uTime * 0.0015);
+          vec2 w = vec2(fbm(cp * 0.55 + 3.1), fbm(cp * 0.55 - 1.7));
+          vec2 q = cp * 1.2 + w * 0.9;
+          float c = fbm(q);
+          float cov = mix(0.53, 0.27, uOvercast);
+          float dens = smoothstep(cov, cov + 0.17, c);
+          float cloud = dens * smoothstep(0.0, 0.14, d.y);
+          vec2 sd = normalize(uSun.xz + vec2(1e-4)) * 0.075;
+          float occ = 0.0;
+          for (int i = 1; i <= 3; i++) occ += smoothstep(cov, cov + 0.22, fbm(q + sd * float(i) * 1.6));
+          float light = exp(-occ * 0.85);
+          vec3 amb = mix(uZenith, uHorizon, 0.65) * 0.95 + 0.04;
+          vec3 cc = amb * mix(0.55, 0.85, dens) + (uSunCol * 1.15 + 0.22) * light * 0.95;
+          cc += uSunCol * pow(mu, 10.0) * (1.0 - dens) * 1.8;
+          cc = mix(cc, uHorizon * 1.05, (1.0 - smoothstep(0.0, 0.18, d.y)) * 0.6); // far clouds melt into the haze
           cc = mix(cc, vec3(0.03, 0.035, 0.05), uNight * 0.92);
-          col = mix(col, cc, cloud * 0.92);
+          col = mix(col, cc, cloud * 0.96);
         }
         gl_FragColor = vec4(col, 1.0);
       }`,

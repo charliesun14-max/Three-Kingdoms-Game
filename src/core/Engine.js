@@ -90,6 +90,78 @@ const RaysShader = {
     }`,
 };
 
+// Depth-based atmosphere: height fog (exponential with altitude), valley mist banks that drift,
+// aerial perspective toward a blue haze, and warm in-scattering toward the sun.
+const AtmosShader = {
+  uniforms: {
+    tDiffuse: { value: null },
+    tDepth: { value: null },
+    uProjInv: { value: new THREE.Matrix4() },
+    uViewInv: { value: new THREE.Matrix4() },
+    uCam: { value: new THREE.Vector3() },
+    uSunDir: { value: new THREE.Vector3(0, 1, 0) },
+    uSunCol: { value: new THREE.Color(1, 0.9, 0.7) },
+    uFogCol: { value: new THREE.Color(0.6, 0.7, 0.8) },
+    uHazeCol: { value: new THREE.Color(0.45, 0.58, 0.75) },
+    uDensity: { value: 0.0026 },
+    uFalloff: { value: 0.018 },
+    uBaseY: { value: 0 },
+    uMistY: { value: 25 },
+    uMist: { value: 0.006 },
+    uHaze: { value: 0.00055 },
+    uTime: { value: 0 },
+    uDebug: { value: 0 },
+  },
+  vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
+  fragmentShader: `
+    uniform float uDebug;
+    uniform sampler2D tDiffuse, tDepth;
+    uniform mat4 uProjInv, uViewInv;
+    uniform vec3 uCam, uSunDir, uSunCol, uFogCol, uHazeCol;
+    uniform float uDensity, uFalloff, uBaseY, uMistY, uMist, uHaze, uTime;
+    varying vec2 vUv;
+    float h21(vec2 p){ return fract(sin(dot(p, vec2(127.1,311.7))) * 43758.5453); }
+    float vn(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.0-2.0*f);
+      return mix(mix(h21(i),h21(i+vec2(1,0)),f.x), mix(h21(i+vec2(0,1)),h21(i+vec2(1,1)),f.x), f.y); }
+    void main(){
+      vec4 c = texture2D(tDiffuse, vUv);
+      // one invalid pixel (a degenerate normal somewhere) would otherwise be smeared into a block by bloom
+      if (any(isnan(c.rgb)) || any(isinf(c.rgb))) c.rgb = vec3(0.0);
+      c.rgb = min(c.rgb, vec3(64.0));
+      float d = texture2D(tDepth, vUv).x;
+      if (uDebug > 0.5 && uDebug < 1.5) { gl_FragColor = vec4(vec3(pow(d, 64.0)), 1.0); return; }
+      if (d >= 0.999999) { gl_FragColor = c; return; } // sky dome draws its own haze
+      vec4 v = uProjInv * vec4(vUv * 2.0 - 1.0, d * 2.0 - 1.0, 1.0);
+      v /= v.w;
+      vec3 wp = (uViewInv * v).xyz;
+      vec3 rd = wp - uCam; float t = length(rd); rd /= t;
+      // analytic exponential height fog
+      float ro = uCam.y - uBaseY, k = rd.y * uFalloff;
+      float path = abs(k) < 1e-4 ? t : (1.0 - exp(-t * k)) / k;
+      float od = uDensity * exp(-ro * uFalloff) * path;
+      // valley mist: a few samples along the ray where it runs below the mist line
+      float tm = min(t, 900.0);
+      float mist = 0.0;
+      for (int i = 0; i < 6; i++) {
+        float s = (float(i) + 0.5) / 6.0;
+        vec3 p = uCam + rd * tm * s * s;
+        float below = 1.0 - smoothstep(uMistY - 18.0, uMistY, p.y);
+        float n = vn(p.xz * 0.006 + vec2(uTime * 0.004, uTime * 0.002)) * 0.65 + vn(p.xz * 0.019 - uTime * 0.006) * 0.35;
+        mist += below * smoothstep(0.35, 0.75, n);
+      }
+      od += uMist * mist / 6.0 * tm;
+      // aerial perspective: everything far away takes on the sky's blue
+      float haze = 1.0 - exp(-t * uHaze);
+      float fog = 1.0 - exp(-od);
+      float sunAmt = pow(max(dot(rd, uSunDir), 0.0), 6.0);
+      vec3 inscat = mix(uFogCol, uSunCol, sunAmt * 0.65);
+      vec3 col = mix(c.rgb, uHazeCol * mix(1.0, 1.6, sunAmt), haze * 0.85);
+      col = mix(col, inscat, clamp(fog, 0.0, 0.97));
+      if (uDebug > 1.5) { gl_FragColor = vec4(fog, haze, fract(t / 100.0), 1.0); return; }
+      gl_FragColor = vec4(col, c.a);
+    }`,
+};
+
 // Default quality from the GPU: Ultra on RTX / RX 6000+ class cards, High on older discrete GPUs.
 export function detectQuality() {
   try {
@@ -123,9 +195,18 @@ export class Engine {
 
     // HDR, multisampled frame for the post chain (the canvas' own antialiasing doesn't reach it)
     const pr = this.renderer.getPixelRatio();
-    const rt = new THREE.WebGLRenderTarget(window.innerWidth * pr, window.innerHeight * pr, { type: THREE.HalfFloatType, samples: quality >= 3 ? 4 : quality >= 1 ? 2 : 0 });
+    const msaa = new URLSearchParams(location.search).get('msaa'); // ?msaa=0 for software-rendered tests
+    const rt = new THREE.WebGLRenderTarget(window.innerWidth * pr, window.innerHeight * pr, { type: THREE.HalfFloatType, samples: msaa !== null ? +msaa : quality >= 3 ? 4 : quality >= 1 ? 2 : 0 });
+    // both ping-pong targets carry depth, so the atmosphere pass can rebuild world positions
+    rt.depthTexture = new THREE.DepthTexture(rt.width, rt.height, THREE.UnsignedIntType);
     this.composer = new EffectComposer(this.renderer, rt);
+    this.composer.renderTarget2.depthTexture = new THREE.DepthTexture(rt.width, rt.height, THREE.UnsignedIntType);
     this.composer.addPass(new RenderPass(this.scene, this.camera));
+    // atmosphere straight after the scene, while its depth is the frame's own
+    if (quality >= 1) {
+      this.atmos = new ShaderPass(AtmosShader);
+      this.composer.addPass(this.atmos);
+    }
     if (quality >= 2) {
       this.ao = new AOPass(this.scene, this.camera, window.innerWidth, window.innerHeight);
       this.ao.updateGtaoMaterial({ radius: 0.7, distanceExponent: 1.4, thickness: 1.2, scale: 1.1, samples: quality >= 3 ? 16 : 12 });
@@ -170,8 +251,28 @@ export class Engine {
     u.uVis.value = v.z < 1 ? vis * (1 - THREE.MathUtils.smoothstep(off, 1.0, 1.8)) : 0;
   }
 
+  // per-frame atmosphere settings (colours in linear HDR, densities per metre)
+  setAtmosphere(o) {
+    if (!this.atmos) return;
+    const u = this.atmos.uniforms;
+    for (const [k, v] of Object.entries(o)) {
+      if (v && v.isColor) u[k].value.copy(v);
+      else if (v && v.isVector3) u[k].value.copy(v);
+      else u[k].value = v;
+    }
+  }
+
   render(dt) {
     this.grade.uniforms.uTime.value += dt;
+    if (this.atmos) {
+      const u = this.atmos.uniforms, cam = this.camera;
+      u.uProjInv.value.copy(cam.projectionMatrixInverse);
+      u.uViewInv.value.copy(cam.matrixWorld);
+      u.uCam.value.copy(cam.position);
+      u.uTime.value += dt;
+      // the pass reads whichever target the scene was just drawn into
+      this.atmos.uniforms.tDepth.value = this.composer.readBuffer.depthTexture;
+    }
     this.composer.render(dt);
   }
 }

@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { Rng } from '../core/Rng.js';
 import { buildTree, treeMaterials, allTreeUniforms } from './TreeFactory.js';
-import { smoothPolyline } from '../core/MathUtil.js';
+import { smoothPolyline, smoothstep } from '../core/MathUtil.js';
 import { assets } from '../core/Assets.js';
 import { Tex } from './TextureGen.js';
 
@@ -22,7 +22,7 @@ export class Vegetation {
     this.lodNear = world.engine.quality >= 3 ? 420 : 260;
   }
 
-  canPlace(x, z, clearance = 2.5, allowSettlement = false) {
+  canPlace(x, z, clearance = 2.5, allowSettlement = false, maxSlope = 0.45) {
     const hf = this.hf;
     if (Math.abs(x) > hf.half - 4 || Math.abs(z) > hf.half - 4) return false;
     if (hf.maskAt(x, z, 0) > 0.05 || hf.maskAt(x + clearance, z, 0) > 0.05 || hf.maskAt(x - clearance, z, 0) > 0.05
@@ -35,7 +35,7 @@ export class Vegetation {
       const gi = Math.round(hf.toGrid(x)), gj = Math.round(hf.toGrid(z));
       if (hf.riverDist[hf.idx(gi, gj)] < wr.width / 2 + 2) return false;
     }
-    if (hf.slope(x, z) > 0.45) return false;
+    if (hf.slope(x, z) > maxSlope) return false;
     for (const c of this.world.colliders.query(x, z, clearance + 1)) {
       if (c.type === 'box') {
         const dx = x - c.x, dz = z - c.z;
@@ -91,11 +91,27 @@ export class Vegetation {
         this.addTree(rng.pick(f.mix), px, pz, rng.range(0.8, 1.2));
       }
     }
+    // Wooded hills: mountainsides carry pine and mixed forest in broad patches, thinning toward
+    // the ridges, so the hills read as forested ranges rather than bare grass
+    const q = this.world.engine.quality;
+    const dens = q >= 3 ? 1 : q >= 2 ? 0.8 : q >= 1 ? 0.55 : 0.3;
+    const base = R.baseHeight ?? 10;
+    for (let z = -hf.half; z < hf.half; z += 8) for (let x = -hf.half; x < hf.half; x += 8) {
+      const px = x + rng.range(0, 8), pz = z + rng.range(0, 8);
+      const alt = hf.getHeight(px, pz) - base;
+      if (alt < 16) continue;
+      const patch = 0.5 + 0.5 * hf.noise2.fbm(px / 260, pz / 260, 3);
+      const p = smoothstep(16, 34, alt) * smoothstep(0.3, 0.62, patch) * (1 - smoothstep(150, 210, alt)) * dens;
+      if (rng.next() > p) continue;
+      if (!this.canPlace(px, pz, 1.0, false, 0.72)) continue;
+      const sp = alt > 60 || rng.next() < 0.55 ? 'pine' : rng.pick(['elm', 'elm', 'poplar']);
+      this.addTree(sp, px, pz, rng.range(0.8, 1.25));
+    }
     // Meadow trees and shrubs
     for (let z = -hf.half; z < hf.half; z += 26) for (let x = -hf.half; x < hf.half; x += 26) {
       const px = x + rng.range(0, 26), pz = z + rng.range(0, 26);
       const alt = hf.getHeight(px, pz);
-      if (rng.next() < 0.16 && this.canPlace(px, pz, 3)) {
+      if (rng.next() < 0.16 * (q >= 2 ? 1.6 : 1) && this.canPlace(px, pz, 3)) {
         const sp = alt > 60 ? 'pine' : rng.pick(['elm', 'elm', 'poplar', 'jujube', 'poplar', 'pine']);
         this.addTree(sp, px, pz, rng.range(0.8, 1.15));
       }
@@ -104,6 +120,18 @@ export class Vegetation {
       const px = x + rng.range(0, 11), pz = z + rng.range(0, 11);
       const forest = hf.maskAt(px, pz, 3);
       if (rng.next() < 0.07 + forest * 0.25 && this.canPlace(px, pz, 1.2)) this.addTree('shrub', px, pz, rng.range(0.7, 1.4));
+    }
+    // Groves: small stands of elm, jujube and poplar scattered over the plains
+    const groves = q >= 2 ? 26 : q >= 1 ? 16 : 8;
+    for (let k = 0; k < groves; k++) {
+      const gx = rng.range(-hf.half * 0.9, hf.half * 0.9), gz = rng.range(-hf.half * 0.9, hf.half * 0.9);
+      const sp = rng.pick(['elm', 'elm', 'jujube', 'poplar', 'mulberry']);
+      const n = rng.int(6, 16);
+      for (let i = 0; i < n; i++) {
+        const a = rng.range(0, Math.PI * 2), r = rng.range(0, 22);
+        const px = gx + Math.cos(a) * r, pz = gz + Math.sin(a) * r;
+        if (this.canPlace(px, pz, 2.2)) this.addTree(rng.next() < 0.8 ? sp : 'shrub', px, pz, rng.range(0.85, 1.2));
+      }
     }
     // River willows
     if (hf.riverPts) {
@@ -442,7 +470,7 @@ ${HEIGHT_SAMPLER}`)
   float sx = hAt(wxz + vec2(1.0,0.0)) - hAt(wxz - vec2(1.0,0.0));
   float sz = hAt(wxz + vec2(0.0,1.0)) - hAt(wxz - vec2(0.0,1.0));
   float slope = length(vec2(sx, sz)) * 0.5;
-  float dens = 1.0 - m.r * 1.4 - m.g * 1.2 - m.b * 1.05 - m.a * 0.45 - smoothstep(0.35, 0.7, wet) - smoothstep(0.45, 0.9, slope);
+  float dens = 1.0 - m.r * 1.4 - m.g * 1.2 - smoothstep(0.12, 0.4, m.b) * 1.3 - m.a * 0.45 - smoothstep(0.35, 0.7, wet) - smoothstep(0.45, 0.9, slope);
   float patchN = gvn(wxz * 0.05) * 0.7 + gvn(wxz * 0.21) * 0.3;
   dens *= smoothstep(0.18, 0.5, patchN + 0.12) * uDensity;
   float dist = length(wxz - uCam.xz);
