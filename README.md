@@ -55,6 +55,23 @@ A desktop browser with WebGL2 and a dedicated GPU is recommended. You can change
 - Archery: hold to draw and release to shoot. Arrows fly ballistically, and AI archers form up behind the line.
 - Villagers follow daily schedules (farming, market, tavern, sleep) and use A* navigation. The towns have guards, merchants, a blacksmith and an innkeeper.
 
+**Town life** (in the spirit of *Red Dead Redemption 2*)
+- People at work, each with their tools: sweepers with brooms, porters with carrying poles, sack-carriers at the granary, washerwomen at the well, woodcutters, market women with baskets, fishermen on the riverbank, children chasing through the market.
+- Street performers: a juggler with an audience, a qin player whose music you can hear across the market, and a storyteller with listeners who tells the old tales (the Feast at Hongmen, Han Xin, the Cowherd and the Weaver Girl, Jing Ke). You can tip them or pay for a story.
+- People speak: hawkers cry their wares, passers-by stop to gossip, people complain about the rain, guards call the curfew, and everyone reacts when you walk the streets with a drawn blade.
+- **Q** greets anyone and **T** antagonizes them. Greet the same person on three different days and they become friendly. Rank and reputation change how people answer you. Cowards cower, guards warn you, and tough men pick a fight: a non-lethal fistfight with a cheering crowd, which ends when one man yields.
+- Law and crime: crimes are only reported if someone witnesses them, and bounties are kept per region. Guards chase and confront you, and you can pay, bribe, talk your way out, go to jail (days pass and the gaolers take a cut) or resist and be hunted. Sneak (**C**) behind someone to pick their pocket, or rob a merchant's stall when they look away. Stealing a horse from a dealer is a crime.
+- Things to do:
+  - games: touhu 投壺 (pitching arrows into a pot), arm-wrestling the tavern strongman, betting on cockfights 鬥雞, liubo dice, and the archery butts in the garrison yard and army camps;
+  - paid work: carrying grain for the granary foreman, splitting firewood;
+  - fishing: buy a bamboo rod and fish at any water's edge, from crucian carp up to the legendary golden carp;
+  - services: hot meals at the inn (well fed: faster stamina), the barber (choose your beard), the tailor (commission a robe in any dye and cut), and the horse dealer outside the south gate;
+  - charity and prayer: alms for beggars, who know the street rumours, and incense at the Earth God shrine (blessing: luck at games and slow healing).
+- Hunting:
+  - prey: sika deer (stags carry antlers), wild boar that charge, hares, and pheasants that burst into flight;
+  - a single tiger haunts the most remote hills of each region;
+  - animals sense you less when you sneak; skin your kills for meat, hides and trophies, roast them at a campfire, and sell the pelts.
+
 **RPG systems**
 - Skills that improve with use (Strength, Agility, Vitality, Blade, Polearm, Unarmed, Defence, Speech, Leadership, Stealth).
 - Merit (軍功), Virtue (德) and Renown (名望).

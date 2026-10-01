@@ -87,6 +87,7 @@ export class Combat {
       cands.push({ c, d, a });
     }
     if (!cands.length) {
+      if (attacker === g.player && g.wildlife?.meleeHit(attacker, reach, arc, (W.dmg.slash + W.dmg.stab + W.dmg.blunt) * 0.9 * (1 + attacker.stats.str * 0.02))) return;
       g.events.emit('whiff', attacker);
       return;
     }

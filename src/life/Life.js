@@ -7,6 +7,7 @@ import { BARKS, pick } from './barkLines.js';
 import { randomName } from '../entities/Population.js';
 import { randomAppearance } from '../entities/Humanoid.js';
 import { Activities } from './Activities.js';
+import { Wildlife } from './Wildlife.js';
 
 const PENTA = [0, 2, 4, 7, 9];
 
@@ -22,6 +23,7 @@ export class Life {
     this.nextAmbient = 3;
     this.nextChat = 5;
     this.act = new Activities(this);
+    try { game.wildlife = new Wildlife(game); } catch (e) { console.warn('wildlife', e); game.wildlife = null; }
     for (const s of game.world.region.settlements) {
       try {
         if (s.type === 'walledTown') this.buildTown(s);
@@ -220,6 +222,7 @@ export class Life {
     if (!p) return;
     for (const f of this.anims) f(t, dt);
     this.act.update(dt);
+    this.g.wildlife?.update(dt);
     // the qin player's music carries across the market
     for (const m of this.musicians) {
       const c = m.c, d = c.distTo(p);
@@ -317,5 +320,5 @@ export class Life {
   // service and performer conversations
   talk(c) { return this.act.talk(c); }
   interact(it) { return this.act.interact(it); }
-  extraInteractables() { return this.act.dynamic(); }
+  extraInteractables() { return [...this.act.dynamic(), ...(this.g.wildlife?.carcasses() || [])]; }
 }

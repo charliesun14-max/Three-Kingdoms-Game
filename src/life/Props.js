@@ -141,7 +141,7 @@ export const PROPS = {
 export const HOLD = {
   broom: { dir: [0.1, -0.75, 0.65] },
   rod: { dir: [0, 0.55, 0.84] },
-  axe: { dir: 'forearm' },
+  axe: { dir: 'tool' },
   cup: { dir: [0, 1, 0] },
 };
 
@@ -149,5 +149,5 @@ export const HOLD = {
 export const WEAR = {
   pole: { bone: 'chest', pos: [-0.17, 0.2, 0.0], rot: [0, 0, 0] },
   basket: { bone: 'chest', pos: [0, -0.27, 0.28], rot: [0, 0, 0] },
-  sack: { bone: 'chest', pos: [-0.12, 0.28, -0.08], rot: [0, 0.3, 0.2] },
+  sack: { bone: 'chest', pos: [-0.25, 0.25, -0.2], rot: [0.25, 0.5, 0.45], scale: 0.8 },
 };

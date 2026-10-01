@@ -47,6 +47,7 @@ export const ITEMS = {
   hareFur: { type: 'trade', name: 'Hare Fur', cn: '兔毛', desc: 'Soft fur for collars and writing brushes.', price: 14, weight: 0.2 },
   pheasant: { type: 'use', name: 'Pheasant', cn: '雉', desc: 'A plump wild pheasant.', price: 16, weight: 1, use: { food: 18 } },
   feathers: { type: 'trade', name: 'Pheasant Plumes', cn: '雉羽', desc: 'Long tail feathers, worn on the helmets of generals.', price: 26, weight: 0.1 },
+  tigerHide: { type: 'trade', name: 'Tiger Skin', cn: '虎皮', desc: 'The striped hide of a mountain tiger. Generals sit upon such skins; kings pay a fortune for them.', price: 900, weight: 6 },
   incense: { type: 'trade', name: 'Incense', cn: '香', desc: 'Sticks of incense for the shrine.', price: 3, weight: 0.05 },
   // quest items
   notice: { type: 'quest', name: 'Recruitment Proclamation', cn: '榜文', desc: 'Governor Liu Yan calls for volunteers to fight the Yellow Turbans.', price: 0, weight: 0 },

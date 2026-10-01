@@ -737,6 +737,7 @@ export class Game {
       else if (pz2 === 'walk') state.speed = 1.5;
       else if (pz2 === 'run') state.speed = 5;
       else if (pz2 === 'block') { state.stance = 'combat'; state.blocking = true; m.setDrawn(true); }
+      else if (pz2.includes('+')) { const [ps, lp, pr] = pz2.split('+'); if (ps) m.anim.setPose(ps); if (lp) m.anim.setLoop(lp); if (pr) m.setProp(pr); }
       else if (pz2) m.anim.setPose(pz2);
       this.showcase.push({ model: m, state });
     });

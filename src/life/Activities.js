@@ -269,6 +269,7 @@ export class Activities {
       case 'fish': return this.fish(it);
       case 'pickSack': return this.pickSack();
       case 'dropSack': return this.dropSack();
+      case 'skin': return this.g.wildlife.skin(it.data.a);
       default: return false;
     }
   }

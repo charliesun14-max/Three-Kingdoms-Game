@@ -98,7 +98,7 @@ export class CharacterModel {
     const mesh = PROPS[kind]();
     this.propMesh = mesh;
     const w = WEAR[kind];
-    if (w) { this.bones[w.bone].add(mesh); mesh.position.set(...w.pos); mesh.rotation.set(...w.rot); }
+    if (w) { this.bones[w.bone].add(mesh); mesh.position.set(...w.pos); mesh.rotation.set(...w.rot); if (w.scale) mesh.scale.setScalar(w.scale); }
     else { this.bones.handR.add(mesh); mesh.position.set(0, -0.07, 0.02); }
   }
 
@@ -125,7 +125,11 @@ export class CharacterModel {
       if (hold && this.sheathed) {
         this.root.updateMatrixWorld(true);
         const hr = this.bones.handR;
-        if (hold.dir === 'forearm') { hr.getWorldPosition(_a); this.bones.elbowR.getWorldPosition(_b); _dir.subVectors(_a, _b).normalize(); }
+        if (hold.dir === 'forearm' || hold.dir === 'tool') {
+          hr.getWorldPosition(_a); this.bones.elbowR.getWorldPosition(_b); _dir.subVectors(_a, _b).normalize();
+          // a tool's haft crosses the fist at right angles to the forearm, in the plane of the swing
+          if (hold.dir === 'tool') { _co.set(-1, 0, 0).applyQuaternion(this.root.getWorldQuaternion(_qr)); _dir.crossVectors(_co, _dir).normalize(); }
+        }
         else _dir.set(...hold.dir).normalize().applyQuaternion(this.root.getWorldQuaternion(_qr));
         _qw.setFromUnitVectors(_up, _dir);
         hr.getWorldQuaternion(_qh);

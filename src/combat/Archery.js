@@ -43,6 +43,7 @@ export class Archery {
         if (dist < tg.r) { a.pos.copy(hit).addScaledVector(tg.normal, 0.05); a.mesh.position.copy(a.pos); a.stuck = true; a.life = 30; g.life?.act.onTargetHit(tg, dist); struck = true; break; }
       }
       if (struck) continue;
+      if (g.wildlife?.arrowHit(a.pos, a.owner, a.dmg)) { a.stuck = true; a.life = Math.min(a.life, 0.1); continue; }
       // hit characters
       for (const c of g.entities.nearby(a.pos, 3)) {
         if (c === a.owner || c.dead || !(g.combat.hostile(a.owner, c) || a.owner.combat.target === c)) continue;
