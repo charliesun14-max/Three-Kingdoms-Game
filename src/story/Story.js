@@ -129,6 +129,9 @@ export class Story {
     this.objHandlers.clear();
     this.mission = id;
     g.setFlag('mission', id);
+    // Missions inside a chapter assume the chapter's region; a restore or debug jump may start elsewhere.
+    const home = { 1: 'zhuo', 2: 'guangzong', 3: 'hulao', 4: 'xuzhou' }[m.chapter];
+    if (home && g.regionId !== home && !/_start$|^m1_/.test(id)) await g.travel(home, null, {});
     if (m.setup) await m.setup(this, g, o);
     this._setupRes?.();
     g.save(true);

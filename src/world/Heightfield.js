@@ -250,6 +250,12 @@ export class Heightfield {
         const patch = this.noise.noise(x / 9, z / 9) * 0.5 + 0.5;
         v *= st.type === 'walledTown' ? 0.95 : 0.35 + 0.65 * patch;
         if (v > 0) setMax(x + 0.5, z + 0.5, 2, v * 255);
+        // the main cross streets of a walled town are worn into the ground like roads
+        if (st.type === 'walledTown' && Math.abs(x - st.x) < hw && Math.abs(z - st.z) < hd) {
+          const e = Math.min(Math.abs(x + 0.5 - st.x), Math.abs(z + 0.5 - st.z)) + 1.2 * this.noise.noise(x / 5, z / 5);
+          const sv = 1 - smoothstep(4.5, 6.5, e);
+          if (sv > 0) setMax(x + 0.5, z + 0.5, 0, sv * 200);
+        }
       }
     }
     // Forest floor (A)

@@ -82,12 +82,14 @@ export class CameraController {
     if (lock) {
       const tx = lock.pos.x - p.pos.x, tz = lock.pos.z - p.pos.z;
       const want = Math.atan2(tx, tz);
-      this.yaw = dampAngle(this.yaw, want, 5, dt);
-      this.pitch = lerp(this.pitch, 0.22, 1 - Math.exp(-3 * dt));
+      this.yaw = dampAngle(this.yaw, want - 0.1, 5, dt);
+      this.pitch = lerp(this.pitch, 0.17, 1 - Math.exp(-3 * dt));
     }
     // shoulder offset to the right
     const right = new THREE.Vector3(-Math.cos(this.yaw), 0, Math.sin(this.yaw));
-    const off = p.combat.drawn ? 0.55 : 0.4;
+    // locked on, swing wider over the shoulder so the foe isn't hidden behind your own back
+    this.offS = lerp(this.offS ?? 0.4, lock ? 0.95 : p.combat.drawn ? 0.55 : 0.4, 1 - Math.exp(-5 * dt));
+    const off = this.offS;
     const pivot = head.clone().addScaledVector(right, off);
     const cp = Math.cos(this.pitch), sp = Math.sin(this.pitch);
     const back = new THREE.Vector3(-Math.sin(this.yaw) * cp, sp, -Math.cos(this.yaw) * cp);
@@ -113,7 +115,7 @@ export class CameraController {
     const k = 1 - Math.exp(-14 * dt);
     this.pos.lerp(target, k);
     if (this.pos.distanceTo(target) > 8) this.pos.copy(target);
-    const lookAt = lock ? head.clone().lerp(new THREE.Vector3(lock.pos.x, lock.pos.y + 1.3, lock.pos.z), 0.35) : pivot.clone().addScaledVector(back, -4);
+    const lookAt = lock ? head.clone().lerp(new THREE.Vector3(lock.pos.x, lock.pos.y + 1.3, lock.pos.z), 0.6) : pivot.clone().addScaledVector(back, -4);
     this.look.lerp(lookAt, 1 - Math.exp(-12 * dt));
     this.cam.position.copy(this.pos);
     if (this.shake > 0) {

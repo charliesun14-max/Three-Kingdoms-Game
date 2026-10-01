@@ -34,6 +34,13 @@ A desktop browser with WebGL2 and a dedicated GPU is recommended. You can change
 - Seven hand-laid regions built from procedural heightfields: Zhuo Commandery (Lousang, the walled county town of Zhuo, Zhang Fei's peach garden, the Juma River, Daxing Mountain), the siege of Guangzong, Hulao Pass, Xiaopei, the Red Cliffs on the Yangtze, Xuchang with its abdication altar, and a generated field-battle map.
 - Han architecture: thatched mud-plaster farmhouses, tiled timber halls with curved hip roofs and upturned eaves, rammed-earth city walls with gate towers and corner towers, multi-storey watchtowers like those in Han tomb models, yamen compounds, market stalls, army camps with palisades, Yellow Turban camps, and tower ships.
 - A day-night cycle with a cloud-filled sky, fog, stars and moon, animated river water, wind-blown GPU grass and millet, trees with leaf cards (pine, elm, poplar, willow, peach blossom, and the great mulberry of Lousang), firelight, and lanterns that glow at night.
+- Weather that drifts between clear, overcast and rain. Rain darkens and wets the ground and brings its own sound.
+- Horses: bay, chestnut, black, grey, white and Red Hare, with walk, trot and gallop gaits. There are no stirrups, as in the Han. Press H to whistle for your horse.
+
+**Sound** (all synthesised at runtime)
+- Guqin music built from Karplus-Strong plucked strings, with slides and vibrato ornaments (吟猱) and an occasional xiao flute. The music changes to war drums in battle and quietens under dialogue.
+- Formant-synthesised voices: effort grunts, pain, death cries and battle shouts, pitched per character.
+- Surroundings: wind, the river, town crowds, fire, birdsong and crickets, dogs, cockcrow at dawn, the smith's hammer, summer cicadas, rain, hoofbeats on road and grass, bowstrings and arrow strikes, and the clash of a battle in the distance.
 
 **Characters and combat**
 - Skinned procedural humanoids in Han dress: cross-collared robes closing to the right (右衽), wide sleeves, leg wraps, lamellar armour, helmets and official caps. Historical figures have their traditional looks: Guan Yu's red face, green headscarf and long beard; Zhang Fei's tiger whiskers; Liu Bei's large ears.
@@ -44,6 +51,8 @@ A desktop browser with WebGL2 and a dedicated GPU is recommended. You can change
   - knockback, dodges, and a limit on how many enemies attack you at once (attack tokens)
   - enemies who flee or surrender (you choose to spare, rob or execute them)
 - Real Han weapons: the ring-pommel dao, jian, spear, ji halberd, the Green Dragon Crescent Blade, the Serpent Spear and the Sky Piercer. Polearms are held two-handed using IK.
+- Characters turn their heads toward whoever is speaking, the enemy they're fighting, or a passer-by who catches their eye.
+- Archery: hold to draw and release to shoot. Arrows fly ballistically, and AI archers form up behind the line.
 - Villagers follow daily schedules (farming, market, tavern, sleep) and use A* navigation. The towns have guards, merchants, a blacksmith and an innkeeper.
 
 **RPG systems**

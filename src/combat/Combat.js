@@ -21,7 +21,7 @@ const HOSTILE = {
 export class Combat {
   constructor(game) {
     this.game = game;
-    this.blood = new BloodFX(game.engine.scene);
+    this.blood = new BloodFX(game.engine.scene, (x, z) => game.world.groundHeight(x, z));
     this.sparks = new SparkFX(game.engine.scene);
     this.trails = new Trails(game.engine.scene);
     this.archery = new Archery(game);
@@ -195,6 +195,17 @@ export class Combat {
 }
 
 // ---- particles -----------------------------------------------------------------
+let _dot = null;
+function dotTexture() {
+  if (_dot) return _dot;
+  const c = document.createElement('canvas'); c.width = c.height = 32;
+  const g = c.getContext('2d'), gr = g.createRadialGradient(16, 16, 0, 16, 16, 16);
+  gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.45, 'rgba(255,255,255,0.9)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = gr; g.fillRect(0, 0, 32, 32);
+  _dot = new THREE.CanvasTexture(c);
+  return _dot;
+}
+
 class ParticlePool {
   constructor(scene, n, color, size, additive = false) {
     this.n = n;
@@ -204,7 +215,7 @@ class ParticlePool {
     this.i = 0;
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.BufferAttribute(this.pos, 3));
-    this.mat = new THREE.PointsMaterial({ color, size, transparent: true, depthWrite: false, blending: additive ? THREE.AdditiveBlending : THREE.NormalBlending, sizeAttenuation: true });
+    this.mat = new THREE.PointsMaterial({ color, size, map: dotTexture(), alphaTest: 0.05, transparent: true, depthWrite: false, blending: additive ? THREE.AdditiveBlending : THREE.NormalBlending, sizeAttenuation: true });
     this.points = new THREE.Points(g, this.mat);
     this.points.frustumCulled = false;
     scene.add(this.points);
@@ -217,9 +228,13 @@ class ParticlePool {
     this.life[k] = life;
   }
   update(dt, gravity = 9) {
+    const gh = this.ground;
     for (let k = 0; k < this.n; k++) {
       if (this.life[k] <= 0) continue;
       this.life[k] -= dt;
+      if (gh && this.vel[k * 3 + 1] < 0 && this.pos[k * 3 + 1] < gh(this.pos[k * 3], this.pos[k * 3 + 2]) + 0.02) { // landed: rest on the ground briefly
+        this.vel[k * 3] = this.vel[k * 3 + 1] = this.vel[k * 3 + 2] = 0; this.life[k] = Math.min(this.life[k], 0.6); continue;
+      }
       this.vel[k * 3 + 1] -= gravity * dt;
       this.pos[k * 3] += this.vel[k * 3] * dt;
       this.pos[k * 3 + 1] += this.vel[k * 3 + 1] * dt;
@@ -230,13 +245,40 @@ class ParticlePool {
   }
 }
 class BloodFX extends ParticlePool {
-  constructor(scene) { super(scene, 600, 0x6a0806, 0.06); }
+  constructor(scene, ground) {
+    super(scene, 600, 0x4a0504, 0.035);
+    this.scene = scene; this.ground = ground;
+    this.pools = [];
+    this.poolGeo = new THREE.CircleGeometry(1, 20).rotateX(-Math.PI / 2);
+    // irregular rim so a pool doesn't read as a perfect disc
+    const pa = this.poolGeo.attributes.position;
+    for (let i = 1; i < pa.count; i++) { const k = 0.75 + 0.25 * Math.sin(i * 2.3) * Math.cos(i * 1.1); pa.setX(i, pa.getX(i) * k); pa.setZ(i, pa.getZ(i) * (0.8 + 0.2 * k)); }
+    this.poolMat = new THREE.MeshStandardMaterial({ color: 0x2a0302, roughness: 0.25, metalness: 0.1, transparent: true, opacity: 0.85, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 });
+  }
   burst(p, n, yaw) {
     const v = new THREE.Vector3();
     for (let i = 0; i < n; i++) {
-      v.set(Math.sin(yaw) * 2 + (Math.random() - 0.5) * 3, Math.random() * 2.5, Math.cos(yaw) * 2 + (Math.random() - 0.5) * 3);
-      this.spawn(p, v, 0.5 + Math.random() * 0.5);
+      const sp = 1 + Math.random() * 2.2;
+      v.set(Math.sin(yaw) * sp + (Math.random() - 0.5) * 2, Math.random() * 2.2, Math.cos(yaw) * sp + (Math.random() - 0.5) * 2);
+      this.spawn(p, v, 0.6 + Math.random() * 0.6);
     }
+  }
+  clearPools() { for (const p of this.pools) this.scene.remove(p.m); this.pools = []; }
+  // spreading pool of blood under a body
+  pool(x, z, size = 1) {
+    if (!this.ground) return;
+    const m = new THREE.Mesh(this.poolGeo, this.poolMat);
+    m.position.set(x, this.ground(x, z) + 0.025, z);
+    m.rotation.y = Math.random() * 6.28;
+    m.scale.setScalar(0.05);
+    m.renderOrder = 1;
+    this.scene.add(m);
+    this.pools.push({ m, t: 0, size: size * (0.6 + Math.random() * 0.4) });
+    if (this.pools.length > 40) { const o = this.pools.shift(); this.scene.remove(o.m); }
+  }
+  update(dt) {
+    super.update(dt);
+    for (const p of this.pools) if (p.t < 1) { p.t = Math.min(1, p.t + dt / 9); p.m.scale.setScalar(p.size * (1 - (1 - p.t) ** 2)); }
   }
 }
 class SparkFX extends ParticlePool {

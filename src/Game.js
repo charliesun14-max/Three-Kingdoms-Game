@@ -29,6 +29,7 @@ import { Inventory, itemDef, ARMORS, ITEMS } from './rpg/Items.js';
 import { Rng } from './core/Rng.js';
 import { Autopilot } from './debug/Autopilot.js';
 import { Riding } from './entities/Riding.js';
+import { BattleKit } from './story/BattleKit.js';
 import { Horse } from './entities/Horse.js';
 import { Weather } from './world/Weather.js';
 
@@ -80,6 +81,7 @@ export class Game {
 
   async loadRegion(id, overrides = null) {
     if (this.world) this.disposeWorld();
+    this.combat?.blood.clearPools();
     const def = overrides ? { ...REGIONS[id], ...overrides } : id;
     this.world = new World(this.engine, def, (msg, pr) => this.ui.loading(msg, pr));
     this.ui.loading('Charting paths…', 0.8);
@@ -251,6 +253,17 @@ export class Game {
       }
       pl.draw(true);
       this.playerCtl.lockTarget = this.playerCtl.pickLock();
+    }
+    if (p.has('battle')) {
+      // debug field battle: a Han line around the player and a rebel host charging from ahead
+      const n = +p.get('battle') || 16, pl = this.player, fy = pl.yaw;
+      const kit = new BattleKit(this, 77);
+      const fx = Math.sin(fy), fz = Math.cos(fy);
+      const han = kit.line('han', n, pl.pos.x - fx * 2, pl.pos.z - fz * 2, fy, { aggro: 40 });
+      const foe = kit.wave(p.get('foeKind') || 'yellowTurban', Math.round(n * 1.2), pl.pos.x + fx * 30, pl.pos.z + fz * 30, { x: pl.pos.x, z: pl.pos.z }, { aggro: 60 });
+      kit.charge(han, { x: pl.pos.x + fx * 16, z: pl.pos.z + fz * 16 });
+      kit.charge(foe, { x: pl.pos.x, z: pl.pos.z });
+      pl.draw(true);
     }
     if (p.has('attackAt')) {
       const [frame, dir] = p.get('attackAt').split(':');
@@ -518,6 +531,7 @@ export class Game {
 
   // ------------------------------------------------------------------ deaths & crimes
   onDeath(c, killer) {
+    setTimeout(() => { if (c.dead && this.combat) this.combat.blood.pool(c.pos.x - Math.sin(c.yaw) * 0.5, c.pos.z - Math.cos(c.yaw) * 0.5, 0.9); }, 900);
     if (c === this.player) {
       this.state = 'dead';
       this.input.exitLock();

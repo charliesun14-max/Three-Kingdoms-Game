@@ -76,10 +76,10 @@ export class Settlements {
     if (collideR) this.world.colliders.addCircle(x, z, collideR, { kind: 'prop' });
   }
 
-  addBanner(x, z, text, colors = {}, h = 6.5, rot = 0) {
-    const B = this.site(x, z, rot, 0.5, 0.5);
+  addBanner(x, z, text, colors = {}, h = 6.5, rot = 0, base = null) {
+    const B = base === null ? this.site(x, z, rot, 0.5, 0.5) : this.B.frame(x, base, z, rot) || this.B;
     banner(B, h);
-    const y = this.ground(x, z);
+    const y = base ?? this.ground(x, z);
     const tex = bannerTexture(text, colors.bg, colors.fg, colors.border);
     const g = new THREE.PlaneGeometry(1.1, 2.2, 8, 12);
     g.translate(0.62, -1.1, 0);
@@ -99,7 +99,7 @@ export class Settlements {
     m.castShadow = true;
     this.group.add(m);
     this.banners.push(uni);
-    this.world.colliders.addCircle(x, z, 0.15, { kind: 'pole' });
+    if (base === null) this.world.colliders.addCircle(x, z, 0.15, { kind: 'pole' });
     return m;
   }
 
@@ -409,12 +409,13 @@ export class Settlements {
     this.region.places.zhuoMarket = { x: mx, z: mz };
     const stallColors = [0xa04028, 0x405a78, 0x7a6a40, 0x6a3a5a, 0x3a6a4a, 0x9a7a30];
     const stallSpots = [];
-    for (let i = 0; i < 6; i++) {
-      const row = i < 3 ? -1 : 1;
-      const x = mx - 16 + (i % 3) * 16, z = mz + row * 9;
+    for (let i = 0; i < 12; i++) {
+      // stalls 0-5 keep their historic places; 6-11 fill the gaps between them
+      const row = (i < 6 ? i < 3 : i < 9) ? -1 : 1;
+      const x = i < 6 ? mx - 16 + (i % 3) * 16 : mx - 8 + (i % 3) * 16, z = mz + row * 9;
       const rot = row < 0 ? 0 : Math.PI;
       const st = this.site(x, z, rot, 3, 3);
-      stall(st, stallColors[i]);
+      stall(st, stallColors[i % 6]);
       jars(st, 2, i + 3);
       this.collide(x, z, 3.4, 2.8, rot);
       const [sx, sz] = this.lw(x, z, rot, 0, -0.6);
@@ -447,7 +448,31 @@ export class Settlements {
       for (const [rx, rz, rw, rd] of reserved) if (Math.abs(x - rx) < (w + rw) / 2 && Math.abs(z - rz) < (d + rd) / 2) return false;
       return Math.abs(x - cx) < hw - wallT / 2 - w / 2 - 2 && Math.abs(z - cz) < hd - wallT / 2 - d / 2 - 2;
     };
-    const plotW = 16, plotD = 17;
+    // Shopfronts lining the main cross streets, eaves facing the street
+    const shopSigns = ['布', '米', '鹽', '酒', '茶', '漆', '陶', '肉', '餅', '油'];
+    let sf = 0;
+    for (const alongX of [true, false]) for (const side of [-1, 1]) {
+      const half = alongX ? hw : hd;
+      for (let t = -half + 16; t < half - 14; t += rng.range(10.5, 12.5)) {
+        if (Math.abs(t) < 13) continue;
+        const w = rng.range(8, 10), d = rng.range(5, 6);
+        const x = alongX ? cx + t : cx + side * (7.5 + d / 2), z = alongX ? cz + side * (7.5 + d / 2) : cz + t;
+        const bw = alongX ? w : d, bd = alongX ? d : w;
+        if (!free(x, z, alongX ? w + 1 : d, alongX ? d : w + 1)) continue;
+        const rot = alongX ? (side < 0 ? 0 : Math.PI) : (side < 0 ? Math.PI / 2 : -Math.PI / 2);
+        const kind = rng.next();
+        if (kind < 0.25) this.place('twoStorey', x, z, rot, { w: Math.max(w, 9), d: 6, id: `front_${sf}` });
+        else this.place('tiled', x, z, rot, { w, d, gable: kind < 0.7, id: `front_${sf}` });
+        reserved.push([x, z, bw + 2, bd + 2]);
+        if (rng.chance(0.5)) {
+          const [sx, sz] = this.lw(x, z, rot, w / 2 - 1.2, d / 2 + 0.15);
+          this.addSign(sx, this.ground(x, z) + 2.2, sz, rot, rng.pick(shopSigns));
+        }
+        if (rng.chance(0.35)) { const [a, b] = this.lw(x, z, rot, -w / 2 + 1.5, d / 2 + 1.2); this.prop(jars, a, b, 0, 0.6, rng.int(1, 3), sf + 90); }
+        sf++;
+      }
+    }
+    const plotW = 15, plotD = 16;
     let n = 0;
     for (let lz = -hd + 12; lz < hd - 8; lz += plotD) {
       for (let lx = -hw + 12; lx < hw - 8; lx += plotW) {
@@ -711,7 +736,13 @@ export class Settlements {
     }
     this.spot(`${s.id}_east`, cx + 14, cz, -Math.PI / 2);
     this.spot(`${s.id}_west`, cx - 14, cz, Math.PI / 2);
-    for (const z of [-9, 9]) this.addBanner(cx + 7.5, cz + z, s.banner || '董', s.bannerColors || { bg: '#2a1a2a', fg: '#e8d8a8', border: '#6a1a3a' }, 7);
+    const bc = s.bannerColors || { bg: '#2a1a2a', fg: '#e8d8a8', border: '#6a1a3a' };
+    for (const z of [-9, 9]) this.addBanner(cx + 7.5, cz + z, s.banner || '董', bc, 7);
+    // a forest of standards along the battlements, as the defenders would show their strength
+    for (let z = -half + 14; z < half - 10; z += 15) {
+      if (Math.abs(z) < 18) continue;
+      this.addBanner(cx + wallT / 2 - 1.2, cz + z + this.rng.range(-2, 2), z % 2 ? (s.banner || '董') : '呂', bc, this.rng.range(4.5, 6), 0, gy + wallH);
+    }
   }
   openGate() {
     if (this.gateBlock) this.world.colliders.remove(this.gateBlock);

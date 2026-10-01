@@ -328,7 +328,7 @@ ${HEIGHT_SAMPLER}`)
   float sx = hAt(wxz + vec2(1.0,0.0)) - hAt(wxz - vec2(1.0,0.0));
   float sz = hAt(wxz + vec2(0.0,1.0)) - hAt(wxz - vec2(0.0,1.0));
   float slope = length(vec2(sx, sz)) * 0.5;
-  float dens = 1.0 - m.r * 1.4 - m.g * 1.2 - m.b * 0.85 - m.a * 0.45 - smoothstep(0.35, 0.7, wet) - smoothstep(0.45, 0.9, slope);
+  float dens = 1.0 - m.r * 1.4 - m.g * 1.2 - m.b * 1.05 - m.a * 0.45 - smoothstep(0.35, 0.7, wet) - smoothstep(0.45, 0.9, slope);
   float patchN = gvn(wxz * 0.05) * 0.7 + gvn(wxz * 0.21) * 0.3;
   dens *= smoothstep(0.18, 0.5, patchN + 0.12) * uDensity;
   float dist = length(wxz - uCam.xz);

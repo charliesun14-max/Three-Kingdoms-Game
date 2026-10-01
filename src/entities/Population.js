@@ -111,11 +111,12 @@ export class Population {
     }
     // merchants at stalls
     const stalls = g.world.settlements.marketStalls;
-    const shopKinds = ['grocer', 'tailor', 'salt', 'grocer', 'apothecary', 'salt'];
+    const shopKinds = ['grocer', 'tailor', 'salt', 'grocer', 'apothecary', 'salt', 'butcher', 'grocer', 'tailor', 'salt', 'grocer', 'apothecary'];
     stalls.forEach((st, i) => {
       const kind = shopKinds[i];
-      const nm = randomName(rng, i === 1);
-      this.spawn({ ...nm, role: 'merchant', faction: 'civilian', x: st.x, z: st.z, yaw: st.rot, appearance: randomAppearance(i === 1 ? 'woman' : 'merchant', rng), shop: kind,
+      const fem = i === 1 || i === 8 || i === 10;
+      const nm = randomName(rng, fem);
+      this.spawn({ ...nm, role: 'merchant', faction: 'civilian', x: st.x, z: st.z, yaw: st.rot, appearance: randomAppearance(fem ? 'woman' : 'merchant', rng), shop: kind,
         brain: { mode: 'schedule', schedule: [
           { from: 7, to: 18, x: st.x, z: st.z, act: 'talk', rot: st.rot },
           { from: 18, to: 7, x: zhuo.x + rng.range(-60, 60), z: zhuo.z + rng.range(-60, 60), act: 'sleep' },
@@ -151,6 +152,19 @@ export class Population {
           { from: 6.5, to: 12, x: S.market.x + rng.range(-25, 25), z: S.market.z + rng.range(-20, 20), act: 'wander', r: 20 },
           { from: 12, to: 18, x: zhuo.x + rng.range(-60, 60), z: zhuo.z + rng.range(-5, 5), act: 'wander', r: 30 },
           { from: 18, to: 6.5, x: home.x, z: home.z, act: 'sleep' },
+        ] } });
+    }
+    // street traffic: people going about their business along the two main streets
+    const streetPt = () => (rng.chance(0.5) ? { x: zhuo.x + rng.range(-85, 85), z: zhuo.z + rng.range(-3, 3) } : { x: zhuo.x + rng.range(-3, 3), z: zhuo.z + rng.range(-80, 80) });
+    for (let i = 0; i < 14; i++) {
+      const female = rng.chance(0.35);
+      const a = streetPt(), b = streetPt(), c = streetPt();
+      this.spawn({ ...randomName(rng, female), role: 'townsman', faction: 'civilian', x: a.x, z: a.z, appearance: randomAppearance(female ? 'woman' : rng.pick(['farmer', 'farmer', 'merchant', 'official', 'elder']), rng),
+        brain: { mode: 'schedule', schedule: [
+          { from: 6, to: 10, x: a.x, z: a.z, act: 'wander', r: 9 },
+          { from: 10, to: 14, x: b.x, z: b.z, act: 'wander', r: 9 },
+          { from: 14, to: 19, x: c.x, z: c.z, act: 'wander', r: 9 },
+          { from: 19, to: 6, x: a.x, z: a.z, act: 'sleep' },
         ] } });
     }
     // Taoist preacher of the Way of Great Peace near the market (foreshadowing)
@@ -203,7 +217,7 @@ export class Population {
             c.ai.area = { x: st.x, z: st.z, r: Math.min(st.w, st.d) * 0.35 };
           }
           const stalls = g.world.settlements.marketStalls || [];
-          const kinds = ['grocer', 'tailor', 'salt', 'grocer', 'apothecary', 'salt'];
+          const kinds = ['grocer', 'tailor', 'salt', 'grocer', 'apothecary', 'salt', 'butcher', 'grocer', 'tailor', 'salt', 'grocer', 'apothecary'];
           stalls.forEach((sp, i) => this.spawn({ ...randomName(rng), role: 'merchant', faction: 'civilian', x: sp.x, z: sp.z, yaw: sp.rot, appearance: randomAppearance('merchant', rng), shop: kinds[i], brain: { mode: 'idle' } }));
           if (S.smithy) this.spawn({ id: 'smith', name: 'Blacksmith', cn: '鐵匠', role: 'merchant', faction: 'civilian', x: S.smithy.x, z: S.smithy.z, yaw: S.smithy.rot, appearance: { ...randomAppearance('farmer', rng), bare: true, build: 1.2 }, shop: 'smith', brain: { mode: 'schedule', schedule: [{ from: 0, to: 24, x: S.smithy.x, z: S.smithy.z, act: 'hammer', rot: S.smithy.rot }] } });
           if (S.tavernDoor) this.spawn({ id: 'innkeeper', name: 'Innkeeper', cn: '掌櫃', role: 'merchant', faction: 'civilian', x: S.tavernDoor.x + 1.5, z: S.tavernDoor.z + 0.5, appearance: randomAppearance('merchant', rng), shop: 'innkeeper', brain: { mode: 'idle' } });
