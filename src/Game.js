@@ -1,6 +1,6 @@
 // Game orchestrator: boot, main loop, interactions, saving and shared helpers.
 import * as THREE from 'three';
-import { Engine } from './core/Engine.js';
+import { Engine, detectQuality } from './core/Engine.js';
 import { Input } from './core/Input.js';
 import { events } from './core/Events.js';
 import { GameTime } from './core/GameTime.js';
@@ -49,8 +49,10 @@ export class Game {
     this.params = params;
     this.settings = { sens: 1, volume: 0.8, damageTaken: 1, invertX: false, invertY: false, maxAttackers: 2 };
     try { Object.assign(this.settings, JSON.parse(localStorage.getItem('tk_settings') || '{}')); } catch { /* ignore */ }
-    const q = params.has('q') ? +params.get('q') : +(localStorage.getItem('tk_quality') ?? 1);
-    this.quality = Math.max(0, Math.min(2, isNaN(q) ? 1 : q));
+    // saved choice, else picked from the GPU (Ultra on RTX-class cards)
+    const saved = localStorage.getItem('tk_quality');
+    const q = params.has('q') ? +params.get('q') : saved !== null ? +saved : detectQuality();
+    this.quality = Math.max(0, Math.min(3, isNaN(q) ? 1 : q));
     this.events = events;
     this.clockTime = 0;
     this.flags = {};
@@ -177,7 +179,7 @@ export class Game {
     el.className = 'panel-wrap on';
     const s = this.settings;
     el.innerHTML = `<div class="panel" style="height:auto"><div class="close">✕</div><div class="body"><h2>Settings 設</h2>
-      <div class="stat"><span>Graphics quality</span><span><span class="btn" data-q="0">Low</span> <span class="btn" data-q="1">Medium</span> <span class="btn" data-q="2">High</span> (current: ${['Low', 'Medium', 'High'][this.quality]})</span></div>
+      <div class="stat"><span>Graphics quality</span><span><span class="btn" data-q="0">Low</span> <span class="btn" data-q="1">Medium</span> <span class="btn" data-q="2">High</span> <span class="btn" data-q="3">Ultra</span> (current: ${['Low', 'Medium', 'High', 'Ultra'][this.quality]})</span></div>
       <div class="stat"><span>Mouse sensitivity</span><input type="range" min="0.5" max="2" step="0.1" value="${s.sens}" id="s-sens"></div>
       <div class="stat"><span>Master volume</span><input type="range" min="0" max="1" step="0.05" value="${s.volume}" id="s-vol"></div>
       <div class="stat"><span>Difficulty</span><span><span class="btn" data-d="0.6">Story</span> <span class="btn" data-d="1">Warrior</span> <span class="btn" data-d="1.5">Hardcore</span> (×${s.damageTaken})</span></div></div></div>`;
@@ -380,6 +382,8 @@ export class Game {
     this.barks.update();
     this.inCombat = this.clockTime - (this.lastCombat ?? -99) < 6 || (this.playerCtl.lockTarget && !this.playerCtl.lockTarget.dead);
     this.cameraCtl.update(dt);
+    // debug/photo camera: window.__game.photoCam = { pos: [x,y,z], look: [x,y,z] }
+    if (this.photoCam) { const c = this.engine.camera; c.position.set(...this.photoCam.pos); c.lookAt(...this.photoCam.look); }
     const focus = this.player.pos;
     this.weather?.update(dt);
     this.world.update(dt, this.time.hour, focus);

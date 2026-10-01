@@ -1,10 +1,12 @@
 // Terrain mesh (chunked for culling) with a splat-blended standard material.
 import * as THREE from 'three';
 import { Tex } from './TextureGen.js';
+import { assets } from '../core/Assets.js';
 
 export class Terrain {
-  constructor(hf, scene) {
+  constructor(hf, scene, quality = 1) {
     this.hf = hf;
+    this.quality = quality;
     this.group = new THREE.Group();
     this.group.name = 'terrain';
     this.material = this.makeMaterial();
@@ -33,7 +35,19 @@ export class Terrain {
       uCloudT: { value: 0 },
       uCloudK: { value: 0 },
       uRockTint: { value: new THREE.Vector3(...(hf.region.rockTint || [1, 1, 1])) },
+      // optional photo-scanned layers from the asset manifest
+      tLitterN: { value: assets.texture('litter', 'normal') },
+      tLitterR: { value: assets.texture('litter', 'roughness') },
+      tMud: { value: assets.texture('mud') },
+      tMudN: { value: assets.texture('mud', 'normal') },
     };
+    const defines = {};
+    if (this.quality >= 2) defines.DETAIL_NORMALS = '';
+    if (uniforms.tLitterN.value) defines.HAS_LITTER_N = '';
+    if (uniforms.tLitterR.value) defines.HAS_LITTER_R = '';
+    if (uniforms.tMud.value) defines.HAS_MUD = '';
+    if (uniforms.tMudN.value) defines.HAS_MUD_N = '';
+    mat.defines = defines;
     this.uniforms = uniforms;
     mat.onBeforeCompile = (sh) => {
       Object.assign(sh.uniforms, uniforms);
@@ -45,6 +59,12 @@ export class Terrain {
 varying vec3 vWPos;
 varying vec3 vWNorm;
 uniform sampler2D tGrass, tDry, tLoess, tRock, tField, tRoad, tLitter, tMask, tWet;
+uniform sampler2D tLitterN, tLitterR, tMud, tMudN;
+// partial-derivative blend of a tangent-space normal onto another, by weight
+vec3 blendN(vec3 a, vec3 b, float w) {
+  b = normalize(mix(vec3(0.0, 0.0, 1.0), b, w));
+  return normalize(vec3(a.xy / max(a.z, 0.2) + b.xy / max(b.z, 0.2), 1.0));
+}
 uniform float uHalf, uSize, uSeason;
 uniform vec3 uRockTint;
 uniform float uWetness;
@@ -73,6 +93,7 @@ vec3 tex2(sampler2D t, vec2 p){
   vec3 field = texture2D(tField, wp * 0.09).rgb;
   vec3 road = texture2D(tRoad, wp * 0.16).rgb;
   vec3 litter = tex2(tLitter, wp);
+  float wLitter = 0.0, wMud = 0.0;
   // base meadow: grass patched with dry grass and bare loess
   float dryAmt = smoothstep(0.5, 0.95, n1 * 0.8 + n2 * 0.3 + uSeason * 0.5);
   vec3 col = mix(grass, dry, dryAmt * 0.45);
@@ -82,15 +103,25 @@ vec3 tex2(sampler2D t, vec2 p){
   float alt = smoothstep(45.0, 90.0, vWPos.y + n1 * 12.0);
   col = mix(col, mix(dry, loess, 0.5), alt * 0.6);
   col = mix(col, litter, m.a * 0.85);
+  wLitter = m.a * 0.85;
   col = mix(col, field, m.g);
   col = mix(col, loess * vec3(0.95,0.93,0.9), m.b * 0.9);
   col = mix(col, road, m.r);
+  wLitter *= (1.0 - m.g) * (1.0 - m.b * 0.9) * (1.0 - m.r);
   // rock on steep slopes
   float rk = smoothstep(0.22, 0.42, slope + (n3 - 0.5) * 0.12);
   col = mix(col, rock, rk);
+  wLitter *= 1.0 - rk;
   // wet banks: darker mud and sand
+#ifdef HAS_MUD
+  vec3 mud = mix(texture2D(tMud, wp * 0.21).rgb, texture2D(tMud, wp * 0.047 + 0.3).rgb, 0.35) * vec3(0.82, 0.8, 0.78);
+#else
   vec3 mud = loess * vec3(0.55, 0.52, 0.48);
+#endif
   col = mix(col, mud, wet * 0.8);
+  wMud = wet * 0.8;
+  wLitter *= 1.0 - wMud;
+  vec2 rockUv = (wp * 0.6 + vec2(0.0, vWPos.y * 0.1)) * 0.19;
   // macro variation
   col *= 0.92 + 0.16 * n1;
   col *= 1.0 - uWetness * 0.28;
@@ -104,9 +135,38 @@ vec3 tex2(sampler2D t, vec2 p){
   reflectedLight.directDiffuse *= cloudSh;
   reflectedLight.directSpecular *= cloudSh;`)
         .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
-  roughnessFactor = mix(0.95, 0.55, max(wet * 0.7, uWetness * 0.6));`);
+  roughnessFactor = mix(0.95, 0.55, max(wet * 0.7, uWetness * 0.6));
+#ifdef HAS_LITTER_R
+  roughnessFactor = mix(roughnessFactor, texture2D(tLitterR, wp * 0.19).g, wLitter * 0.8);
+#endif`)
+        .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
+#ifdef DETAIL_NORMALS
+  {
+    // tangent frame for a heightfield: u along world +X, v along world +Z
+    vec3 wn = normalize(vWNorm);
+    vec3 T = normalize(vec3(1.0, 0.0, 0.0) - wn * wn.x);
+    vec3 Bt = cross(T, wn);
+    vec3 tn = vec3(0.0, 0.0, 1.0);
+  #ifdef HAS_LITTER_N
+    tn = blendN(tn, texture2D(tLitterN, wp * 0.19).xyz * 2.0 - 1.0, wLitter);
+  #endif
+  #ifdef HAS_MUD_N
+    tn = blendN(tn, texture2D(tMudN, wp * 0.21).xyz * 2.0 - 1.0, wMud);
+  #endif
+    // rock faces: relief from the rock texture's own luminance (finite differences, mip-filtered)
+    if (rk > 0.01) {
+      float e = 0.006;
+      float h0 = dot(texture2D(tRock, rockUv).rgb, vec3(0.333));
+      float hx = dot(texture2D(tRock, rockUv + vec2(e, 0.0)).rgb, vec3(0.333));
+      float hy = dot(texture2D(tRock, rockUv + vec2(0.0, e)).rgb, vec3(0.333));
+      tn = blendN(tn, vec3((h0 - hx) * 7.0, (h0 - hy) * 7.0, 1.0), rk);
+    }
+    vec3 wN = normalize(T * tn.x + Bt * tn.y + wn * tn.z);
+    normal = normalize((viewMatrix * vec4(wN, 0.0)).xyz);
+  }
+#endif`);
     };
-    mat.customProgramCacheKey = () => 'terrainSplat';
+    mat.customProgramCacheKey = () => 'terrainSplat' + Object.keys(defines).join('');
     return mat;
   }
 

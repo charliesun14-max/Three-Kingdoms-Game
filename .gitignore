@@ -4,3 +4,4 @@ screenshots/tmp/
 *.log
 release/
 public/decoders/
+assets-src/.build/

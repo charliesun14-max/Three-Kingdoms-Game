@@ -1,5 +1,6 @@
 // A loaded region: terrain, water, sky, vegetation, settlements and colliders.
 import * as THREE from 'three';
+import { assets } from '../core/Assets.js';
 import { CHAR_LIGHT } from '../entities/Humanoid.js';
 import { REGIONS } from './regions.js';
 import { Heightfield } from './Heightfield.js';
@@ -20,7 +21,7 @@ export class World {
     onProgress('Shaping the land…', 0.1);
     this.hf = new Heightfield(this.region);
     onProgress('Raising the earth…', 0.3);
-    this.terrain = new Terrain(this.hf, this.scene);
+    this.terrain = new Terrain(this.hf, this.scene, engine.quality);
     this.water = new Water(this.hf, this.scene);
     this.sky = new SkySystem(engine);
     onProgress('Building villages and walls…', 0.45);
@@ -50,6 +51,7 @@ export class World {
   update(dt, hour, focus) {
     this.time += dt;
     this.sky.update(hour, dt, focus);
+    assets.setNight(this.sky.nightFactor ?? 0);
     const tu = this.terrain.uniforms;
     CHAR_LIGHT.uRim.value = 0.03 + 0.09 * (this.sky.dayFactor ?? 1);
     tu.uCloudT.value += dt;
