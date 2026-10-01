@@ -63,7 +63,15 @@
       {
         "file": "models/trees/pruned_d.glb"
       }
-    ]
+    ],
+    "dandelion": {
+      "file": "models/trees/gv_bush.glb",
+      "height": 0.28
+    },
+    "grassTuft": {
+      "file": "models/trees/gv_flower.glb",
+      "height": 0.75
+    }
   },
   "props": {
     "well": {
@@ -151,6 +159,20 @@
     "femaleHead": {
       "file": "models/characters/female_head.glb",
       "anchor": "origin"
+    }
+  },
+  "trees": {
+    "elm": {
+      "file": "models/trees/broadleaf.glb",
+      "height": 11
+    },
+    "mulberry": {
+      "file": "models/trees/broadleaf.glb",
+      "height": 15
+    },
+    "jujube": {
+      "file": "models/trees/broadleaf.glb",
+      "height": 6
     }
   }
 }

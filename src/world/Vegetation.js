@@ -229,16 +229,17 @@ export class Vegetation {
         // a tree model from the asset manifest: instance each of its material parts
         const parts = assets.parts('trees', sp, v);
         if (parts && parts.length) {
-          for (const lod of [0, 1]) for (const part of parts) {
+          for (const part of parts) windify(part.material);
+          for (const lod of [0]) for (const part of parts) {
             const im = new THREE.InstancedMesh(part.geometry, part.material, list.length);
             list.forEach((t, i) => { p.set(t.x, this.hf.getHeight(t.x, t.z) - 0.05, t.z); q.setFromAxisAngle(up, t.r); s.setScalar(t.s); m.compose(p, q, s); im.setMatrixAt(i, m); });
             im.castShadow = lod === 0; im.receiveShadow = true; im.computeBoundingSphere();
             if (part.material.transparent || part.material.alphaTest > 0) im.userData.noAO = true;
             (lod === 0 ? tile.lod0 : tile.lod1).add(im);
           }
-          continue;
         }
-        for (const lod of [0, 1]) {
+        // distant tiles always use the cheap procedural impostor of the species
+        for (const lod of parts && parts.length ? [1] : [0, 1]) {
           const geo = this.getTreeGeo(sp, v, lod);
           const wood = new THREE.InstancedMesh(geo.wood, mats.wood, list.length);
           const leaf = new THREE.InstancedMesh(geo.leaves, mats.leaf, list.length);
@@ -264,6 +265,11 @@ export class Vegetation {
       this.tiles.set(key, tile);
     }
     this.buildRocks();
+    // close-up ground cover from scanned plants: dandelions and seed-headed grass tufts
+    const ql = this.world.engine.quality;
+    this.details = [];
+    if (ql >= 1 && assets.has('scatter', 'grassTuft')) this.details.push(new DetailField(this.world, 'grassTuft', ql >= 3 ? 1800 : ql >= 2 ? 1200 : 600, ql >= 2 ? 48 : 34, 0.75, 1.3));
+    if (ql >= 1 && assets.has('scatter', 'dandelion')) this.details.push(new DetailField(this.world, 'dandelion', ql >= 3 ? 700 : ql >= 2 ? 480 : 240, ql >= 2 ? 40 : 28, 0.8, 1.25));
     this.grass = new GrassField(this.world);
     this.crops = new CropField(this.world);
   }
@@ -383,7 +389,77 @@ export class Vegetation {
       }
     }
     if (this.grass) this.grass.update(camPos, time);
+    for (const d of this.details || []) d.update(camPos);
+    WIND.uTime.value = time;
     if (this.crops) this.crops.update(camPos, time);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Wind sway for scanned tree models (their materials come from the asset loader).
+const WIND = { uTime: { value: 0 } };
+function windify(mat) {
+  if (!mat || mat.userData.windy) return;
+  mat.userData.windy = true;
+  mat.onBeforeCompile = (sh) => {
+    sh.uniforms.uTime = WIND.uTime;
+    sh.vertexShader = 'uniform float uTime;\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
+    {
+      vec4 ip = instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0);
+      float h = max(0.0, transformed.y);
+      float ph = ip.x * 0.13 + ip.z * 0.17;
+      float sway = sin(uTime * 1.3 + ph) * 0.6 + sin(uTime * 2.7 + ph * 1.7) * 0.25;
+      transformed.x += sway * h * h * 0.0009;
+      transformed.z += sway * 0.6 * h * h * 0.0009;
+      ${mat.alphaTest > 0 || mat.transparent ? 'transformed += normal * sin(uTime * 4.0 + position.x * 3.0 + ph) * 0.004 * h;' : ''}
+    }`);
+  };
+  mat.customProgramCacheKey = () => 'windy' + mat.uuid;
+}
+
+// Scanned ground-cover plants scattered around the camera on a world-aligned grid of cells (so they
+// stay put as you move), skipping roads, fields, towns, water and steep ground; re-laid every few metres.
+class DetailField {
+  constructor(world, key, count, radius, minS, maxS) {
+    this.world = world; this.hf = world.hf; this.radius = radius; this.key = key;
+    this.cell = Math.sqrt((Math.PI * radius * radius) / count);
+    this.minS = minS; this.maxS = maxS;
+    const parts = assets.parts('scatter', key) || [];
+    this.meshes = parts.map((p) => {
+      const im = new THREE.InstancedMesh(p.geometry, p.material, count);
+      im.count = 0; im.castShadow = false; im.receiveShadow = true; im.frustumCulled = false;
+      im.userData.noAO = true;
+      world.scene.add(im);
+      return im;
+    });
+    this.max = count; this.last = null;
+  }
+  update(cam) {
+    if (!this.meshes.length) return;
+    if (this.last && Math.hypot(cam.x - this.last.x, cam.z - this.last.z) < this.cell * 3) return;
+    this.last = { x: cam.x, z: cam.z };
+    const hf = this.hf, c = this.cell, r = this.radius;
+    const m = new THREE.Matrix4(), q = new THREE.Quaternion(), s = new THREE.Vector3(), p = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0);
+    const h = (a, b, k) => { const v = Math.sin(a * 127.1 + b * 311.7 + k * 74.7) * 43758.5453; return v - Math.floor(v); };
+    let n = 0;
+    for (let gz = Math.floor((cam.z - r) / c); gz <= (cam.z + r) / c && n < this.max; gz++) {
+      for (let gx = Math.floor((cam.x - r) / c); gx <= (cam.x + r) / c && n < this.max; gx++) {
+        const x = (gx + h(gx, gz, 1)) * c, z = (gz + h(gx, gz, 2)) * c;
+        if (Math.hypot(x - cam.x, z - cam.z) > r) continue;
+        // patchy: plants come in drifts
+        const patch = 0.5 + 0.5 * hf.noise2.noise(x / 18 + (this.key.length * 3.1), z / 18);
+        if (h(gx, gz, 3) > patch * 1.1) continue;
+        if (Math.abs(x) > hf.half - 2 || Math.abs(z) > hf.half - 2) continue;
+        if (hf.maskAt(x, z, 0) > 0.1 || hf.maskAt(x, z, 1) > 0.15 || hf.maskAt(x, z, 2) > 0.15 || hf.waterAt(x, z) !== null || hf.slope(x, z) > 0.5) continue;
+        p.set(x, hf.getHeight(x, z) - 0.02, z);
+        q.setFromAxisAngle(up, h(gx, gz, 4) * 6.283);
+        s.setScalar(this.minS + (this.maxS - this.minS) * h(gx, gz, 5));
+        m.compose(p, q, s);
+        for (const im of this.meshes) im.setMatrixAt(n, m);
+        n++;
+      }
+    }
+    for (const im of this.meshes) { im.count = n; im.instanceMatrix.needsUpdate = true; }
   }
 }
 

@@ -21,6 +21,7 @@ const POT = `${DL}/Ancient_Stone_Pot_PBR_UVW_8K-a3b0e90c/fbx/ancient-stone-pot-p
 const LAMP = `${DL}/China_lantern-25e905a6/fbx/chinalamp_extracted/ChinaLamp_Material_`;
 const TRENCH = `${DL}/Military_Trenches_Ground_Patch_Rock_S_03-4906428e/fbx/mid/military_trenches_ground_extracted/Military_Trenches_Ground_Patch_Rock_S_03_ydzkbhu_Mid_2K_`;
 const GROUND = `${DL}/Ground-fbf8a1a7/fbx/ground-house-in-the-wood_extracted/textures/Ground024_2K_`;
+const GV = `${DL}/Grass_Vegitation_Mix-e351d09f/fbx/grass-vegitation-mix_extracted/textures`;
 const CUP = `${DL}/chinese_cup-10fd1206/blender/chinese-cup_extracted/textures`;
 
 // Megascans materials exported from the village scene: MI_<name>_<id>_2K -> <name>_BaseColor.PNG etc.
@@ -60,6 +61,10 @@ const MODELS = [
   ['models/props/stone_jar.glb', 'pot.glb', 1024, () => ({ base: `${POT}BaseCol.png`, normal: `${POT}Normal.png`, orm: { g: `${POT}Roughne.png`, b: `${POT}Metalli.png` } })],
   ['models/props/stone_lantern.glb', 'lantern.glb', 1024, () => ({ base: `${LAMP}BaseColor.1001.png`, normal: `${LAMP}Normal.1001.png`, mr: `${LAMP}OcclusionRoughnessMetallic.1001.png`, ao: `${LAMP}OcclusionRoughnessMetallic.1001.png` })],
   ['models/props/cup.glb', 'cup.glb', 512, (m) => (m.endsWith('001') ? { base: `${CUP}/китай.jpg` } : null)],
+  // broadleaf tree and ground-cover plants (sources prepared as described in tools/assets/foliage.py)
+  ['models/trees/broadleaf.glb', 'veg/mobile_tree.glb', 2048, (m) => (m.includes('Leaf') ? { base: `${RAW}/veg/T_Mobile_Trees_Leaf.png`, alpha: true } : { base: `${RAW}/veg/T_Mobile_Trees_Trunk.png`, normal: `${RAW}/veg/T_Mobile_Trees_Trunk_normal.png` })],
+  ['models/trees/gv_bush.glb', 'veg/gv_bush.glb', 1024, (m) => ({ base: `${GV}/${m.replace(/\.\d+$/, '')}.png`, alpha: true })],
+  ['models/trees/gv_flower.glb', 'veg/gv_flower.glb', 1024, (m) => ({ base: `${GV}/${m.replace(/\.\d+$/, '')}.png`, alpha: true })],
   // character skin parts (skin atlases prepared by tools/assets/skin-textures.mjs)
   ['models/characters/male_head.glb', 'char/male_head_lo.glb', 2048, () => SKIN],
   ['models/characters/female_head.glb', 'char/female_head.glb', 1024, () => ({ base: `${RAW}/char/skin_female.png`, normal: `${RAW}/char/Female_3_Body_normal.png`, mr: `${RAW}/char/skin_female_orm.png` })],
@@ -113,6 +118,8 @@ for (const [out, raw, size, resolve] of MODELS) {
     const maps = resolve(mat.getName());
     if (!maps) continue;
     if (real(maps.base)) mat.setBaseColorTexture(await tex(maps.base, () => webp(maps.base, size, QUALITY.base))).setBaseColorFactor([1, 1, 1, 1]);
+    // cut-out foliage: alpha-tested, both sides lit
+    if (maps.alpha) mat.setAlphaMode('MASK').setAlphaCutoff(0.45).setDoubleSided(true);
     if (real(maps.normal)) mat.setNormalTexture(await tex(maps.normal, () => webp(maps.normal, size, QUALITY.normal)));
     const orm = maps.orm ? await tex(JSON.stringify(maps.orm), () => ormImage(maps.orm, size)) : real(maps.mr) ? await tex(maps.mr, () => webp(maps.mr, size, QUALITY.orm)) : null;
     if (orm) mat.setMetallicRoughnessTexture(orm).setMetallicFactor(1).setRoughnessFactor(1);
