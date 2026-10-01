@@ -387,6 +387,7 @@ export class Activities {
     const bars = mg.text(m, '');
     pit.fight = { A, B: Bc, t: 0, hop: [0, 0], peck: [0, 0] };
     g.audio.play('cheer', pit.pair[0].position);
+    if (g.audio.enabled) g.audio.rooster(pit.pair[0].position);
     const luck = p.buffs?.blessed > g.clockTime ? 0.06 : 0;
     while (A.hp > 0 && Bc.hp > 0) {
       await mg.wait(650 + Math.random() * 500);

@@ -3,6 +3,20 @@ import { itemDef, RANKS, rankIndex, ARMORS } from '../rpg/Items.js';
 import { SKILLS } from '../rpg/Progression.js';
 import { WEAPONS } from '../combat/Weapons.js';
 
+const TIPS = [
+  'Tip: block just before a blow lands for a perfect parry, then strike at once for a riposte.',
+  'Tip: press Q to greet anyone you meet. Three greetings on different days make a friend.',
+  'Tip: sneak (C) up behind a townsman and press E to lift his purse — if no one is watching.',
+  'Tip: a bamboo fishing rod from the grocer lets you fish at any river or pond.',
+  'Tip: deer bolt when they hear you running. Sneak, and approach from behind cover.',
+  'Tip: rest by a campfire to roast the fish and game you carry.',
+  'Tip: the Guide tab lists every pastime in town and keeps your records.',
+  'Tip: a hot meal at the inn leaves you well fed — stamina recovers faster.',
+  'Tip: guards will offer you the choice of a fine, the cells — or a fight. Bribes work, sometimes.',
+  'Tip: burn incense at an Earth God shrine for luck at games of chance.',
+  'Tip: in a fistfight, keep your blade sheathed — steel turns a brawl into assault.',
+  'Tip: whistle (H) and your horse will come to you.',
+];
 const h = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html !== undefined) e.innerHTML = html; return e; };
 
 export class UI {
@@ -285,7 +299,8 @@ export class UI {
   loading(msg, p) {
     if (!this.loadEl) {
       this.loadEl = h('div', 'loading', `<div class="cn">天命</div><div class="msg"></div><div class="bar"><i></i></div>
-        <div class="quote">“The empire, long divided, must unite; long united, must divide. Thus it has ever been.”<br>— Luo Guanzhong, <i>Romance of the Three Kingdoms</i></div>`);
+        <div class="quote">“The empire, long divided, must unite; long united, must divide. Thus it has ever been.”<br>— Luo Guanzhong, <i>Romance of the Three Kingdoms</i></div>
+        <div class="tip">${TIPS[Math.floor(Math.random() * TIPS.length)]}</div>`);
       this.root.appendChild(this.loadEl);
     }
     this.loadEl.querySelector('.msg').textContent = msg;

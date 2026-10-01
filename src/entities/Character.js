@@ -320,7 +320,7 @@ export class Character {
 
   toJSON() {
     return {
-      id: this.id, name: this.name, stats: this.stats, equip: this.equip, hp: this.hp, stamina: this.stamina, food: this.food,
+      id: this.id, name: this.name, cn: this.cn, stats: this.stats, equip: this.equip, hp: this.hp, stamina: this.stamina, food: this.food,
       pos: [this.pos.x, this.pos.z], yaw: this.yaw, inventory: this.inventory.toJSON(), baseLook: this.baseLook,
     };
   }

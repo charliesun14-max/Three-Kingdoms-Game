@@ -713,6 +713,7 @@ export class Game {
     p.pos.set(sp.pos[0], this.world.groundHeight(sp.pos[0], sp.pos[1]), sp.pos[1]);
     p.yaw = sp.yaw;
     p.name = sp.name;
+    if (sp.cn !== undefined) p.cn = sp.cn;
     p.buildModel();
     this.progression.load(s.progression);
     this.army.load(s.army);
