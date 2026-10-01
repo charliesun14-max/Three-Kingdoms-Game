@@ -206,6 +206,7 @@ export class Social {
       g.progression.addRenown(0.6);
       g.progression.gain('unarmed', 3);
       g.ui.notify(`You beat ${c.name} in a fistfight.`, 'merit');
+      g.record('brawlsWon');
       for (const o of b.crowd) if (!o.dead && Math.random() < 0.5) setTimeout(() => g.barks.say(o, pick(['Ha! Well fought!', 'That settles it!', 'Pay up, Old Wang!', 'Ooh, he\'ll feel that tomorrow.'])), 300 + Math.random() * 1500);
     } else if (p.hp < p.hpMax * 0.25) {
       g.barks.say(c, pick(BARKS.brawlWin));
@@ -216,6 +217,7 @@ export class Social {
       p.model.anim.setPose('kneel');
       setTimeout(() => p.model.anim.setPose(null), 3500);
       g.ui.notify(`${c.name} beat you${took ? ` and took ${took} coins` : ''}.`, 'vice');
+      g.record('brawlsLost');
     } else if (c.distTo(p) > 30 || g.clockTime - b.t0 > 120) this.end();
   }
 

@@ -359,6 +359,7 @@ export class Wildlife {
     this.list.splice(this.list.indexOf(a), 1);
     await g.ui.fade(0, 0.5);
     p.model.anim.setPose(null);
+    g.record('hunted'); g.record('hunted_' + a.kind);
     g.ui.notify(`You skin and butcher the ${a.S.name.toLowerCase()}: ${got.join(', ')}.`, 'item');
     g.progression.gain('blade', 0.3);
   }

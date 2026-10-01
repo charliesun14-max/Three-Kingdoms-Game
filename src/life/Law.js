@@ -54,6 +54,7 @@ export class Law {
     if (!w.length && !opts.certain) return false;
     const st = this.state, r = g.regionId;
     st.bounty[r] = (st.bounty[r] || 0) + def.fine;
+    g.record('crimes');
     (st.crimes[r] = st.crimes[r] || []).push(def.name);
     g.ui.notify(`Crime witnessed: ${def.name} — bounty ${st.bounty[r]} coins`, 'vice');
     g.progression.addVirtue(kind === 'murder' ? -15 : kind === 'insult' ? -0.5 : -2, '', kind !== 'murder');
@@ -178,6 +179,7 @@ export class Law {
     this.clear();
     g.cameraCtl.snapBehind?.(p);
     await g.ui.fade(0, 1.2);
+    g.record('jailDays', days);
     g.ui.notify(`You spent ${days} day${days > 1 ? 's' : ''} in the county cells${lost ? ` and ${lost} coins went to the gaolers` : ''}.`, 'vice');
   }
 
@@ -203,6 +205,7 @@ export class Law {
       if (Math.random() < 0.3) { const id = ['milletCake', 'bandage', 'wine', 'herbs', 'salt'][Math.floor(Math.random() * 5)]; if (itemDef(id)) { p.inventory.add(id); got += ` and ${itemDef(id).name}`; } }
       g.audio.play('coins');
       g.ui.notify(`Lifted ${got} from ${c.name}.`, 'item');
+      g.record('pockets');
       g.progression.addVirtue(-1, '', true);
     } else {
       g.barks.say(c, pick(BARKS.thief), 2.5);
@@ -224,6 +227,7 @@ export class Law {
     if (Math.random() < chance) {
       m.inventory.remove(it.id); p.inventory.add(it.id);
       g.ui.notify(`Stole ${it.name} from ${m.name}'s stall.`, 'item');
+      g.record('stalls');
       g.progression.addVirtue(-1, '', true);
       if (this.witnesses().filter((c) => c !== m && Math.abs(c.angleTo(p)) < 1.3).length > 1) this.crime('theft');
     } else {

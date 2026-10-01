@@ -14,6 +14,7 @@ export class Barks {
 
   say(c, text, dur = 3.4) {
     if (!c || !text) return;
+    if (this.g.settings.barks === false && c !== this.g.player) return;
     this.list = this.list.filter((b) => { if (b.c === c) { b.el.remove(); return false; } return true; });
     const el = document.createElement('div');
     el.className = 'bark' + (c === this.g.player ? ' me' : '');

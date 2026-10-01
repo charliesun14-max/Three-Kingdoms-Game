@@ -622,6 +622,8 @@ export class Game {
   }
   flag(k) { return this.flags[k]; }
   setFlag(k, v = true) { this.flags[k] = v; }
+  // tally of pastimes and deeds shown in the Guide
+  record(key, n = 1) { const r = this.flags.records || (this.flags.records = {}); r[key] = (r[key] || 0) + n; }
   chronicleAdd(text) { this.chronicle.push({ date: this.time.dateCn(), text }); }
   compassMarkers() {
     const out = this.quests.markers();

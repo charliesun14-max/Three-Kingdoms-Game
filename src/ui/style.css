@@ -203,3 +203,6 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #000; color:
 .cr-bg { padding: 8px 10px; border: 1px solid rgba(214, 180, 110, .3); cursor: pointer; font-size: 14px; line-height: 1.35; } .cr-bg b { font-family: 'Ma Shan Zheng', serif; font-size: 18px; color: #f6e2b0; } .cr-bg div { margin-top: 4px; }
 .cr-bg.on { border-color: var(--gold); background: rgba(214, 180, 110, .14); }
 .cr-go { margin: 20px 0 10px; text-align: right; } .btn.big { font-size: 20px; padding: 8px 22px; }
+.gd { font-size: 15px; line-height: 1.55; margin: 6px 0 10px; }
+.gd kbd { display: inline-block; min-width: 20px; padding: 0 5px; border: 1px solid var(--gold); color: var(--gold); font-size: 13px; text-align: center; }
+table.rec { width: 100%; border-collapse: collapse; font-size: 15px; } table.rec td { padding: 4px 6px; border-bottom: 1px solid rgba(214, 180, 110, .15); } table.rec td:last-child { text-align: right; color: #f6e2b0; }

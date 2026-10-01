@@ -311,12 +311,12 @@ export class UI {
 
   renderPanel() {
     const tab = this.panelOpen;
-    const tabs = [['inventory', '囊', 'Inventory'], ['character', '身', 'Character'], ['journal', '志', 'Journal'], ['map', '圖', 'Map'], ['menu', '選', 'System']];
+    const tabs = [['inventory', '囊', 'Inventory'], ['character', '身', 'Character'], ['journal', '志', 'Journal'], ['map', '圖', 'Map'], ['guide', '導', 'Guide'], ['menu', '選', 'System']];
     this.panelWrap.innerHTML = `<div class="panel"><div class="tabs">${tabs.map(([id, cn, en]) => `<div class="tab ${id === tab ? 'on' : ''}" data-t="${id}"><span class="cn">${cn}</span>${en}</div>`).join('')}</div><div class="close">✕</div><div class="body"></div></div>`;
     this.panelWrap.querySelectorAll('.tab').forEach((t) => { t.onclick = () => { this.panelOpen = t.dataset.t; this.renderPanel(); }; });
     this.panelWrap.querySelector('.close').onclick = () => this.closePanel();
     const body = this.panelWrap.querySelector('.body');
-    ({ inventory: this.renderInventory, character: this.renderCharacter, journal: this.renderJournal, map: this.renderMap, menu: this.renderMenu, shop: this.renderShop }[tab] || this.renderInventory).call(this, body);
+    ({ inventory: this.renderInventory, character: this.renderCharacter, journal: this.renderJournal, map: this.renderMap, guide: this.renderGuide, menu: this.renderMenu, shop: this.renderShop }[tab] || this.renderInventory).call(this, body);
   }
 
   renderInventory(body) {
@@ -388,8 +388,30 @@ export class UI {
   renderMap(body) {
     body.innerHTML = `<div class="mapwrap"><canvas width="900" height="900"></canvas><div class="legend"><h2>${this.game.world.region.name}</h2><div class="muted" style="font-family:var(--brush);font-size:24px">${this.game.world.region.cn} · ${this.game.world.region.province}</div>
       <h3>Legend</h3><div>▲ You</div><div style="color:#b08a20">◆ Objective</div><div>■ Settlement</div><div style="color:#9a1e14">✕ Hostile camp</div>
-      <p class="muted" style="font-size:14px;margin-top:20px">Scroll of the commandery, drawn by the county clerk.</p></div></div>`;
+      <p class="muted" style="font-size:14px;margin-top:20px">Scroll of the commandery, drawn by the county clerk.</p><div id="map-travel"></div></div></div>`;
     this.game.drawMap(body.querySelector('canvas'));
+    // once the realm is yours, every region of the story can be revisited freely
+    const g = this.game;
+    if (g.flags.gameComplete) {
+      const regions = [['zhuo', 'Zhuo Commandery 涿郡'], ['guangzong', 'Guangzong 廣宗'], ['hulao', 'Hulao Pass 虎牢關'], ['xuzhou', 'Xu Province 徐州'], ['chibi', 'Red Cliffs 赤壁'], ['xuchang', 'Xuchang 許昌']].filter(([id]) => id !== g.regionId);
+      const tv = body.querySelector('#map-travel');
+      tv.innerHTML = '<h3>Travel 行</h3>' + regions.map(([id, n]) => `<div class="btn" style="margin:4px 0;display:block" data-travel="${id}">${n}</div>`).join('');
+      tv.querySelectorAll('[data-travel]').forEach((b) => { b.onclick = async () => { this.closePanel(); await g.travel(b.dataset.travel, null, { msg: 'The imperial carriage sets out…' }); }; });
+    }
+  }
+
+  renderGuide(body) {
+    const g = this.game, r = g.flags.records || {};
+    const rec = [['Fish caught', r.fish], ['Golden carp', r.goldenCarp], ['Game hunted', r.hunted], ['Tigers slain', r.hunted_tiger], ['Fistfights won / lost', r.brawlsWon || r.brawlsLost ? `${r.brawlsWon || 0} / ${r.brawlsLost || 0}` : 0], ['Races won', r.racesWon ? `${r.racesWon} of ${r.races}` : r.races ? `0 of ${r.races}` : 0], ['Touhu games won', r.touhuWon], ['Arm-wrestling wins', r.armWon], ['Cockfight bets won', r.cockWins], ['Letters written', r.letters], ['Sacks carried', r.sacks], ['Logs split', r.logs], ['Tales heard', r.tales], ['Alms given', r.alms], ['Prayers at shrines', r.prayers], ['Thieves caught', r.thieves], ['Lost children returned', r.children], ['Pockets picked', r.pockets], ['Crimes witnessed', r.crimes], ['Days in the cells', r.jailDays]];
+    body.innerHTML = `<div class="grid2"><div><h2>Guide 導</h2>
+      <h3>Living in the towns</h3>
+      <p class="gd"><kbd>Q</kbd> greets the person in front of you and <kbd>T</kbd> antagonizes them. Greet someone on three different days and they become a friend. Rank and reputation change how people answer you. Tough men answer insults with their fists: a fistfight ends when one man yields, but draw a blade and it becomes assault.</p>
+      <p class="gd"><kbd>C</kbd> sneaks. Behind someone, <kbd>E</kbd> picks their pocket; at a stall whose owner is looking away, <kbd>E</kbd> takes the goods. Crimes only count if someone sees them. Each region keeps its own bounty: guards will confront you, and you can pay, bribe, talk your way out, go to the cells or resist.</p>
+      <h3>Things to do</h3>
+      <p class="gd"><b>Tavern:</b> meals, beds, liubo dice with the innkeeper, arm-wrestling the strongman, touhu (pitching arrows into the pot) outside.<br><b>Market:</b> the cockpit, the juggler, the qin player, the storyteller, the scribe's table (paid letter-writing), the barber, the tailor (new robes), beggars who know the rumours.<br><b>Work:</b> the granary foreman pays for carrying grain; the woodpiles pay for split logs.<br><b>Outside the walls:</b> the horse dealer by the south gate, horse races around the flags, the archery butts in the garrison yard and army camps.<br><b>Shrines:</b> incense to the Earth God brings a blessing.</p>
+      <p class="gd"><b>Fishing:</b> buy a bamboo rod from the grocer and face any river or pond. <b>Hunting:</b> deer and hares flee, boar and the rare tiger charge. Sneak to get close, and skin your kills with <kbd>E</kbd>. Rest by a fire to cook what you catch.</p>
+      <p class="gd"><b>Chance meetings:</b> purse-snatchers, lost children, drunks and thugs turn up in the streets now and then.</p>
+      </div><div><h3>Records 錄</h3><table class="rec">${rec.map(([k, v]) => `<tr><td>${k}</td><td>${v || 0}</td></tr>`).join('')}</table></div></div>`;
   }
 
   renderMenu(body) {
@@ -401,6 +423,8 @@ export class UI {
       <div class="stat"><span>Graphics quality</span><span><span class="btn" data-q="0">Low</span> <span class="btn" data-q="1">Medium</span> <span class="btn" data-q="2">High</span> (current: ${['Low', 'Medium', 'High'][g.quality]}, reloads)</span></div>
       <div class="stat"><span>Mouse sensitivity</span><input type="range" min="0.5" max="2" step="0.1" value="${s.sens}" id="m-sens"></div>
       <div class="stat"><span>Master volume</span><input type="range" min="0" max="1" step="0.05" value="${s.volume}" id="m-vol"></div>
+      <div class="stat"><span>Street chatter (speech above heads)</span><span><span class="btn" data-t="barks">${s.barks === false ? 'Off' : 'On'}</span></span></div>
+      <div class="stat"><span>Chance encounters in towns</span><span><span class="btn" data-t="encounters">${s.encounters === false ? 'Off' : 'On'}</span></span></div>
       <div class="stat"><span>Difficulty (damage taken)</span><span><span class="btn" data-d="0.6">Story</span> <span class="btn" data-d="1">Warrior</span> <span class="btn" data-d="1.5">Hardcore</span> (current ×${s.damageTaken})</span></div>
       <h3>Controls</h3>
       <p style="font-size:16px;line-height:1.7">WASD move · Shift sprint · C sneak · F draw/sheathe · LMB strike — while locked on, move the mouse to choose the cut (left, right, overhead ↑, thrust ↓), or use Z/X/V/B · RMB block (block just before a blow lands for a <b>perfect parry</b>, then strike for a riposte) · Space dodge · Tab switch target · E interact · 1 bandage · 2 medicine · 3 eat · G order troops · I/J/M/C panels · Esc menu</p>`;
@@ -409,6 +433,7 @@ export class UI {
     body.querySelector('#m-load').onclick = () => { this.closePanel(); g.loadGame(); };
     body.querySelector('#m-title').onclick = () => { location.search = ''; };
     body.querySelectorAll('[data-q]').forEach((b) => { b.onclick = () => { localStorage.setItem('tk_quality', b.dataset.q); location.reload(); }; });
+    body.querySelectorAll('[data-t]').forEach((b) => { b.onclick = () => { s[b.dataset.t] = s[b.dataset.t] === false; g.saveSettings(); this.renderPanel(); }; });
     body.querySelectorAll('[data-d]').forEach((b) => { b.onclick = () => { s.damageTaken = +b.dataset.d; g.saveSettings(); this.renderPanel(); }; });
     body.querySelector('#m-sens').oninput = (e) => { s.sens = +e.target.value; g.cameraCtl.sens = 0.0024 * s.sens; g.saveSettings(); };
     body.querySelector('#m-vol').oninput = (e) => { s.volume = +e.target.value; g.audio?.setVolume(s.volume); g.saveSettings(); };

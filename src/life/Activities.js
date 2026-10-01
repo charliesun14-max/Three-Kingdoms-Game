@@ -196,6 +196,7 @@ export class Activities {
         p.inventory.coins -= 3; c.inventory.coins += 3;
         const tale = TALES[(m.tales = (m.tales ?? Math.floor(Math.random() * TALES.length)) + 1) % TALES.length];
         await st.say(c.id, `Today: ${tale.title}!`);
+        g.record('tales');
         for (const l of tale.lines) await st.say(c.id, l);
         g.progression.gain('speech', 0.5);
       } else if (r === 'tip') {
@@ -217,6 +218,7 @@ export class Activities {
         p.inventory.coins -= 2; g.audio.play('coins');
         await st.say(c.id, pick(BARKS.alms));
         if (m.alms !== day) { m.alms = day; g.progression.addVirtue(1, 'charity'); }
+        g.record('alms');
       } else if (r === 'news') await st.say(c.id, this.rumour());
       g.dialogue.end();
       return true;
@@ -331,6 +333,7 @@ export class Activities {
       await mg.wait(900);
     }
     const res = me > him ? 'win' : me < him ? 'lose' : 'draw';
+    g.record(res === 'win' ? 'touhuWon' : 'touhuPlayed');
     if (bet > 0 && res === 'win') { p.inventory.coins += bet; g.audio.play('coins'); }
     if (bet > 0 && res === 'lose') p.inventory.coins -= bet;
     score.innerHTML = `<b>${res === 'win' ? 'You win' : res === 'lose' ? `${foe} wins` : 'A draw'}</b>, ${me} to ${him}.${bet > 0 && res !== 'draw' ? ` ${res === 'win' ? '+' : '−'}${bet} coins.` : ''}`;
@@ -355,6 +358,7 @@ export class Activities {
     const win = await mg.tug(m, { label: 'Tap SPACE as fast as you can!', foe: 0.55 + Math.random() * 0.15, you: Math.min(1, p.stats.str / 18), secs: 14 });
     if (win) { p.inventory.coins += bet; c.inventory.coins = Math.max(0, c.inventory.coins - bet); g.audio.play('coins'); g.progression.gain('str', 2); g.progression.addRenown(0.4); }
     else p.inventory.coins -= bet;
+    g.record(win ? 'armWon' : 'armLost');
     mg.text(m, win ? `<b>${c.name}'s wrist slams onto the table!</b> The tavern roars. +${bet} coins.` : `<b>${c.name} pins you</b> and laughs. −${bet} coins.`);
     g.barks.say(c, win ? pick(['Aiya! My arm!', 'Again! Tomorrow! …Maybe next month.', 'Heaven, what do you eat?']) : pick(['Ha! Reeds, I said!', 'Come back when you\'ve carried millstones.', 'Next!']), 3);
     await mg.choose(m, [{ t: 'Done', v: 1 }]);
@@ -399,7 +403,8 @@ export class Activities {
     const winner = A.hp > 0 ? 'A' : 'B', W = winner === 'A' ? A : Bc;
     pit.fight = null;
     let msg = `<b>${W.cn} ${W.name} wins!</b> The loser's handler scoops up his bird.`;
-    if (bet && side === winner) { const pay = Math.round(bet * (winner === 'A' ? oddsA : oddsB)); p.inventory.coins += pay; g.audio.play('coins'); msg += ` You collect ${pay} coins.`; }
+    g.record('cockfights');
+    if (bet && side === winner) { g.record('cockWins'); const pay = Math.round(bet * (winner === 'A' ? oddsA : oddsB)); p.inventory.coins += pay; g.audio.play('coins'); msg += ` You collect ${pay} coins.`; }
     else if (bet) msg += ` Your ${bet} coins are gone.`;
     log.innerHTML = msg;
     g.audio.play('cheer', pit.pair[0].position);
@@ -427,6 +432,7 @@ export class Activities {
     p.inventory.coins += pay; g.audio.play('coins');
     g.time.addHours(1); p.stamina = Math.max(0, p.stamina - 30); p.food = Math.max(0, p.food - 4);
     g.progression.gain('str', 1 + clean * 0.3);
+    g.record('logs', 6);
     t.innerHTML = `You split six logs${clean ? ` (${clean} clean through)` : ''}. <b>+${pay} coins.</b> An hour passes.`;
     await mg.choose(m, [{ t: 'Done', v: 1 }]);
     mg.close(m);
@@ -448,6 +454,7 @@ export class Activities {
       p.model.anim.setPose(null);
       (p.buffs = p.buffs || {}).blessed = g.clockTime + 900;
       g.progression.addVirtue(0.5, '', true);
+      g.record('prayers');
       g.ui.notify('The Earth God\'s blessing: wounds mend a little, and luck favours you at games of chance.', 'virtue');
     } else p.model.anim.play('greet');
     return true;
@@ -578,6 +585,7 @@ export class Activities {
     }
     if (R.state === 'run' && (R.me.done || !me)) {
       const place = R.finish.indexOf('you') + 1;
+      g.record('races'); if (place === 1) g.record('racesWon');
       if (place === 1) { g.player.inventory.coins += 100; g.audio.play('cheer'); g.progression.addRenown(1); g.ui.notify('You win the race! +100 coins.', 'merit'); }
       else g.ui.notify(me ? `You finish ${place === 2 ? 'second' : 'third'}. ${R.finish[0]} takes the prize.` : 'You left the race.', 'item');
       g.quests.finish(R.qid);
@@ -614,6 +622,7 @@ export class Activities {
     g.audio.play('thud', p.pos);
     g.progression.gain('str', 0.6);
     g.quests.progress(j.id, 'sacks', 1);
+    g.record('sacks');
     if (j.n >= j.need) { g.quests.finish(j.id); this.job = null; g.barks.say(this.granary.foreman, 'Good work. Come back when the next cart comes in.', 3); }
     return true;
   }
@@ -644,6 +653,7 @@ export class Activities {
     p.inventory.coins += pay; if (pay) g.audio.play('coins');
     g.progression.gain('speech', 0.5 + right * 0.2);
     g.time.addHours(0.5);
+    g.record('letters');
     status.innerHTML = `${right} of ${words.length} characters correct. ${pay ? `The customer pays <b>${pay} coins</b>.` : 'The customer takes his letter elsewhere.'}`;
     await mg.choose(m, [{ t: 'Done', v: 1 }]);
     mg.close(m);
@@ -751,7 +761,7 @@ export class Activities {
         const fight = { crucian: 0.2, carp: 0.45, catfish: 0.6, mandarinFish: 0.7, goldenCarp: 0.95 }[kind];
         status.innerHTML = 'Hooked! Bring it in…';
         const res = await mg.reel(m, { fight });
-        if (res === 'caught') { p.inventory.add(kind); status.innerHTML = `<b>You land a ${itemDef(kind).name} ${itemDef(kind).cn}!</b>`; g.progression.gain('agi', 0.3); if (kind === 'goldenCarp') g.progression.addRenown(1); }
+        if (res === 'caught') { g.record('fish'); if (kind === 'goldenCarp') g.record('goldenCarp'); p.inventory.add(kind); status.innerHTML = `<b>You land a ${itemDef(kind).name} ${itemDef(kind).cn}!</b>`; g.progression.gain('agi', 0.3); if (kind === 'goldenCarp') g.progression.addRenown(1); }
         else status.innerHTML = 'Snap! The line breaks and the fish is gone.';
         g.time.addHours(0.25);
       }

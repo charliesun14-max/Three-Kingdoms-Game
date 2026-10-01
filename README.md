@@ -78,6 +78,18 @@ A desktop browser with WebGL2 and a dedicated GPU is recommended. You can change
   - a single tiger haunts the most remote hills of each region;
   - animals sense you less when you sneak; skin your kills for meat, hides and trophies, roast them at a campfire, and sell the pelts.
 
+**Your character**
+- Create your character at the start of a New Journey:
+  - **Name:** pick a Han family name and given name with their characters, or type your own. Your family name runs through the story: your mother, your sister, the village gossip, even the dynasty you may found.
+  - **Looks:** complexion, build, beard, headwear and clothes, with a live preview in Lousang.
+  - **Upbringing:**
+    - farmer's son: hardy;
+    - hunter's son: bow, stealth and a fishing rod;
+    - poor scholar's grandson: speech, and better pay at the scribe's table;
+    - smith's apprentice: strength and blade.
+- The **Guide** tab explains town life and keeps your **Records**: fish caught, game hunted, fights, races, letters written and more.
+- When the story is complete, the map lets you travel freely between all the regions of the story.
+
 **RPG systems**
 - Skills that improve with use (Strength, Agility, Vitality, Blade, Polearm, Unarmed, Defence, Speech, Leadership, Stealth).
 - Merit (軍功), Virtue (德) and Renown (名望).
@@ -93,6 +105,10 @@ A desktop browser with WebGL2 and a dedicated GPU is recommended. You can change
 5. **The Deer Hunt of Warlords:** a strategic campaign across the 14 provinces against Cao Cao, Yuan Shao, Sun Quan and the others. It includes the Battle of Guandu and recruiting officers such as Zhao Yun and Xu Shu. You can fight each battle in person or let your generals auto-resolve it.
 6. **The Red Cliffs:** Huang Gai's fire ships against Cao Cao's chained fleet, followed by the landing at Wulin.
 7. **The Mandate of Heaven:** the storming of Xuchang, a final meeting with Cao Cao, Emperor Xian's abdication (you decline twice, following ritual custom), and your coronation at the altar, where you name your dynasty and era. The epilogue depends on your choices.
+
+## Art assets (optional)
+
+Everything is procedural. Downloaded **glTF 2.0 (`.glb`)** models and tileable **`.jpg`/`.png`** textures can replace any tree species, building type, prop or ground and material texture. Drop them into `public/assets/` and list them in `public/assets/manifest.json`. See `public/assets/README.md` and `manifest.example.json` for the slots and conventions: metres, +Y up, front facing +Z.
 
 ## Development
 

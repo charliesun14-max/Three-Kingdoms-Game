@@ -18,6 +18,7 @@ export class Encounters {
   update(dt) {
     const g = this.g;
     if (this.cur) { this.cur.update?.(dt); return; }
+    if (g.settings.encounters === false) return;
     if (g.dialogue.active || g.cutscene || g.inCombat || g.social.brawl || g.minigame || g.law.wanted() > 0) return;
     this.next -= dt;
     if (this.next > 0 || !this.inTown()) return;
@@ -93,7 +94,7 @@ export class Encounters {
           if (r) { p.inventory.coins -= Math.min(purse, p.inventory.coins); await g.story.say(victim.id, 'All of it! Here — take ten for your trouble. There are still good men under Heaven.'); p.inventory.coins += 10; g.progression.addVirtue(3, 'honesty'); g.progression.addRenown(0.5); }
           else { await g.story.say(victim.id, '…I see. You are no better than he was.'); g.progression.addVirtue(-3, 'keeping a stolen purse'); }
           g.dialogue.end();
-          st.returned = true; g.quests.finish(qid); this.done([th]);
+          st.returned = true; g.quests.finish(qid); this.done([th]); g.record('thieves');
           return true;
         }
         return false;
@@ -137,7 +138,7 @@ export class Encounters {
           kid.ai.override = () => { kid.stop(); kid.faceYaw = Math.atan2(mother.pos.x - kid.pos.x, mother.pos.z - kid.pos.z); return true; };
           g.barks.say(kid, 'Mama!', 2.5);
           setTimeout(() => g.barks.say(mother, 'Little Hu! Where did you go? Oh — thank you, kind sir, thank you!', 4), 1200);
-          g.player.inventory.coins += 5; g.progression.addVirtue(2, 'kindness');
+          g.player.inventory.coins += 5; g.progression.addVirtue(2, 'kindness'); g.record('children');
           g.quests.finish(qid);
           setTimeout(() => this.done([kid, mother]), 6000);
         }
