@@ -18,6 +18,7 @@ export const MISSION_ORDER = Object.keys(MISSIONS);
 export class Story {
   constructor(game) {
     this.g = game;
+    this.missions = MISSIONS; // exposed for debug staging
     this.mission = null;
     this.waiters = [];
     this.talkHandlers = new Map(); // id -> async fn(c) returning true if handled
