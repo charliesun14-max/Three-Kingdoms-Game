@@ -838,6 +838,10 @@ export class Settlements {
       l.intensity = f.base * flick * (0.35 + night * 0.9);
     });
     for (const l of this.lanterns) l.material.emissiveIntensity = 0.15 + night * 2.8;
+    // a great conflagration reddens the whole night
+    let blaze = 0;
+    for (const f of this.fires) if (f.mesh.userData.blaze && f._d < 600) blaze++;
+    sky.firestorm = Math.min(1, blaze / 12);
   }
 }
 
@@ -865,8 +869,52 @@ function makeFlame(scale = 1) {
     p.rotation.y = (i / 3) * Math.PI;
     g.add(p);
   }
+  if (scale >= 2) {
+    // a blaze: extra tongues of flame, a halo of glow and a column of smoke lit from below
+    for (let i = 0; i < 5; i++) {
+      const s = scale * (0.7 + Math.random() * 0.8);
+      const p = new THREE.Mesh(new THREE.PlaneGeometry(1.1 * s, 2.2 * s), mat);
+      p.position.set((Math.random() - 0.5) * scale * 0.9, 1.1 * s, (Math.random() - 0.5) * scale * 0.9);
+      p.rotation.y = Math.random() * Math.PI;
+      g.add(p);
+    }
+    const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture(), color: 0xff6a20, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false }));
+    glow.scale.setScalar(7 * scale); glow.position.y = 1.2 * scale;
+    g.add(glow);
+    const smokeMat = new THREE.ShaderMaterial({
+      uniforms: uni, transparent: true, depthWrite: false, side: THREE.DoubleSide,
+      vertexShader: `varying vec2 vUv; void main(){ vUv = uv; vec3 p = position; p.x *= 0.6 + uv.y * 1.4; gl_Position = projectionMatrix * modelViewMatrix * vec4(p,1.0); }`,
+      fragmentShader: `uniform float uTime; varying vec2 vUv;
+        float h(vec2 p){ return fract(sin(dot(p, vec2(12.9,78.2)))*43758.5); }
+        float n(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.-2.*f); return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y); }
+        void main(){
+          float y = vUv.y, x = vUv.x - 0.5;
+          float t = n(vec2(vUv.x * 4.0 + sin(y * 3.0 + uTime * 0.3), y * 5.0 - uTime * 0.9)) * 0.6 + n(vec2(vUv.x * 9.0, y * 11.0 - uTime * 1.7)) * 0.4;
+          float a = smoothstep(0.5, 0.1, abs(x) + (t - 0.5) * 0.35) * smoothstep(0.0, 0.08, y) * (1.0 - smoothstep(0.55, 1.0, y)) * (0.35 + t * 0.65);
+          vec3 col = mix(vec3(0.9, 0.36, 0.08), vec3(0.07, 0.06, 0.06), smoothstep(0.02, 0.3, y));
+          gl_FragColor = vec4(col, a * 0.8);
+        }`,
+    });
+    for (let i = 0; i < 2; i++) {
+      const sm = new THREE.Mesh(new THREE.PlaneGeometry(4 * scale, 16 * scale), smokeMat);
+      sm.position.y = 9 * scale; sm.rotation.y = i * Math.PI / 2 + 0.3;
+      sm.renderOrder = 2;
+      g.add(sm);
+    }
+    g.userData.blaze = true;
+  }
   g.userData.uni = uni;
   return g;
+}
+let _glow = null;
+function glowTexture() {
+  if (_glow) return _glow;
+  const c = document.createElement('canvas'); c.width = c.height = 64;
+  const x = c.getContext('2d'), gr = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+  gr.addColorStop(0, 'rgba(255,255,255,0.9)'); gr.addColorStop(0.3, 'rgba(255,255,255,0.35)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+  x.fillStyle = gr; x.fillRect(0, 0, 64, 64);
+  _glow = new THREE.CanvasTexture(c);
+  return _glow;
 }
 
 function makeNoticeTexture() {

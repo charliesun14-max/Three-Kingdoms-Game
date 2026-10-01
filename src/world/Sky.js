@@ -147,6 +147,15 @@ export class SkySystem {
     const hor = new THREE.Color(0.55, 0.68, 0.82).lerp(new THREE.Color(0.95, 0.55, 0.28), golden).lerp(new THREE.Color(0.02, 0.03, 0.06), night);
     zen.lerp(new THREE.Color(0.45, 0.47, 0.5).multiplyScalar(lerp(1, 0.08, night)), ov * 0.8);
     hor.lerp(new THREE.Color(0.6, 0.62, 0.64).multiplyScalar(lerp(1, 0.08, night)), ov * 0.8);
+    const fs = (this.firestorm || 0) * Math.max(night, 0.3);
+    if (fs > 0) {
+      hor.lerp(new THREE.Color(0.62, 0.17, 0.04), fs * 0.85);
+      zen.lerp(new THREE.Color(0.1, 0.025, 0.012), fs * 0.5);
+      scene.fog.color.lerp(new THREE.Color(0.24, 0.07, 0.02), fs * 0.75);
+      this.hemi.color.lerp(new THREE.Color(0.9, 0.35, 0.12), fs * 0.6);
+      this.hemi.groundColor.lerp(new THREE.Color(0.55, 0.16, 0.04), fs * 0.8);
+      this.hemi.intensity += 0.35 * fs;
+    }
     u.uZenith.value.copy(zen);
     u.uHorizon.value.copy(hor);
     u.uSunCol.value.copy(sunCol).multiplyScalar(day);
