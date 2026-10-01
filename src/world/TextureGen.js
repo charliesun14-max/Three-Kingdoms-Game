@@ -87,11 +87,12 @@ function cached(key, gen) {
 export const Tex = {
   grass: () => cached('grass', () => colorField(11, 512, (a, b) => {
     const t = a * 0.7 + b * 0.3;
-    const dry = Math.max(0, (a - 0.6) * 2);
-    return [mix(78, 120, dry) + b * 22 - 8, mix(96, 112, dry) + t * 30, mix(48, 60, dry) + b * 10];
+    // living meadow green with a little straw showing through
+    const dry = Math.max(0, (a - 0.66) * 2.2);
+    return [mix(58, 104, dry) + b * 18 - 6, mix(88, 104, dry) + t * 34, mix(34, 52, dry) + b * 10];
   })),
   dryGrass: () => cached('dryGrass', () => colorField(21, 512, (a, b) => {
-    return [148 + a * 40 + b * 20, 132 + a * 30, 80 + b * 20];
+    return [126 + a * 36 + b * 16, 120 + a * 28, 70 + b * 18];
   })),
   loess: () => cached('loess', () => colorField(31, 512, (a, b, u, v, x, y) => {
     const peb = ((x * 7919 + y * 104729) % 97) < 2 ? -30 : 0;
@@ -106,7 +107,8 @@ export const Tex = {
         const crack = Math.abs(n - 0.5) < 0.012 ? -45 : 0;
         const strata = Math.sin((v + m * 0.25) * 60) * 8;
         const base = 104 + n * 70 + strata + crack;
-        put(d, (y * S + x) * 4, base + 8 + m * 20, base + 2, base - 6 + m * 10);
+        // weathered limestone/granite: warm grey with ochre staining
+        put(d, (y * S + x) * 4, base + 6 + m * 18, base + 1 + m * 6, base - 10 + m * 4);
       }
     });
   }),
@@ -143,18 +145,52 @@ export const Tex = {
     const leaf = ((x * 31 + y * 17) % 13 === 0 && a > 0.5) ? 25 : 0;
     return [88 + a * 40 + leaf, 74 + a * 28, 44 + b * 14];
   })),
-  plaster: () => cached('plaster', () => colorField(81, 256, (a, b) => {
-    const c = 205 + a * 30 - b * 15;
-    return [c, c - 10, c - 26];
+  plaster: () => cached('plaster', () => colorField(81, 512, (a, b, u, v) => {
+    // lime plaster gone warm with age: patchy, with rain streaks running down
+    const streak = Math.max(0, Math.sin(u * Math.PI * 20 + b * 3) * 0.5 + 0.5) * (0.4 + 0.6 * a) * 14;
+    const c = 182 + a * 30 - b * 18 - streak;
+    return [c + 4, c - 8, c - 26];
   })),
   rammedEarth: () => cached('rammedEarth', () => {
-    const f = makeFbm(91, 4, 5);
-    return canvasTex(256, (d, S) => {
+    // tamped earth in formwork courses, the course joints darker, rain-cut runnels down the face
+    const f = makeFbm(91, 4, 5), g = makeFbm(93, 16, 3);
+    return canvasTex(512, (d, S) => {
       for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
         const u = x / S, v = y / S;
-        const n = f(u, v);
-        const layer = (Math.floor(v * 6 + n * 0.3) % 2) * 5 + (Math.abs((v * 6 + n * 0.3) % 1 - 0.02) < 0.015 ? -10 : 0);
-        put(d, (y * S + x) * 4, 162 + n * 40 + layer, 136 + n * 32 + layer, 100 + n * 22 + layer);
+        const n = f(u, v), m = g(u, v);
+        const cv = v * 8 + n * 0.25;
+        const joint = Math.abs((cv % 1) - 0.03) < 0.035 ? -26 : 0;
+        const course = (Math.floor(cv) % 2) * 7 - 3;
+        const runnel = Math.max(0, Math.sin(u * Math.PI * 28 + m * 6) - 0.82) * -120 * (0.4 + n);
+        const pit = m > 0.68 ? -18 : 0;
+        const b = n * 46 + course + joint + runnel + pit;
+        put(d, (y * S + x) * 4, 150 + b, 124 + b * 0.9, 90 + b * 0.75);
+      }
+    });
+  }),
+  // packed earth for town streets and yards: tamped soil, grit and embedded pebbles
+  packedEarth: () => cached('packedEarth', () => {
+    const f = makeFbm(171, 6, 5), g = makeFbm(173, 24, 3);
+    const rng = new Rng(175);
+    const cells = 36, peb = [];
+    for (let j = 0; j < cells; j++) for (let i = 0; i < cells; i++) if (rng.next() < 0.6) peb.push([(i + rng.next()) / cells, (j + rng.next()) / cells, rng.range(0.004, 0.012), rng.range(-28, 22)]);
+    return canvasTex(512, (d, S) => {
+      for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
+        const u = x / S, v = y / S;
+        const n = f(u, v), m = g(u, v);
+        const b = 112 + n * 46 + (m - 0.5) * 22 + (((x * 7919 + y * 104729) % 53) < 2 ? -24 : 0);
+        put(d, (y * S + x) * 4, b + 16, b + 6, b - 12);
+      }
+      for (const [px, py, r, sh] of peb) {
+        const R = Math.max(1.5, r * S);
+        for (let dy = -Math.ceil(R); dy <= R; dy++) for (let dx = -Math.ceil(R); dx <= R; dx++) {
+          const dd = Math.hypot(dx, dy * 1.2) / R;
+          if (dd > 1) continue;
+          const xx = ((Math.floor(px * S) + dx) % S + S) % S, yy = ((Math.floor(py * S) + dy) % S + S) % S;
+          const lit = (1 - dd) * 40 + (-dx - dy) / R * 18 - (dd > 0.82 ? 30 : 0);
+          const c = 120 + sh + lit;
+          put(d, (yy * S + xx) * 4, c + 4, c + 2, c - 4);
+        }
       }
     });
   }),
@@ -232,12 +268,15 @@ export const Tex = {
   }),
   lacquer: () => cached('lacquer', () => colorField(141, 128, (a, b) => [128 + a * 30, 30 + a * 10, 24 + b * 8])),
   cloth: () => cached('cloth', () => {
-    const f = makeFbm(151, 16, 3);
-    return canvasTex(128, (d, S) => {
+    // plain weave with 4 px threads, uneven slubs and faint wear
+    const f = makeFbm(151, 16, 3), g = makeFbm(157, 64, 2);
+    return canvasTex(256, (d, S) => {
       for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
-        const weave = ((x % 2) ^ (y % 2)) ? 8 : -8;
-        const n = f(x / S, y / S);
-        const c = 200 + weave + n * 40;
+        const over = (Math.floor(x / 4) + Math.floor(y / 4)) % 2;
+        const tx = Math.sin(((x % 4) + 0.5) / 4 * Math.PI), ty = Math.sin(((y % 4) + 0.5) / 4 * Math.PI);
+        const thread = over ? tx * 0.8 + ty * 0.2 : ty * 0.8 + tx * 0.2;
+        const n = f(x / S, y / S), slub = g(x / S, y / S);
+        const c = 178 + thread * 30 + n * 34 + (slub - 0.5) * 14;
         put(d, (y * S + x) * 4, c, c, c);
       }
     });

@@ -153,6 +153,18 @@ export class Settlements {
     return f;
   }
 
+  // true if a circle of radius r at (x, z) overlaps any collider (buildings, walls, props)
+  blocked(x, z, r) {
+    for (const c of this.world.colliders.query(x, z, r + 1)) {
+      if (c.type === 'box') {
+        const dx = x - c.x, dz = z - c.z;
+        const lx = dx * c.c - dz * c.s, lz = dx * c.s + dz * c.c;
+        if (Math.abs(lx) < c.hw + r && Math.abs(lz) < c.hd + r) return true;
+      } else if (Math.hypot(x - c.x, z - c.z) < c.r + r) return true;
+    }
+    return false;
+  }
+
   addLantern(x, y, z) {
     const g = new THREE.SphereGeometry(0.22, 10, 8);
     g.scale(1, 1.2, 1);
@@ -351,7 +363,16 @@ export class Settlements {
       B.pop();
       this.collide(cx + sx * hw, cz + sz * hd, 9, 9);
     }
-
+    // war banners along the wall walk
+    const bcol = s.bannerColors || { bg: '#8a1a12' };
+    for (let t = -hw + 14; t <= hw - 14; t += 18) {
+      if (Math.abs(t) < gateW) continue;
+      for (const zz of [-hd, hd]) this.addBanner(cx + t, cz + zz + (zz < 0 ? 1.2 : -1.2), s.banner || '漢', bcol, 5, 0, gy + wallH);
+    }
+    for (let t = -hd + 14; t <= hd - 14; t += 18) {
+      if (Math.abs(t) < gateW) continue;
+      for (const xx of [-hw, hw]) this.addBanner(cx + xx + (xx < 0 ? 1.2 : -1.2), cz + t, s.banner || '漢', bcol, 5, Math.PI / 2, gy + wallH);
+    }
     // --- Yamen (county office) compound in the NE block, facing south
     const yx = cx + 45, yz = cz - 50, yw = 56, yd = 52;
     const yb = this.site(yx, yz, 0, yw, yd);
@@ -529,6 +550,29 @@ export class Settlements {
       if (Math.abs(x - mx) < 42 && Math.abs(z - mz) < 38) continue;
       this.prop(jars, x, z, 0, 0.6, rng.int(1, 3), i + 50);
     }
+    // strings of red lanterns hung across the two main streets
+    for (const k of [-4, -3, -2, 2, 3, 4]) {
+      for (const axis of [0, 1]) {
+        const along = k * 13;
+        if (Math.abs(along) > (axis ? hw : hd) - 12) continue;
+        const ends = axis === 0 ? [[cx - 5.2, cz + along], [cx + 5.2, cz + along]] : [[cx + along, cz - 5.2], [cx + along, cz + 5.2]];
+        if (ends.some(([x, z]) => this.blocked(x, z, 0.4))) continue;
+        const ys = ends.map(([x, z]) => this.ground(x, z) + 4.6);
+        for (const [x, z] of ends) {
+          const P = this.site(x, z, 0, 0.4, 0.4);
+          P.cyl('darkwood', 0, 0, 0, 0.09, 4.8, { seg: 6 });
+          this.world.colliders.addCircle(x, z, 0.15, { kind: 'prop' });
+        }
+        const [[ax, az], [bx, bz]] = ends;
+        const R = this.site((ax + bx) / 2, (az + bz) / 2, axis === 0 ? 0 : Math.PI / 2, 10.4, 0.2);
+        R.box('darkwood', 0, ys[0] - this.ground((ax + bx) / 2, (az + bz) / 2) - 0.3, 0, 10.4, 0.03, 0.03);
+        for (let i = 1; i <= 5; i++) {
+          const f = i / 6, sag = Math.sin(f * Math.PI) * 0.45;
+          this.addLantern(ax + (bx - ax) * f, ys[0] - 0.55 - sag, az + (bz - az) * f);
+        }
+      }
+    }
+
     this.spot('townCentre', cx, cz);
     this.spot(`${s.id}_centre`, cx, cz);
     this.spot(`${s.id}_hall`, this.spots.yamenHall.x, this.spots.yamenHall.z);

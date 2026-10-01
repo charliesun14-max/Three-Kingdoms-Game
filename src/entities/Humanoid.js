@@ -55,6 +55,28 @@ function sphereAt(c, r, sx = 1, sy = 1, sz = 1, seg = 10) {
   g.translate(...c);
   return g;
 }
+// Reshape the egg-like head sphere into a human head: tapering jaw and chin, flatter face plane,
+// fuller back of the skull, narrower crown and temples. Applied identically to the skull and the
+// face shell (both in head space around the same centre) so the painted face stays registered.
+function shapeHead(geo, cx, cy, cz) {
+  const pos = geo.attributes.position;
+  const sm = (a, b, v) => { const t = Math.min(1, Math.max(0, (v - a) / (b - a))); return t * t * (3 - 2 * t); };
+  for (let i = 0; i < pos.count; i++) {
+    let x = pos.getX(i) - cx, y = pos.getY(i) - cy, z = pos.getZ(i) - cz;
+    const ny = y / 0.112, nz = z / 0.1, nx = x / 0.09;
+    const jaw = sm(0.05, -1.0, ny);
+    x *= 1 - 0.2 * jaw;
+    if (nz < 0) z *= 1 - 0.12 * jaw;
+    z += 0.006 * sm(-0.55, -0.95, ny) * sm(0.2, 0.9, nz); // chin
+    z -= 0.007 * sm(0.45, 1.0, nz) * (1 - Math.min(1, Math.abs(ny))); // face plane
+    x *= 1 - 0.06 * sm(0.3, 1.0, ny); // crown
+    z *= 1 + 0.07 * sm(-0.2, -1.0, nz) * sm(-0.3, 0.6, ny); // occiput
+    if (Math.abs(nx) > 0.6) x *= 1 - 0.035 * sm(0.0, 0.5, ny) * sm(0.9, 0.4, ny); // temples
+    pos.setXYZ(i, x + cx, y + cy, z + cz);
+  }
+  geo.computeVertexNormals();
+  return geo;
+}
 function boxAt(c, w, h, d, rx = 0) {
   const g = new THREE.BoxGeometry(w, h, d);
   if (rx) g.rotateX(rx);
@@ -110,7 +132,12 @@ export const CHAR_LIGHT = { uRim: { value: 0.08 }, uRimCol: { value: new THREE.C
 function withRim(mat, key) {
   mat.onBeforeCompile = (sh) => {
     Object.assign(sh.uniforms, CHAR_LIGHT);
-    sh.fragmentShader = 'uniform float uRim;\nuniform vec3 uRimCol;\n' + sh.fragmentShader.replace('#include <opaque_fragment>', `
+    // bind-pose height (feet at 0) so road dust can settle on hems, trouser legs and shoes
+    sh.vertexShader = 'varying float vBodyY;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n  vBodyY = position.y;');
+    sh.fragmentShader = 'uniform float uRim;\nuniform vec3 uRimCol;\nvarying float vBodyY;\n' + sh.fragmentShader
+      .replace('#include <color_fragment>', `#include <color_fragment>
+      ${key === 'c' ? 'diffuseColor.rgb *= mix(vec3(0.66, 0.6, 0.52), vec3(1.0), smoothstep(0.04, 0.72, vBodyY));' : ''}`)
+      .replace('#include <opaque_fragment>', `
       outgoingLight += uRimCol * pow(1.0 - clamp(dot(normal, normalize(vViewPosition)), 0.0, 1.0), 3.0) * uRim;
       #include <opaque_fragment>`);
   };
@@ -119,8 +146,10 @@ function withRim(mat, key) {
 }
 function bodyMaterials() {
   if (matCache.has('body')) return matCache.get('body');
-  const cloth = withRim(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.92, map: Tex.cloth() }), 'c');
-  const metal = withRim(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.42, metalness: 0.55, map: Tex.lamellar() }), 'm');
+  // woven hemp and silk: a soft sheen at grazing angles, and the weave in relief
+  const cloth = withRim(new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: 0.9, map: Tex.cloth(), bumpMap: Tex.cloth(), bumpScale: 0.9, sheen: 0.55, sheenRoughness: 0.75, sheenColor: new THREE.Color(0.9, 0.86, 0.8) }), 'c');
+  // lacquered iron lamellae: plates and lacing stand out
+  const metal = withRim(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.42, metalness: 0.55, map: Tex.lamellar(), bumpMap: Tex.lamellar(), bumpScale: 2.2 }), 'm');
   const hair = withRim(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.55, metalness: 0.0 }), 'h');
   const res = [cloth, metal, hair];
   matCache.set('body', res);
@@ -149,7 +178,8 @@ export function buildHumanoid(ap = {}) {
   const J = jointPositions(P);
   const S = new SkinBuilder();
   const g = P.girth;
-  const skin = ap.skin ?? 0xc99a70;
+  // skin a little less saturated than the preset: warm sunlight and the filmic curve push it orange
+  const skin = (() => { const c = new THREE.Color(ap.skin ?? 0xc99a70), l = c.r * 0.3 + c.g * 0.59 + c.b * 0.11; c.lerp(new THREE.Color(l, l, l), 0.14); return c.getHex(); })();
   const robe = ap.robe ?? 0x7a6a50;
   const trim = ap.trim ?? shade(robe, 0.6).getHex();
   const trousers = ap.trousers ?? 0x5a4c3a;
@@ -162,7 +192,7 @@ export function buildHumanoid(ap = {}) {
 
   // --- head & neck
   S.add(limbGeo([0, 1.44, 0], [0, 1.57, 0.005], 0.052 * g, 0.048, 8), 'neck', skin);
-  S.add(sphereAt([0, 1.615, 0.005], 0.1, 0.9, 1.12, 1.0, 14), 'head', skin); // back of head / skull (face mesh overlays front)
+  S.add(shapeHead(sphereAt([0, 1.615, 0.005], 0.1, 0.9, 1.12, 1.0, 20), 0, 1.615, 0.005), 'head', skin); // skull (face mesh overlays the front)
   for (const s of [-1, 1]) S.add(sphereAt([s * 0.093, 1.6, -0.005], 0.022, 0.5, 1.2, 0.9, 6), 'head', ap.bigEars ? shade(skin, 1.0) : skin); // ears
   if (ap.bigEars) for (const s of [-1, 1]) S.add(sphereAt([s * 0.1, 1.58, -0.005], 0.026, 0.5, 1.7, 0.9, 6), 'head', skin);
 
@@ -439,9 +469,9 @@ export function buildHumanoid(ap = {}) {
   const ftex = faceTexture(faceOpts);
   const fg = new THREE.SphereGeometry(0.1005, 36, 26, Math.PI * 0.0, Math.PI, 0.18 * Math.PI, 0.64 * Math.PI);
   sculptFace(fg, ap);
-  // Rotate so the texture centre (u=0.25 of full sphere → here u=0.5 of the half) faces +Z
-  const fm = new THREE.Mesh(fg, new THREE.MeshStandardMaterial({ map: ftex, roughness: 0.75 }));
-  fm.scale.set(0.9, 1.12, 1.0);
+  fg.scale(0.9, 1.12, 1.0);
+  shapeHead(fg, 0, 0, 0);
+  const fm = new THREE.Mesh(fg, new THREE.MeshStandardMaterial({ map: ftex, roughness: 0.68 }));
   fm.position.set(0, 1.615 - 1.55, 0.006);
   // remap uv: half-sphere phi range [0,π] corresponds to u' in [0,1]; sample face texture u in [0,0.5]
   const uv = fg.attributes.uv;

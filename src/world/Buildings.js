@@ -255,9 +255,23 @@ export class Batch {
 export function farmhouse(B, o = {}) {
   const w = o.w ?? 7, d = o.d ?? 4.4, h = o.h ?? 2.5;
   const wall = o.wall ?? 'mudbrick';
-  B.box('rammed', 0, -0.4, 0, w + 0.5, 0.55, d + 0.5, { uv: 2 });
+  // fieldstone footing, then daubed walls held in an exposed timber frame
+  B.box('stone', 0, -0.45, 0, w + 0.45, 0.75, d + 0.45, { uv: 1.6 });
   B.box(wall, 0, 0, 0, w, h, d);
   B.gableEnds(wall, 0, h, 0, w, d, 1.7);
+  const posts = Math.max(2, Math.round(w / 2.3));
+  for (let i = 0; i <= posts; i++) {
+    const x = -w / 2 + (w * i) / posts;
+    for (const zz of [d / 2 + 0.04, -d / 2 - 0.04]) B.box('darkwood', x, 0, zz, 0.2, h, 0.14, { uv: 0.6 });
+  }
+  for (const xx of [w / 2 + 0.04, -w / 2 - 0.04]) {
+    B.box('darkwood', xx, 0, 0, 0.14, h, 0.2, { uv: 0.6 });
+    B.box('darkwood', xx, h - 0.16, 0, 0.16, 0.18, d + 0.1, { uv: 0.6 });
+  }
+  for (const zz of [d / 2 + 0.06, -d / 2 - 0.06]) {
+    B.box('darkwood', 0, h - 0.2, zz, w + 0.35, 0.22, 0.16, { uv: 0.6 });
+    B.box('darkwood', 0, 0.02, zz, w + 0.1, 0.18, 0.14, { uv: 0.6 });
+  }
   B.roof('thatch', 0, h - 0.05, 0, w, d, 1.75, { type: 'gable', overhang: 0.65, curve: 1.1 });
   // door + frame
   B.box('door', -w * 0.18, 0, d / 2 + 0.02, 1.05, 1.9, 0.08, { uv: 2 });
@@ -282,6 +296,9 @@ export function tiledHouse(B, o = {}) {
   B.box('stone', 0, -0.3, 0, w + 1.4, plat + 0.3, d + 1.4, { uv: 1.5 });
   const y0 = plat;
   B.box(o.wall ?? 'plaster', 0, y0, 0, w - 0.1, h, d - 0.1);
+  // plank wainscot along the lower walls, where plaster would be splashed and worn
+  for (const zz of [d / 2 - 0.02, -d / 2 + 0.02]) B.box('wood', 0, y0, zz, w - 0.05, 0.85, 0.08, { uv: 1.5 });
+  for (const xx of [w / 2 - 0.02, -w / 2 + 0.02]) B.box('wood', xx, y0, 0, 0.08, 0.85, d - 0.05, { uv: 1.5 });
   // columns
   const col = o.lacquer ? 'lacquer' : 'darkwood';
   const nb = Math.max(2, Math.round(w / 3));
@@ -429,22 +446,58 @@ export function gateTower(B, o = {}) {
     B.box('door', -s * 1.25, 0, 0, 2.5, h - 1.8, 0.2, { uv: 4 });
     B.pop();
   }
-  // tower building on top
+  // stone footing and grey brick facing on the gate piers
+  for (const s of [-1, 1]) {
+    B.box('stone', s * (gw / 2 + pw / 2), -1.5, 0, pw + 0.5, 2.6, d + 0.5, { uv: 2 });
+    B.box('brick', s * (gw / 2 + pw / 2), 1.1, 0, pw + 0.24, h - 2.6, d + 0.24, { uv: 3 });
+  }
+  B.box('brick', 0, h - 1.4, 0, gw + 0.1, 1.4, d + 0.24, { uv: 2 });
+  // a two-storey gate tower (城樓): lower hall with a gallery, a skirt roof, a smaller upper hall
   B.push().sub(0, h, 0, 0);
   const tw = w - 2, td = d - 1.5;
-  B.box('darkwood', 0, 0, 0, tw + 1, 0.3, td + 1);
-  B.box('plaster', 0, 0.3, 0, tw, 3.2, td);
-  const nb = 5;
+  B.box('darkwood', 0, 0, 0, tw + 2.2, 0.32, td + 2.2);
+  B.box('plaster', 0, 0.32, 0, tw, 3.4, td);
+  const nb = 6;
   for (let i = 0; i <= nb; i++) {
     const x = -tw / 2 + (tw * i) / nb;
-    for (const zz of [td / 2, -td / 2]) B.cyl('lacquer', x, 0.3, zz, 0.18, 3.2, { seg: 8 });
+    for (const zz of [td / 2, -td / 2]) {
+      B.cyl('lacquer', x, 0.32, zz, 0.2, 3.4, { seg: 10 });
+      // bracket sets under the eaves
+      B.box('darkwood', x, 3.5, zz, 0.7, 0.22, 0.7);
+      B.box('lacquer', x, 3.72, zz, 1.0, 0.18, 0.5);
+    }
   }
   for (let i = 0; i < nb; i++) {
     const x = -tw / 2 + (tw * (i + 0.5)) / nb;
-    B.box('lattice', x, 1.0, td / 2 + 0.04, tw / nb - 0.5, 1.5, 0.06, { uv: 1 });
-    B.box('lattice', x, 1.0, -td / 2 - 0.04, tw / nb - 0.5, 1.5, 0.06, { uv: 1 });
+    B.box('lattice', x, 1.0, td / 2 + 0.04, tw / nb - 0.6, 1.8, 0.06, { uv: 1 });
+    B.box('lattice', x, 1.0, -td / 2 - 0.04, tw / nb - 0.6, 1.8, 0.06, { uv: 1 });
   }
-  B.roof('roofTile', 0, 3.6, 0, tw, td, 2.6, { type: 'hip', overhang: 1.5, lift: 0.6 });
+  // gallery railing round the lower hall
+  const gx = tw / 2 + 1.0, gz = td / 2 + 1.0;
+  for (const zz of [gz, -gz]) {
+    B.box('lacquer', 0, 0.32 + 0.95, zz, 2 * gx, 0.1, 0.1);
+    B.box('darkwood', 0, 0.32 + 0.45, zz, 2 * gx, 0.06, 0.06);
+    for (let i = 0; i <= 12; i++) B.box('darkwood', -gx + (2 * gx * i) / 12, 0.32, zz, 0.08, 0.95, 0.08);
+  }
+  for (const xx of [gx, -gx]) {
+    B.box('lacquer', xx, 0.32 + 0.95, 0, 0.1, 0.1, 2 * gz);
+    for (let i = 0; i <= 5; i++) B.box('darkwood', xx, 0.32, -gz + (2 * gz * i) / 5, 0.08, 0.95, 0.08);
+  }
+  // skirt roof over the gallery
+  B.roof('roofTile', 0, 3.85, 0, tw + 1.0, td + 1.0, 1.3, { type: 'hip', overhang: 1.5, lift: 0.55 });
+  // upper hall
+  const uw = tw * 0.7, ud = td * 0.72;
+  B.box('plaster', 0, 4.6, 0, uw, 2.6, ud);
+  for (let i = 0; i <= 4; i++) {
+    const x = -uw / 2 + (uw * i) / 4;
+    for (const zz of [ud / 2, -ud / 2]) B.cyl('lacquer', x, 4.6, zz, 0.17, 2.6, { seg: 10 });
+  }
+  for (let i = 0; i < 4; i++) {
+    const x = -uw / 2 + (uw * (i + 0.5)) / 4;
+    B.box('lattice', x, 5.2, ud / 2 + 0.04, uw / 4 - 0.5, 1.4, 0.06, { uv: 1 });
+    B.box('lattice', x, 5.2, -ud / 2 - 0.04, uw / 4 - 0.5, 1.4, 0.06, { uv: 1 });
+  }
+  B.roof('roofTile', 0, 7.2, 0, uw, ud, 2.4, { type: 'hip', overhang: 1.7, lift: 0.75 });
   B.pop();
 }
 
@@ -595,6 +648,22 @@ export function stall(B, color = 0xa05030) {
   B.quad('cloth', [V(-1.8, 2.2, 1.5), V(1.8, 2.2, 1.5), V(1.8, 2.65, -1.3), V(-1.8, 2.65, -1.3)], null, color);
   B.box('wood', 0, 0, 0.7, 2.8, 0.85, 0.7);
   B.box('darkwood', 0, 0.85, 0.7, 2.9, 0.06, 0.8);
+  // goods heaped on the counter and in baskets at its foot
+  const rng = new Rng(Math.floor(color % 9973));
+  const PRODUCE = [0x5a8a32, 0x6e9a3a, 0xe8e2d0, 0xb02a1a, 0xd8a030, 0x7a4a8a, 0xc87a2a, 0x8a6a3a];
+  for (let i = 0; i < 4; i++) {
+    const x = -1.05 + i * 0.7, c = rng.pick(PRODUCE);
+    B.cyl('straw', x, 0.91, 0.7, 0.27, 0.16, { r2: 0.3, seg: 10 });
+    for (let k = 0; k < 6; k++) B.sphere('pottery', x + rng.range(-0.14, 0.14), 1.08 + rng.range(0, 0.05), 0.7 + rng.range(-0.12, 0.12), rng.range(0.06, 0.1), { color: c, seg: 6 });
+  }
+  for (let i = 0; i < 3; i++) {
+    const x = -1.2 + i * 1.2 + rng.range(-0.15, 0.15), c = rng.pick(PRODUCE);
+    B.cyl('straw', x, 0, 1.45, 0.3, 0.42, { r2: 0.36, seg: 10 });
+    for (let k = 0; k < 7; k++) B.sphere('pottery', x + rng.range(-0.18, 0.18), 0.45 + rng.range(0, 0.06), 1.45 + rng.range(-0.18, 0.18), rng.range(0.07, 0.11), { color: c, seg: 6 });
+  }
+  // bolts of cloth and a stack of bowls on the counter
+  B.cyl('cloth', 1.0, 0.92, 0.45, 0.09, 0.9, { rz: Math.PI / 2, seg: 8, color: rng.pick([0x8a2a1a, 0x2a4a6a, 0xd8c8a0]) });
+  for (let k = 0; k < 4; k++) B.cyl('pottery', -1.25, 0.91 + k * 0.05, 0.42, 0.11, 0.05, { r2: 0.14, seg: 10, color: 0x6a4a32 });
 }
 
 export function weaponRack(B) {
