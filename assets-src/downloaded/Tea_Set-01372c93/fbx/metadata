@@ -1,0 +1,102 @@
+{
+	"assetNamespace": "fab",
+	"listing":
+	{
+		"averageRating": 0,
+		"createdAt": "",
+		"description": "<p>Victorian era tea set. I modeled this as a quick scene prop, but it certainly works for most game needs as well. If anyone is interested in kits please let me know.</p>",
+		"isAiForbidden": false,
+		"isAiGenerated": false,
+		"lastUpdatedAt": "",
+		"listingType": "3d-model",
+		"media": "https://media.fab.com/image_previews/gallery_images/1cd15656-72f0-484d-89de-6c126f6ded0c/096db126-6674-46af-8c6e-06bc7cf0c41a.jpeg",
+		"publishedAt": "2024-10-18T19:13:17.369593Z",
+		"reviewCount": 0,
+		"thumbnail": "https://media.fab.com/image_previews/gallery_images/30dcdd6c-7d32-459a-9a53-064acdf0c6bc/dc60108d-6f93-4304-8452-c10b33d175fe.jpeg",
+		"title": "Tea Set",
+		"uid": "01372c93-678d-4ddf-83c2-d6e11c095e86",
+		"updatedAt": "",
+		"user":
+		{
+			"coverImageUrl": "https://cdn1.epicgames.com/fab/seller/o-ns2l95tgnt53mtngmgvwnfbshn3qqm/backgroundImage/blob-1920x540-92f65cc5e5001dc6c52a43b27dfa7053.jpg",
+			"profileImageUrl": "https://cdn1.epicgames.com/fab/seller/o-ns2l95tgnt53mtngmgvwnfbshn3qqm/profileImage/blob-500x500-003244335cd7aef2ae2abfbec6f6d645.jpg",
+			"sellerName": "Ryan Paule",
+			"uid": "23b845d5-79eb-4e01-b9c1-3f8c21e821c7"
+		},
+		"tags": [
+			{
+				"name": "Dining",
+				"slug": "dining",
+				"uid": "19a59166-3f32-4e2e-ace5-2b9380522d96"
+			},
+			{
+				"name": "Historical",
+				"slug": "historical",
+				"uid": "80a06e67-194b-4da6-89c7-4ef1e0c28184"
+			},
+			{
+				"name": "History",
+				"slug": "history",
+				"uid": "e8813717-24d7-4073-833a-53a7be2a8427"
+			},
+			{
+				"name": "Teacup",
+				"slug": "teacup",
+				"uid": "ef89e72e-13d5-4bf5-951e-a7f849a72dd3"
+			}
+		],
+		"category":
+		{
+			"name": "Tools, Objects & Decor",
+			"path": "objects-decor",
+			"slug": "objects-decor",
+			"uid": "d22d8b61-3aa8-4558-a6d1-c2a18543e0fd"
+		},
+		"assetFormats": [
+			{
+				"assetFormatType":
+				{
+					"name": "FBX",
+					"groupName": "3D Exchange Formats",
+					"code": "fbx",
+					"icon": "cube",
+					"extensions": [
+						"fbx"
+					]
+				}
+			},
+			{
+				"assetFormatType":
+				{
+					"name": "Converted Files",
+					"groupName": "",
+					"code": "converted-files",
+					"icon": "cube",
+					"extensions": [
+						"gltf",
+						"glb",
+						"usdz"
+					]
+				}
+			}
+		],
+		"_PluginMetas":
+		{
+			"apiDataVersion": "0.0.1",
+			"entitlementUid": "",
+			"cacheSize": 0,
+			"downloaded": []
+		}
+	},
+	"target": "",
+	"quality": "",
+	"format": "fbx",
+	"fileId": "cfeb8b9b-3785-4c57-94de-ce0a70b409c1",
+	"platformIncluded": "",
+	"distributionPointBaseUrls": [],
+	"distributionMethod": "",
+	"entitlementUid": "",
+	"invertedNormal": false,
+	"isConverted": false,
+	"isQuixel": false
+}
