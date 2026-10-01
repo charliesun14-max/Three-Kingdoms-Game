@@ -5,9 +5,31 @@ Everything in *Mandate of Heaven* is generated in code. Downloaded models and te
 ## Formats
 
 - **Models: glTF 2.0, binary `.glb`**, with the textures embedded. `.gltf` with its `.bin` and images beside it also works.
-  - Geometry compressed with Draco and Meshopt is supported, and so are KTX2/Basis textures.
+  - Geometry compressed with Draco and Meshopt is supported, and so are KTX2/Basis and WebP textures. The decoders ship with the game, so it all works offline.
   - FBX, OBJ, Blend or Unity/Unreal packages don't work directly. Open them in Blender and use *File → Export → glTF 2.0 (.glb)*.
 - **Textures: `.jpg` or `.png`**, tileable (seamless), sized 1024–2048 px. The game uses the colour (albedo/diffuse) map.
+
+## Large files (over 25 MB)
+
+GitHub's web page only accepts uploads up to **25 MB**, and plain Git rejects any file over **100 MB**. Two things get around that.
+
+**1. Shrink the file first.** Most downloaded models are far bigger than a game needs: uncompressed geometry and 4K or 8K textures.
+- Put the raw files in `assets-src/` at the top of the repository, keeping the same sub-folders (`props/`, `trees/` and so on).
+- Run `npm run assets:optimize`. It writes compressed copies (Meshopt geometry, WebP textures capped at 2048 px) into `public/assets/` and prints the size before and after.
+- Add `-- --texture-size 4096` for hero assets, or `-- --texture-size 1024` for small props.
+
+**2. Use Git LFS for whatever is still big.** This repository's `.gitattributes` already sends `.glb`, `.gltf`, `.bin`, `.fbx`, `.blend`, `.ktx2`, `.hdr`/`.exr`, the images in this folder and everything in `assets-src/` to Git LFS, which takes files up to 2 GB each. Install it once from https://git-lfs.com, then commit as usual:
+
+```bash
+git lfs install                  # once per computer
+git add public/assets assets-src
+git commit -m "Add temple and pine models"
+git push
+```
+
+GitHub Desktop handles LFS automatically. Check with `git lfs ls-files`: your models should be listed there. Note that your GitHub account's LFS storage and bandwidth quota applies (see *Settings → Billing*).
+
+If you'd rather not keep the files in Git at all, the desktop game also loads an `assets/` folder placed **next to its executable** (beside the `.app` on macOS), or the folder opened by *Esc → Open my assets folder*. Its `manifest.json` is merged over this one entry by entry, so you can test or ship an art pack without rebuilding.
 
 ## Conventions
 

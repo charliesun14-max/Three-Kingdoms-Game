@@ -2,17 +2,36 @@
 
 An open-world, third-person RPG set at the end of the Eastern Han dynasty (184–220 AD), in the spirit of *Kingdom Come: Deliverance* but in Three Kingdoms China. You start as a peasant of **Lousang Village** in Zhuo Commandery, Liu Bei's own village. You fight in the Yellow Turban Rebellion, stand at Hulao Pass against Lü Bu, govern Xu Province, and can end up on the Dragon Throne.
 
-Everything is procedural and runs in the browser. It uses three.js and has no external art or audio assets: terrain, Han-era architecture, characters, weapons, textures, music and sound effects are all generated in code.
+It runs in the browser or as a desktop app for Windows, macOS and Linux. It is built with three.js and needs no external art or audio: terrain, Han-era architecture, characters, weapons, textures, music and sound effects are all generated in code. Downloaded 3D models can replace any part of the scenery (see *Art assets*).
 
 ## Play
 
+### Download (no setup)
+
+Open the repository's **Releases** page and download the build for your system:
+
+| System | File | How to run it |
+|---|---|---|
+| Windows | `MandateOfHeaven-…-win-x64.exe` (installer) or `…-win-x64.zip` | Run the installer, or unzip and run `MandateOfHeaven.exe`. If SmartScreen warns about an unknown publisher, choose *More info → Run anyway*. |
+| macOS | `…-mac-….dmg` | Drag the app to Applications. The build is unsigned, so the first time, right-click it and choose *Open*. |
+| Linux | `…-linux-x86_64.AppImage` or `.tar.gz` | `chmod +x` the AppImage and run it. |
+
+The builds are made by the **Desktop builds** workflow (`.github/workflows/desktop.yml`). To publish a new release, push a version tag: `git tag v1.0.0 && git push origin v1.0.0`. To get a test build without a release, open the Actions tab, choose *Desktop builds → Run workflow*, and download the files from the run page.
+
+### From the source code
+
+You need [Node.js](https://nodejs.org) 20 or newer (and [Git LFS](https://git-lfs.com) if the repository holds art assets).
+
 ```bash
+git clone https://github.com/charliesun14-max/Three-Kingdoms-Game.git
+cd Three-Kingdoms-Game
 npm install
-npm run dev        # http://127.0.0.1:5173
-npm run build      # static build in dist/
+npm run dev          # play in the browser at http://127.0.0.1:5173
+npm run desktop      # or play in the desktop window
+npm run dist:win     # build the downloadable game yourself (also dist:mac, dist:linux); output goes to release/
 ```
 
-A desktop browser with WebGL2 and a dedicated GPU is recommended. You can change the graphics quality (Low/Medium/High) in Settings.
+A dedicated GPU is recommended. You can change the graphics quality (Low/Medium/High) in the Esc menu. In the desktop app, F11 or Alt+Enter toggles fullscreen.
 
 ### Controls
 
@@ -108,12 +127,20 @@ A desktop browser with WebGL2 and a dedicated GPU is recommended. You can change
 
 ## Art assets (optional)
 
-Everything is procedural. Downloaded **glTF 2.0 (`.glb`)** models and tileable **`.jpg`/`.png`** textures can replace any tree species, building type, prop or ground and material texture. Drop them into `public/assets/` and list them in `public/assets/manifest.json`. See `public/assets/README.md` and `manifest.example.json` for the slots and conventions: metres, +Y up, front facing +Z.
+Everything is procedural. Downloaded **glTF 2.0 (`.glb`)** models and tileable **`.jpg`/`.png`** textures can replace any tree species, building type, prop or ground and material texture. List them in a `manifest.json`. See `public/assets/README.md` and `manifest.example.json` for the slots and conventions: metres, +Y up, front facing +Z.
+
+There are two places assets can go:
+
+- **Inside the game (shipped to every player):** put them in `public/assets/` and commit them. Model and texture files are stored with **Git LFS** (see `.gitattributes`), which takes files up to 2 GB each. That gets past the 25 MB limit of GitHub's web uploader and the 100 MB limit of plain Git.
+- **Beside an installed copy (no rebuild):** the desktop game also reads an `assets/` folder next to its executable (next to the `.app` on macOS), and the folder that *Esc → Open my assets folder* opens. Files and manifest entries there override the built-in ones.
+
+`npm run assets:optimize` compresses every model in `assets-src/` (Meshopt geometry, WebP textures up to 2048 px) and writes it to `public/assets/`. It often cuts a large download to a tenth of its size.
 
 ## Development
 
 - `node tools/shoot.mjs <name> "<query>" [frames]` takes a headless screenshot, for example `play&mission=m7_daxing`, `scene=chars`, or `foes=3&attackAt=5:overhead`.
 - `node tools/autotest.mjs [mission] [minutes]` runs the story autopilot (`?auto`), which plays every mission end to end and reports errors.
 - `node tools/posecheck.mjs blade` prints hand positions for the animation keyframes.
+- `electron/main.cjs` is the desktop wrapper. It serves the built game over `app://` and merges players' asset folders into `assets/`.
 
 See `SCORECARD.md` for the quality review of each part.

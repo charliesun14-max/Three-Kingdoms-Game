@@ -433,7 +433,7 @@ export class UI {
     const g = this.game;
     const s = g.settings;
     body.innerHTML = `<h2>System 選</h2>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;margin:12px 0 20px"><span class="btn" id="m-resume">Resume</span><span class="btn" id="m-save">Save game</span><span class="btn" id="m-load">Load last save</span><span class="btn" id="m-title">Quit to title</span></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin:12px 0 20px"><span class="btn" id="m-resume">Resume</span><span class="btn" id="m-save">Save game</span><span class="btn" id="m-load">Load last save</span><span class="btn" id="m-title">Quit to title</span>${window.desktop ? '<span class="btn" id="m-full">Fullscreen (F11)</span><span class="btn" id="m-assets">Open my assets folder</span><span class="btn" id="m-quit">Quit to desktop</span>' : ''}</div>
       <h3>Settings</h3>
       <div class="stat"><span>Graphics quality</span><span><span class="btn" data-q="0">Low</span> <span class="btn" data-q="1">Medium</span> <span class="btn" data-q="2">High</span> (current: ${['Low', 'Medium', 'High'][g.quality]}, reloads)</span></div>
       <div class="stat"><span>Mouse sensitivity</span><input type="range" min="0.5" max="2" step="0.1" value="${s.sens}" id="m-sens"></div>
@@ -442,11 +442,16 @@ export class UI {
       <div class="stat"><span>Chance encounters in towns</span><span><span class="btn" data-t="encounters">${s.encounters === false ? 'Off' : 'On'}</span></span></div>
       <div class="stat"><span>Difficulty (damage taken)</span><span><span class="btn" data-d="0.6">Story</span> <span class="btn" data-d="1">Warrior</span> <span class="btn" data-d="1.5">Hardcore</span> (current ×${s.damageTaken})</span></div>
       <h3>Controls</h3>
-      <p style="font-size:16px;line-height:1.7">WASD move · Shift sprint · C sneak · F draw/sheathe · LMB strike — while locked on, move the mouse to choose the cut (left, right, overhead ↑, thrust ↓), or use Z/X/V/B · RMB block (block just before a blow lands for a <b>perfect parry</b>, then strike for a riposte) · Space dodge · Tab switch target · E interact · 1 bandage · 2 medicine · 3 eat · G order troops · I/J/M/C panels · Esc menu</p>`;
+      <p style="font-size:16px;line-height:1.7">WASD move · Shift sprint · C sneak · F draw/sheathe · LMB strike — while locked on, move the mouse to choose the cut (left, right, overhead ↑, thrust ↓), or use Z/X/V/B · RMB block (block just before a blow lands for a <b>perfect parry</b>, then strike for a riposte) · Space dodge · Tab switch target · E interact · 1 bandage · 2 medicine · 3 eat · G order troops · I/J/M/P panels · Esc menu</p>`;
     body.querySelector('#m-resume').onclick = () => this.closePanel();
     body.querySelector('#m-save').onclick = () => { g.save(); this.notify('Game saved.'); };
     body.querySelector('#m-load').onclick = () => { this.closePanel(); g.loadGame(); };
     body.querySelector('#m-title').onclick = () => { location.search = ''; };
+    if (window.desktop) {
+      body.querySelector('#m-full').onclick = () => window.desktop.toggleFullscreen();
+      body.querySelector('#m-assets').onclick = () => { window.desktop.openAssetsFolder(); this.notify('Put .glb models and a manifest.json there, then restart the game.'); };
+      body.querySelector('#m-quit').onclick = () => { g.save(true); window.desktop.quit(); };
+    }
     body.querySelectorAll('[data-q]').forEach((b) => { b.onclick = () => { localStorage.setItem('tk_quality', b.dataset.q); location.reload(); }; });
     body.querySelectorAll('[data-t]').forEach((b) => { b.onclick = () => { s[b.dataset.t] = s[b.dataset.t] === false; g.saveSettings(); this.renderPanel(); }; });
     body.querySelectorAll('[data-d]').forEach((b) => { b.onclick = () => { s.damageTaken = +b.dataset.d; g.saveSettings(); this.renderPanel(); }; });

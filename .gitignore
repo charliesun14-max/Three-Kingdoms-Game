@@ -2,3 +2,5 @@ node_modules/
 dist/
 screenshots/tmp/
 *.log
+release/
+public/decoders/

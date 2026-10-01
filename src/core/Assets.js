@@ -62,8 +62,8 @@ export async function loadAssets(renderer, onProgress = () => {}) {
     man = await r.json();
   } catch { return lib; }
   lib.manifest = man;
-  const draco = new DRACOLoader().setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
-  const ktx2 = new KTX2Loader().setTranscoderPath('https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/libs/basis/').detectSupport(renderer);
+  const draco = new DRACOLoader().setDecoderPath('./decoders/draco/');
+  const ktx2 = new KTX2Loader().setTranscoderPath('./decoders/basis/').detectSupport(renderer);
   const gltf = new GLTFLoader().setDRACOLoader(draco).setKTX2Loader(ktx2).setMeshoptDecoder(MeshoptDecoder);
   const jobs = [];
   for (const section of ['props', 'trees', 'buildings', 'rocks']) {
