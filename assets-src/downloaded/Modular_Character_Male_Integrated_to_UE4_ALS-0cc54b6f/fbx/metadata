@@ -1,0 +1,97 @@
+{
+	"assetNamespace": "fab",
+	"listing":
+	{
+		"averageRating": 5,
+		"createdAt": "",
+		"description": "<p>**Free Uasset download Link: </p>\n<p><a target=\"_blank\" href=\"https://drive.google.com/drive/folders/1M1mMVymlfN4oYTFgdF8AK0BpbMG2-u3H?usp=sharing\" rel=\"noopener noreferrer nofollow\">https://drive.google.com/drive/folders/1M1mMVymlfN4oYTFgdF8AK0BpbMG2-u3H?usp=sharing</a></p>\n<p>**UE4 project has higher quality assets</p>\n<p>**Showcase video: <a target=\"_blank\" href=\"https://www.youtube.com/watch?v=1tb9WLV37RA\" rel=\"noopener noreferrer nofollow\">https://www.youtube.com/watch?v=1tb9WLV37RA</a></p>\n<p>Fully Modular male Character for UE4\n* Integrated to ALS( Advanced Locomotion System )\n* UE 4.26.2 or above( Please contact If you need any Specific Engine version)\n* Tested with UE5 Latest Version\n* Only Uasset File Available\n* Full Project Setup With ALS</p>\n<p>N.B. Download the full project or you can download it as a plugin, just make sure your project has all ALS content at their default locations for this to work properly</p>\n<p>Thanks</p>",
+		"isAiForbidden": false,
+		"isAiGenerated": false,
+		"lastUpdatedAt": "",
+		"listingType": "3d-model",
+		"media": "https://media.fab.com/image_previews/gallery_images/4159fbc1-1c06-4aa2-8a93-f84b875dfee4/3a078375-8756-41a1-843e-46118542646b.jpeg",
+		"publishedAt": "2026-06-02T11:36:35.043410Z",
+		"reviewCount": 2,
+		"thumbnail": "https://media.fab.com/image_previews/gallery_images/f3473c9e-c87f-4941-8fc4-237520373831/8b32977c-7af1-4975-ad1f-1767b65e845c.jpeg",
+		"title": "Modular Character Male Integrated to UE4 ALS",
+		"uid": "0cc54b6f-cafa-4811-a688-72f1ca1aec4b",
+		"updatedAt": "",
+		"user":
+		{
+			"coverImageUrl": "https://cdn1.epicgames.com/fab/seller/o-glp3k5n2zqslz6qxp72bpm784vsxkt/cover/52e80f1d.png",
+			"profileImageUrl": "https://cdn1.epicgames.com/fab/seller/o-glp3k5n2zqslz6qxp72bpm784vsxkt/profile/f47433b0.png",
+			"sellerName": "MBM Studios",
+			"uid": "bbe1cf9c-c45a-4fef-84f6-fafcaa4c57ba"
+		},
+		"tags": [
+			{
+				"name": "Modular",
+				"slug": "modular",
+				"uid": "3f9ccd49-dae7-45e2-bdb6-9e288855da06"
+			},
+			{
+				"name": "Lowpoly",
+				"slug": "lowpoly",
+				"uid": "451806dc-649e-43b7-9c2e-a54485de14b6"
+			},
+			{
+				"name": "Character",
+				"slug": "character",
+				"uid": "f07e8c06-66ed-4396-81cf-108f0afcb6d6"
+			}
+		],
+		"category":
+		{
+			"name": "Characters & Creatures",
+			"path": "characters-creatures",
+			"slug": "characters-creatures",
+			"uid": "358f4f32-1ca9-42ec-9be6-24303e41b412"
+		},
+		"assetFormats": [
+			{
+				"assetFormatType":
+				{
+					"name": "FBX",
+					"groupName": "3D Exchange Formats",
+					"code": "fbx",
+					"icon": "cube",
+					"extensions": [
+						"fbx"
+					]
+				}
+			},
+			{
+				"assetFormatType":
+				{
+					"name": "Converted Files",
+					"groupName": "",
+					"code": "converted-files",
+					"icon": "cube",
+					"extensions": [
+						"gltf",
+						"glb",
+						"usdz"
+					]
+				}
+			}
+		],
+		"_PluginMetas":
+		{
+			"apiDataVersion": "0.0.1",
+			"entitlementUid": "50834b99-89de-4b58-acea-3dce2366f7e0",
+			"cacheSize": 0,
+			"downloaded": []
+		}
+	},
+	"target": "",
+	"quality": "",
+	"format": "fbx",
+	"fileId": "1a849b8f-32c3-457e-a954-d0f9f648e8bf",
+	"platformIncluded": "",
+	"distributionPointBaseUrls": [],
+	"distributionMethod": "",
+	"entitlementUid": "50834b99-89de-4b58-acea-3dce2366f7e0",
+	"invertedNormal": false,
+	"isConverted": false,
+	"isQuixel": false
+}

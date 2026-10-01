@@ -1,0 +1,78 @@
+{
+	"assetNamespace": "fab",
+	"listing":
+	{
+		"averageRating": 5,
+		"createdAt": "",
+		"description": "<p>Female Character Pack 3 comes with a total of 4 different costume options. It is rigged with Mixamo, allowing you to retarget animations downloaded from Mixamo and use them in your project.</p><p></p>",
+		"isAiForbidden": false,
+		"isAiGenerated": false,
+		"lastUpdatedAt": "",
+		"listingType": "3d-model",
+		"media": "https://media.fab.com/image_previews/gallery_images/0494e5d5-12b1-462e-85f2-7820777309cd/8f8bfa0a-871e-40be-8872-70806e07828e.png",
+		"publishedAt": "2025-11-15T18:37:10.997688Z",
+		"reviewCount": 1,
+		"thumbnail": "https://media.fab.com/image_previews/gallery_images/1a7a9c50-4c06-460a-a3d6-f07508d842e9/9c543025-81bd-416a-8dec-8a3565200034.png",
+		"title": "Female Pack 3",
+		"uid": "d91f5504-503d-43d6-9b0b-d0f801eb5588",
+		"updatedAt": "",
+		"user":
+		{
+			"coverImageUrl": "https://cdn1.epicgames.com/fab/seller/o-hgzdzq63v4bf4yh9vlbcgdnn56lrwv/cover/38bfff85.png",
+			"profileImageUrl": "https://cdn1.epicgames.com/fab/seller/o-hgzdzq63v4bf4yh9vlbcgdnn56lrwv/profile/f378f10b.png",
+			"sellerName": "ShekerLab",
+			"uid": "a2691c78-2c7f-4623-8fd2-49d7f81cc895"
+		},
+		"tags": [
+			{
+				"name": "Woman",
+				"slug": "woman",
+				"uid": "a4504020-702c-4468-8046-0a5c9c6edadf"
+			},
+			{
+				"name": "Character",
+				"slug": "character",
+				"uid": "f07e8c06-66ed-4396-81cf-108f0afcb6d6"
+			}
+		],
+		"category":
+		{
+			"name": "Characters & Creatures",
+			"path": "characters-creatures",
+			"slug": "characters-creatures",
+			"uid": "358f4f32-1ca9-42ec-9be6-24303e41b412"
+		},
+		"assetFormats": [
+			{
+				"assetFormatType":
+				{
+					"name": "FBX",
+					"groupName": "3D Exchange Formats",
+					"code": "fbx",
+					"icon": "cube",
+					"extensions": [
+						"fbx"
+					]
+				}
+			}
+		],
+		"_PluginMetas":
+		{
+			"apiDataVersion": "0.0.1",
+			"entitlementUid": "",
+			"cacheSize": 0,
+			"downloaded": []
+		}
+	},
+	"target": "",
+	"quality": "",
+	"format": "fbx",
+	"fileId": "2a59b743-0efe-4114-9dac-8f8d8334f457",
+	"platformIncluded": "",
+	"distributionPointBaseUrls": [],
+	"distributionMethod": "",
+	"entitlementUid": "",
+	"invertedNormal": false,
+	"isConverted": false,
+	"isQuixel": false
+}
