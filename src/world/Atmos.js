@@ -10,7 +10,7 @@ const smokeVS = `
     vec4 wp = modelMatrix * vec4(position, 1.0);
     vSeed = fract(sin(dot(modelMatrix[3].xz, vec2(12.9, 78.2))) * 437.5);
     float h = uv.y;
-    wp.x += h * h * uLean * (1.0 + vSeed) + sin(uTime * 0.7 + h * 4.0 + vSeed * 6.0) * h * 0.35;
+    wp.x += h * h * uLean * (1.0 + vSeed) + sin(uTime * 0.7 + h * 4.0 + vSeed * 6.0) * h * 0.7;
     wp.z += h * h * uLean * 0.4;
     gl_Position = projectionMatrix * viewMatrix * wp;
   }`;
@@ -21,10 +21,10 @@ const smokeFS = `
   float n(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.-2.*f); return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y); }
   void main(){
     float y = vUv.y, x = vUv.x - 0.5;
-    float w = 0.12 + y * 0.38;
+    float w = 0.05 + y * 0.42;
     float t = n(vec2(vUv.x * 3.0 + vSeed * 9.0, y * 4.0 - uTime * 0.35)) * 0.6 + n(vec2(vUv.x * 7.0, y * 9.0 - uTime * 0.8)) * 0.4;
     float a = smoothstep(w, w * 0.2, abs(x) + (t - 0.5) * 0.18) * smoothstep(0.0, 0.08, y) * (1.0 - smoothstep(0.4, 1.0, y)) * (0.3 + t * 0.7);
-    gl_FragColor = vec4(vec3(0.62, 0.61, 0.6) * (0.85 + t * 0.2), a * uAmt * 0.55);
+    gl_FragColor = vec4(vec3(0.6, 0.59, 0.58) * (0.85 + t * 0.2), a * uAmt * 0.42 * (1.0 - y * 0.5));
   }`;
 
 export class Atmos {
@@ -36,7 +36,7 @@ export class Atmos {
     // chimney smoke from a share of the houses
     this.smokeU = { uTime: { value: 0 }, uAmt: { value: 1 }, uLean: { value: 2.5 } };
     const smat = new THREE.ShaderMaterial({ uniforms: this.smokeU, vertexShader: smokeVS, fragmentShader: smokeFS, transparent: true, depthWrite: false, side: THREE.DoubleSide, fog: false });
-    const sgeo = new THREE.PlaneGeometry(2.4, 9, 1, 8); sgeo.translate(0, 4.5, 0);
+    const sgeo = new THREE.PlaneGeometry(4.6, 12, 1, 10); sgeo.translate(0, 6, 0);
     const H = { farmhouse: 4.0, tiled: 5.2, twoStorey: 7.6 };
     let n = 0;
     for (const b of game.world.settlements.buildings || []) {
@@ -91,7 +91,7 @@ export class Atmos {
     // cooking fires at dawn and dusk, embers at night, little at midday; rain damps it
     const meal = Math.max(Math.exp(-((hr - 7) ** 2) / 2.5), Math.exp(-((hr - 18) ** 2) / 3));
     this.smokeU.uAmt.value = (0.25 + 0.75 * meal) * (1 - (g.weather?.rain || 0) * 0.5);
-    this.smokeU.uLean.value = 2.5 + (g.weather?.overcast || 0) * 2;
+    this.smokeU.uLean.value = 4 + (g.weather?.overcast || 0) * 3;
     this.birdU.uTime.value = t;
     const day = sky.dayFactor ?? 1;
     const m = new THREE.Matrix4(), q = new THREE.Quaternion(), s = new THREE.Vector3(), p = new THREE.Vector3(), e = new THREE.Euler();

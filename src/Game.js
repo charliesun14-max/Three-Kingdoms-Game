@@ -230,7 +230,7 @@ export class Game {
     events.on('hit', (a, d) => {
       this.social.onHit(a, d);
       // striking a peaceful townsperson is assault; from then on they are fair game (and so are you)
-      if (a === this.player && !this.inCombat && ['civilian', 'han', 'militia'].includes(d.faction) && !this.social.nonLethal(d, a) && !d.tags.has('sparring') && !this.law.hunting()) {
+      if (a === this.player && !this.inCombat && ['civilian', 'han', 'militia'].includes(d.faction) && !this.social.nonLethal(d, a) && !d.tags.has('sparring') && !d.tags.has('thief') && !this.law.hunting()) {
         if (!d.mem?.assaulted) { (d.mem = d.mem || {}).assaulted = true; this.law.crime('assault', { victim: d, certain: this.law.isEnforcer(d) }); if (this.law.isEnforcer(d)) this.law.state.hostile[this.regionId] = true; }
         this.combat.setHostile(this.player, d, true);
       }
@@ -413,7 +413,7 @@ export class Game {
     for (const c of this.entities.nearby(p.pos, 3)) {
       if (c === p || c.ai?.hidden) continue;
       if (c.dead) { if (c.inventory.list().length || c.inventory.coins || c.equip.weapon !== 'fists') consider(c.pos.x, c.pos.z, 1.8, { kind: 'loot', c }); continue; }
-      if (c.ai?.surrendered) { consider(c.pos.x, c.pos.z, 2.2, { kind: 'surrender', c }); continue; }
+      if (c.ai?.surrendered) { if (!c.tags.has('thief')) consider(c.pos.x, c.pos.z, 2.2, { kind: 'surrender', c }); continue; }
       if (this.combat.hostile(p, c)) continue;
       if (c.combat.drawn && c.combat.target) continue;
       if (this.law.canSteal(c)) consider(c.pos.x, c.pos.z, 2.4, { kind: 'steal', c });
@@ -590,7 +590,7 @@ export class Game {
       return;
     }
     if (killer === this.player) {
-      if (['civilian', 'han', 'militia'].includes(c.faction) && !c.tags.has('sparring')) {
+      if (['civilian', 'han', 'militia'].includes(c.faction) && !c.tags.has('sparring') && !c.tags.has('thief')) {
         if (!this.law.crime('murder', { victim: c })) this.progression.addVirtue(-15, 'murder');
       } else {
         const m = c.faction === 'yellowTurban' ? 6 : c.faction === 'bandit' ? 5 : 8;

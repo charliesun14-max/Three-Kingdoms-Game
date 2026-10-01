@@ -47,6 +47,14 @@ export const PROPS = {
     B.box('iron', 0, 0.58, 0.06, 0.03, 0.14, 0.2);
   }),
   cup: () => built((B) => { B.cyl('lacquer', 0, 0, 0.03, 0.035, 0.06, { r2: 0.045, seg: 10 }); }),
+  // paper lantern on a cord, carried by the night watch
+  lantern: () => {
+    const g = built((B) => { B.cyl('darkwood', 0, 0, 0, 0.006, 0.16, { seg: 4 }); B.cyl('darkwood', 0, 0.16, 0, 0.07, 0.02, { seg: 10 }); B.cyl('darkwood', 0, 0.44, 0, 0.07, 0.02, { seg: 10 }); });
+    const glow = new THREE.Mesh(new THREE.SphereGeometry(0.12, 12, 10), new THREE.MeshStandardMaterial({ color: 0xc83020, emissive: 0xff7030, emissiveIntensity: 2.2, roughness: 0.7 }));
+    glow.scale.set(1, 1.25, 1); glow.position.y = 0.31;
+    g.add(glow);
+    return g;
+  },
   // seven-stringed zither laid on the ground before a seated player
   qin: () => built((B) => {
     B.box('lacquer', 0, 0.05, 0, 1.2, 0.06, 0.2, { color: 0x2a1410 });
@@ -143,6 +151,7 @@ export const HOLD = {
   rod: { dir: [0, 0.55, 0.84] },
   axe: { dir: 'tool' },
   cup: { dir: [0, 1, 0] },
+  lantern: { dir: [0, -1, 0.05] },
 };
 
 // Props carried on the body rather than in the hand: bone and local placement.

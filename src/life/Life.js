@@ -9,6 +9,7 @@ import { randomAppearance } from '../entities/Humanoid.js';
 import { Activities } from './Activities.js';
 import { Wildlife } from './Wildlife.js';
 import { Atmos } from '../world/Atmos.js';
+import { Encounters } from './Encounters.js';
 
 const PENTA = [0, 2, 4, 7, 9];
 
@@ -26,6 +27,9 @@ export class Life {
     this.act = new Activities(this);
     try { game.wildlife = new Wildlife(game); } catch (e) { console.warn('wildlife', e); game.wildlife = null; }
     try { this.atmos = new Atmos(game); } catch (e) { console.warn('atmos', e); }
+    this.enc = new Encounters(game);
+    this.nextShelter = 0;
+    this.nextLamp = 0;
     for (const s of game.world.region.settlements) {
       try {
         if (s.type === 'walledTown') this.buildTown(s);
@@ -226,6 +230,9 @@ export class Life {
     this.act.update(dt);
     this.g.wildlife?.update(dt);
     this.atmos?.update(dt);
+    this.enc.update(dt);
+    this.shelter(dt);
+    this.lamps(dt);
     // the qin player's music carries across the market
     for (const m of this.musicians) {
       const c = m.c, d = c.distTo(p);
@@ -321,7 +328,44 @@ export class Life {
   }
 
   // service and performer conversations
-  talk(c) { return this.act.talk(c); }
+  async talk(c) { if (await this.enc.talk(c)) return true; return this.act.talk(c); }
+
+  // in a downpour, people hurry under the nearest eaves until it passes
+  shelter(dt) {
+    const g = this.g, rain = g.weather?.rain || 0;
+    this.nextShelter -= dt;
+    if (rain < 0.45 || this.nextShelter > 0) return;
+    this.nextShelter = 1.2;
+    const blds = g.world.settlements.buildings || [];
+    const cand = g.entities.nearby(g.player.pos, 80).filter((c) => c.faction === 'civilian' && c.ai && !c.ai.override && !c.ai.script && !c.ai.hidden && !c.shop && !['performer', 'storyteller', 'beggar'].includes(c.role) && ['wander', 'haul', 'sweep', 'wash', 'basket'].includes(c.ai.activity?.act));
+    for (const c of cand.slice(0, 2)) {
+      let best = null, bd = 45;
+      for (const b of blds) { const d = Math.hypot(b.door.x - c.pos.x, b.door.z - c.pos.z); if (d < bd) { bd = d; best = b; } }
+      if (!best) continue;
+      const dx = best.x - best.door.x, dz = best.z - best.door.z, L = Math.hypot(dx, dz) || 1;
+      const side = (Math.random() - 0.5) * 3;
+      const sx = best.door.x + (dx / L) * 1.05 + (dz / L) * side, sz = best.door.z + (dz / L) * 1.05 - (dx / L) * side;
+      c.model.setProp(null);
+      c.ai.override = () => {
+        if ((g.weather?.rain || 0) < 0.25) return false;
+        if (c.ai.navTo(sx, sz, 3.4, 0.5)) { c.faceYaw = Math.atan2(-dx, -dz); c.model.anim.setPose('armsCrossed'); }
+        return true;
+      };
+    }
+  }
+
+  // the night watch carries lanterns
+  lamps(dt) {
+    this.nextLamp -= dt;
+    if (this.nextLamp > 0) return;
+    this.nextLamp = 2;
+    const g = this.g, night = (g.world.sky?.nightFactor ?? 0) > 0.45;
+    for (const c of g.entities.nearby(g.player.pos, 160)) {
+      if (c.role !== 'guard' || c.dead) continue;
+      if (night && !c.model.propKind) c.model.setProp('lantern');
+      else if (!night && c.model.propKind === 'lantern') c.model.setProp(null);
+    }
+  }
   interact(it) { return this.act.interact(it); }
   extraInteractables() { return [...this.act.dynamic(), ...(this.g.wildlife?.carcasses() || [])]; }
 }
