@@ -30,6 +30,23 @@ const TALES = [
     'The sleeve tore. The King ran around a pillar, drew his long sword at last, and cut Jing Ke down. Brave men still pour wine for him at the river Yi.'] },
 ];
 
+// Characters a market scribe needs most: [meaning, correct, two look-alikes]
+const GLYPHS = {
+  mother: ['mother', '母', '毋', '父'], father: ['father', '父', '文', '母'], son: ['son', '子', '了', '女'], millet: ['millet, grain', '米', '來', '禾'],
+  water: ['water', '水', '永', '火'], horse: ['horse', '馬', '鳥', '牛'], mountain: ['mountain', '山', '出', '川'], river: ['river', '河', '何', '可'],
+  field: ['field', '田', '由', '甲'], moon: ['moon, month', '月', '日', '目'], home: ['home, family', '家', '宗', '安'], army: ['army', '軍', '車', '運'],
+  cart: ['cart', '車', '東', '軍'], east: ['east', '東', '束', '車'], south: ['south', '南', '幸', '北'], king: ['king', '王', '玉', '主'],
+  peace: ['peace, safe', '安', '女', '宗'], money: ['money', '錢', '鐵', '銀'], silk: ['silk', '絲', '終', '系'], sick: ['ill', '病', '疾', '痛'],
+  return: ['return home', '歸', '帰', '婦'], heaven: ['heaven', '天', '夫', '大'], well: ['well (in health)', '好', '如', '妃'],
+};
+const LETTERS = [
+  { to: 'a son serving in the army', text: 'To my son with the army in Ji: your mother is well and the millet harvest was good. Come home safe.', words: ['son', 'army', 'mother', 'millet', 'home'] },
+  { to: 'a merchant in the east', text: 'To Merchant Wang in the east: the cart and two horses will reach you next month, with six bolts of silk.', words: ['east', 'cart', 'horse', 'moon', 'silk'] },
+  { to: 'a brother in the south', text: 'To my elder brother in the south: father is gravely ill. Return home at once.', words: ['south', 'father', 'sick', 'return', 'home'] },
+  { to: 'a landlord', text: 'To the landlord: the river flooded our field. We beg Heaven, and you, for another month to pay.', words: ['river', 'field', 'heaven', 'moon', 'money'] },
+  { to: 'a daughter married far away', text: 'To my daughter beyond the mountains: we are well. Your mother sends silk for the new child.', words: ['mountain', 'well', 'mother', 'silk'] },
+];
+
 const ROOSTERS = [
   { name: 'Red Plume', cn: '赤羽', color: 0x9a2a12 }, { name: 'Black Iron', cn: '鐵烏', color: 0x1a1a1a },
   { name: 'Golden Spur', cn: '金距', color: 0xb07a2a }, { name: 'White Crane', cn: '白鶴', color: 0xd8d0c0 },
@@ -215,6 +232,7 @@ export class Activities {
       return true;
     }
     if (role === 'barber') { await this.barber(c); return true; }
+    if (role === 'scribe') { await this.scribe(c); return true; }
     if (role === 'horsedealer') { await this.horseDealer(c); return true; }
     if (role === 'foreman') { await this.foreman(c); return true; }
     if (role === 'cockman') {
@@ -598,6 +616,37 @@ export class Activities {
     g.quests.progress(j.id, 'sacks', 1);
     if (j.n >= j.need) { g.quests.finish(j.id); this.job = null; g.barks.say(this.granary.foreman, 'Good work. Come back when the next cart comes in.', 3); }
     return true;
+  }
+
+  // ---- the scribe's table: write letters for those who cannot ----------------------------
+  async scribe(c) {
+    const g = this.g, p = g.player, mg = g.minigames, st = g.story;
+    g.dialogue.begin();
+    const r = await st.choose(c.id, 'My eyes are failing and the queue is long. Can you write a fair hand? Five coins a letter — I pay for correct characters, not for blots.', [
+      { t: 'Take a customer\'s letter.', v: 1, tag: `Speech ${p.stats.speech}` }, { t: 'Not today.', v: 0 },
+    ]);
+    g.dialogue.end();
+    if (!r) return;
+    const L = LETTERS[Math.floor(Math.random() * LETTERS.length)];
+    const m = mg.open('Writing a letter for ' + L.to, '代書', `“${L.text}”`);
+    const words = L.words.slice().sort(() => Math.random() - 0.5).slice(0, 4);
+    const status = mg.text(m, '');
+    let right = 0;
+    for (let i = 0; i < words.length; i++) {
+      const [meaning, ok, ...wrong] = GLYPHS[words[i]];
+      status.innerHTML = `Brush the character for <b>${meaning}</b>: (${i + 1} of ${words.length})`;
+      const opts = [ok, ...wrong].sort(() => Math.random() - 0.5).map((ch) => ({ t: `<span style="font-family:'Ma Shan Zheng',serif;font-size:34px">${ch}</span>`, v: ch }));
+      const pick = await mg.choose(m, opts);
+      if (pick === ok) { right++; status.innerHTML = `<b>${ok}</b> — a fine stroke.`; } else status.innerHTML = `<b>${pick}</b>? The customer frowns: it should be <b>${ok}</b>.`;
+      await mg.wait(900);
+    }
+    const pay = right === words.length ? 6 : right >= words.length - 1 ? 4 : right >= 2 ? 2 : 0;
+    p.inventory.coins += pay; if (pay) g.audio.play('coins');
+    g.progression.gain('speech', 0.5 + right * 0.2);
+    g.time.addHours(0.5);
+    status.innerHTML = `${right} of ${words.length} characters correct. ${pay ? `The customer pays <b>${pay} coins</b>.` : 'The customer takes his letter elsewhere.'}`;
+    await mg.choose(m, [{ t: 'Done', v: 1 }]);
+    mg.close(m);
   }
 
   // ---- services ----------------------------------------------------------------------

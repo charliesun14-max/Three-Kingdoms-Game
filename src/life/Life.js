@@ -157,6 +157,10 @@ export class Life {
     dealer.title = 'horse dealer';
     this.act.horseLine(hx + 3, hz, dealer);
     this.act.raceCourse(s, `${s.id}_race`);
+    const [scx, scz] = this.free(mx + 20, mz + 15, 1);
+    this.place(PROPS.lowTable(), scx, scz + 0.7, 0, 0.5);
+    const scr = this.npc('scribe', 'elder', scx, scz, this.day(8, 18, scx, scz, 'storyteller', { rot: 0 }), { appearance: { ...randomAppearance('official', R), headwear: 'official' } });
+    scr.title = 'letter-writer 代書';
     const [fx, fz] = this.free(mx + 8, mz - 19, 0.6);
     const fm = this.npc('foreman', 'merchant', fx, fz, this.day(7, 18, fx, fz, 'stand', { rot: Math.PI }));
     fm.title = 'granary foreman';
