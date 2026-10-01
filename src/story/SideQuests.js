@@ -75,6 +75,7 @@ export class SideQuests {
     const kit = new BattleKit(g, Math.floor(Math.random() * 1e5));
     const band = kit.wave(Math.random() < 0.5 ? 'yellowTurban' : 'bandit', 4 + Math.floor(Math.random() * 3), x, z, { x, z }, { aggro: 18 });
     for (const b of band) { b.ai.mode = 'wander'; b.ai.area = { x, z, r: 10 }; b.tags.delete('alwaysActive'); }
+    kit.morale(band, { name: 'The raiders' });
     g.quests.start({
       id: 'patrol', title: 'Patrol Duty', cn: '巡邏',
       desc: 'A band of raiders has been sighted in the countryside. Find and destroy them.',

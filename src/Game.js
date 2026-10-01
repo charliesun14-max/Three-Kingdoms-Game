@@ -298,6 +298,7 @@ export class Game {
       const foe = kit.wave(p.get('foeKind') || 'yellowTurban', Math.round(n * 1.2), pl.pos.x + fx * 30, pl.pos.z + fz * 30, { x: pl.pos.x, z: pl.pos.z }, { aggro: 60 });
       kit.charge(han, { x: pl.pos.x + fx * 16, z: pl.pos.z + fz * 16 });
       kit.charge(foe, { x: pl.pos.x, z: pl.pos.z });
+      kit.morale(foe, { name: 'The rebels', bearer: kit.standard(foe, p.get('foeKind') || 'yellowTurban') });
       pl.draw(true);
     }
     if (p.has('attackAt')) {
@@ -373,6 +374,7 @@ export class Game {
     else this.ui.prompt(null);
     this.updateLocation();
     this.social.update(dt);
+    if (this.battleKits) for (const k of this.battleKits) k.update();
     this.life?.update(dt);
     this.law.update(dt);
     this.barks.update();

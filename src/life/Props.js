@@ -139,6 +139,20 @@ export const PROPS = {
     B.cyl('darkwood', 0, 0, 0, 0.05, 4.2, { seg: 6 });
     B.box('cloth', 0.45, 3.2, 0, 0.9, 0.9, 0.02, { color });
   }),
+  // 牙旗 a war standard: tall pole with a long hanging banner in the army's colour
+  standard: (color = 0x9a1e14) => {
+    const g = built((B) => {
+      B.cyl('darkwood', 0, -0.6, 0, 0.025, 4.6, { seg: 6 });
+      B.cyl('bronze', 0, 4.0, 0, 0.04, 0.25, { r2: 0.005, seg: 6 });
+    });
+    const cloth = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 1.9, 4, 8), new THREE.MeshStandardMaterial({ color, side: THREE.DoubleSide, roughness: 0.9 }));
+    cloth.geometry.translate(0.37, -0.95, 0);
+    cloth.position.set(0.02, 3.85, 0);
+    cloth.castShadow = true;
+    g.add(cloth);
+    g.userData.cloth = cloth;
+    return g;
+  },
   bowl: () => built((B) => { B.cyl('pottery', 0, 0, 0, 0.07, 0.05, { r2: 0.11, seg: 12, color: 0x6a4a3a }); }),
   ring: (r = 2.2) => built((B) => {
     // low woven fence ring for the cock pit
@@ -157,6 +171,7 @@ export const HOLD = {
   axe: { dir: 'tool' },
   cup: { dir: [0, 1, 0] },
   lantern: { dir: [0, -1, 0.05] },
+  standard: { dir: [0, 1, 0.08] },
 };
 
 // Props carried on the body rather than in the hand: bone and local placement.

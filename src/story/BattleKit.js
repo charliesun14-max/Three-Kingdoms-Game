@@ -2,6 +2,9 @@
 import { Rng } from '../core/Rng.js';
 import { randomAppearance } from '../entities/Humanoid.js';
 import { randomName } from '../entities/Population.js';
+import { BARKS, pick } from '../life/barkLines.js';
+
+const SIDE_COLOR = { yellowTurban: 0xc8a020, han: 0x9a1e14, militia: 0x9a1e14, dongZhuo: 0x3a1a2a, enemy: 0x1c2436, bandit: 0x3a3028 };
 
 export const alive = (list) => list.filter((c) => !c.dead && !c.ai?.surrendered && !c.ai?.fleeing);
 
@@ -16,7 +19,60 @@ export const UNIFORMS = {
 };
 
 export class BattleKit {
-  constructor(g, seed = 1) { this.g = g; this.rng = new Rng(seed); this.all = []; }
+  constructor(g, seed = 1) { this.g = g; this.rng = new Rng(seed); this.all = []; this.sides = []; }
+
+  // A standard-bearer keeps the banner a few paces behind the middle of his side and never runs —
+  // unless the side breaks. His death shakes the whole army.
+  standard(list, kind) {
+    const live = list.filter((c) => !c.dead);
+    if (!live.length) return null;
+    const cx = live.reduce((a, c) => a + c.pos.x, 0) / live.length, cz = live.reduce((a, c) => a + c.pos.z, 0) / live.length;
+    const b = this.soldier(kind, cx, cz, { weapon: 'dao' });
+    b.title = 'standard-bearer';
+    b.model.setProp('standard');
+    b.model.propMesh?.userData.cloth?.material.color.setHex(SIDE_COLOR[b.faction] ?? 0x9a1e14);
+    b.ai.fighter = false;
+    const g = this.g;
+    b.ai.override = () => {
+      if (b.ai.fleeing) return false;
+      const l = list.filter((c) => !c.dead && c !== b);
+      if (!l.length) return false;
+      const mx = l.reduce((a, c) => a + c.pos.x, 0) / l.length, mz = l.reduce((a, c) => a + c.pos.z, 0) / l.length;
+      const fx = l.reduce((a, c) => a + (c.combat.target ? c.combat.target.pos.x - c.pos.x : 0), 0), fz = l.reduce((a, c) => a + (c.combat.target ? c.combat.target.pos.z - c.pos.z : 0), 0);
+      const L = Math.hypot(fx, fz) || 1;
+      if (b.ai.navTo(mx - (fx / L) * 6, mz - (fz / L) * 6, 3.2, 1.5)) { b.stop(); b.faceYaw = Math.atan2(fx, fz); }
+      const cl = b.model.propMesh?.userData.cloth;
+      if (cl) cl.rotation.y = Math.sin(g.clockTime * 2.3 + b.pos.x) * 0.35;
+      return true;
+    };
+    list.push(b);
+    return b;
+  }
+
+  // Opt-in morale: when a side has lost its general or most of its men, the rest break and run.
+  morale(list, opts = {}) {
+    const side = { list, n0: list.length, general: opts.general || null, broken: false, name: opts.name || '', bearer: opts.bearer || null };
+    this.sides.push(side);
+    if (!this.g.battleKits) this.g.battleKits = new Set();
+    this.g.battleKits.add(this);
+    return side;
+  }
+  update() {
+    for (const s of this.sides) {
+      if (s.broken) continue;
+      const left = alive(s.list).length;
+      const shaken = (s.general?.dead ? 0.25 : 0) + (s.bearer?.dead ? 0.15 : 0);
+      if (left / Math.max(1, s.n0) < 0.35 + shaken) {
+        s.broken = true;
+        this.rout(s.list);
+        const g = this.g, live = alive(s.list).concat(s.list.filter((c) => !c.dead && c.ai?.fleeing));
+        g.audio?.play('horn');
+        g.ui.notify(`${s.name || 'The enemy'}: the line breaks and they flee!`, 'merit');
+        live.slice(0, 3).forEach((c, i) => setTimeout(() => !c.dead && g.barks?.say(c, pick(['Run! Run for your lives!', 'The banner has fallen — flee!', 'Retreat! Retreat!', 'It\'s lost! Save yourselves!']), 2.5), i * 400));
+      }
+    }
+    if (this.sides.every((s) => s.broken || !alive(s.list).length)) this.g.battleKits?.delete(this);
+  }
 
   soldier(kind, x, z, extra = {}) {
     const g = this.g, rng = this.rng, U = UNIFORMS[kind] || UNIFORMS.enemy;
@@ -61,6 +117,7 @@ export class BattleKit {
       c.yaw = faceYaw;
       list.push(c);
     }
+    if (n >= 10 && !extra.noStandard) this.standard(list, kind);
     return list;
   }
 

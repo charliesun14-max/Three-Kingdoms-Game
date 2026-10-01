@@ -46,6 +46,7 @@ export async function runFieldBattle(st, g, spec) {
   const gen = FACTIONS[spec.enemy].general;
   const general = kit.officer({ id: 'enemyGeneral', figure: gen.figure, name: gen.name, cn: gen.cn, title: `General of ${FACTIONS[spec.enemy].name}`, faction: 'enemy', role: 'soldier', x: 0, z: -70, weapon: 'ji', body: 'generalArmor', hp: 800, stats: { str: 16, vit: 16, polearm: 15, block: 14 } });
   const w1 = kit.wave('enemy', Math.ceil(nE * 0.55), 0, -50, { x: 0, z: 40 });
+  const eBearer = kit.standard(w1, 'enemy');
   g.quests.start({
     id: 'q_field', main: true, title: `Battle for ${spec.place}`, cn: '野戰',
     desc: spec.defence ? `${FACTIONS[spec.enemy].name} invades ${spec.place}. Hold the field.` : `Your army meets ${FACTIONS[spec.enemy].name}'s host in ${spec.place}.`,
@@ -66,6 +67,7 @@ export async function runFieldBattle(st, g, spec) {
   if (!knocked()) {
     for (const o of g.quests.get('q_field').objs) o.hidden = false;
     const w2 = kit.wave('enemy', nE - w1.length, 0, -80, { x: 0, z: 20 });
+    kit.morale([...w1.filter((c) => !c.dead), ...w2], { general, bearer: eBearer, name: `${FACTIONS[spec.enemy].name}'s army` });
     kit.charge([general], { x: 0, z: 10 });
     g.ui.subtitle(gen.name, 'Cut them down! Bring me their general\'s head!', 4);
     await st.waitFor(() => general.dead || knocked());
