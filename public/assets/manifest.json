@@ -1,35 +1,156 @@
 {
   "_comment": "Art assets built from assets-src/ by npm run assets:build. Anything not listed stays procedural.",
   "textures": {
-    "litter": { "file": "textures/ground024_color.webp", "normal": "textures/ground024_normal.webp", "roughness": "textures/ground024_rough.webp" },
-    "mud": { "file": "textures/forest_floor_color.webp", "normal": "textures/forest_floor_normal.webp" }
+    "litter": {
+      "file": "textures/ground024_color.webp",
+      "normal": "textures/ground024_normal.webp",
+      "roughness": "textures/ground024_rough.webp"
+    },
+    "mud": {
+      "file": "textures/forest_floor_color.webp",
+      "normal": "textures/forest_floor_normal.webp"
+    },
+    "skinStubble": "textures/skin_male_stubble.webp"
   },
   "rocks": {
-    "small": [{ "file": "models/rocks/boulder.glb" }, { "file": "models/rocks/trench_rock.glb" }],
-    "smallB": { "file": "models/rocks/ledge_rock.glb" },
-    "big": { "file": "models/rocks/mossy_rock.glb" },
-    "bigB": { "file": "models/rocks/ledge_root.glb" },
-    "bigC": [{ "file": "models/rocks/cliff_a.glb" }, { "file": "models/rocks/cliff_b.glb" }],
-    "crag": { "file": "models/rocks/coast_cliff.glb" }
+    "small": [
+      {
+        "file": "models/rocks/boulder.glb"
+      },
+      {
+        "file": "models/rocks/trench_rock.glb"
+      }
+    ],
+    "smallB": {
+      "file": "models/rocks/ledge_rock.glb"
+    },
+    "big": {
+      "file": "models/rocks/mossy_rock.glb"
+    },
+    "bigB": {
+      "file": "models/rocks/ledge_root.glb"
+    },
+    "bigC": [
+      {
+        "file": "models/rocks/cliff_a.glb"
+      },
+      {
+        "file": "models/rocks/cliff_b.glb"
+      }
+    ],
+    "crag": {
+      "file": "models/rocks/coast_cliff.glb"
+    }
   },
   "scatter": {
-    "stump": { "file": "models/rocks/stump.glb", "k": 0.8 },
-    "fallenPine": { "file": "models/rocks/fallen_pine.glb" },
-    "deadTree": [{ "file": "models/trees/pruned_a.glb" }, { "file": "models/trees/pruned_b.glb" }, { "file": "models/trees/pruned_c.glb" }, { "file": "models/trees/pruned_d.glb" }]
+    "stump": {
+      "file": "models/rocks/stump.glb",
+      "k": 0.8
+    },
+    "fallenPine": {
+      "file": "models/rocks/fallen_pine.glb"
+    },
+    "deadTree": [
+      {
+        "file": "models/trees/pruned_a.glb"
+      },
+      {
+        "file": "models/trees/pruned_b.glb"
+      },
+      {
+        "file": "models/trees/pruned_c.glb"
+      },
+      {
+        "file": "models/trees/pruned_d.glb"
+      }
+    ]
   },
   "props": {
-    "well": { "file": "models/props/well.glb", "width": 2.7 },
-    "jars": { "file": "models/props/stone_jar.glb", "height": 0.72, "cluster": [[0, 0, 1, 0], [0.66, 0.2, 0.8, 40], [-0.56, 0.32, 0.68, 110]] },
-    "pot": { "file": "models/props/stone_jar.glb", "height": 0.5 },
-    "cup": { "file": "models/props/cup.glb", "height": 0.07 },
-    "stoneLantern": { "file": "models/props/stone_lantern.glb", "height": 1.6, "glow": [0.69, 0.42] },
-    "bench": { "file": "models/props/bench.glb", "width": 1.9 },
-    "railing": { "file": "models/props/railing.glb" },
-    "bollard": { "file": "models/props/bollard.glb", "height": 1.0 },
-    "stoneWall": { "file": "models/props/stone_wall.glb" }
+    "well": {
+      "file": "models/props/well.glb",
+      "width": 2.7
+    },
+    "jars": {
+      "file": "models/props/stone_jar.glb",
+      "height": 0.72,
+      "cluster": [
+        [
+          0,
+          0,
+          1,
+          0
+        ],
+        [
+          0.66,
+          0.2,
+          0.8,
+          40
+        ],
+        [
+          -0.56,
+          0.32,
+          0.68,
+          110
+        ]
+      ]
+    },
+    "pot": {
+      "file": "models/props/stone_jar.glb",
+      "height": 0.5
+    },
+    "cup": {
+      "file": "models/props/cup.glb",
+      "height": 0.07
+    },
+    "stoneLantern": {
+      "file": "models/props/stone_lantern.glb",
+      "height": 1.6,
+      "glow": [
+        0.69,
+        0.42
+      ]
+    },
+    "bench": {
+      "file": "models/props/bench.glb",
+      "width": 1.9
+    },
+    "railing": {
+      "file": "models/props/railing.glb"
+    },
+    "bollard": {
+      "file": "models/props/bollard.glb",
+      "height": 1.0
+    },
+    "stoneWall": {
+      "file": "models/props/stone_wall.glb"
+    }
   },
   "music": {
-    "peace": ["music/lotus_loop.ogg", "music/lotus_loop.mp3"],
-    "combat": ["music/dragon_loop.ogg", "music/dragon_loop.mp3"]
+    "peace": [
+      "music/lotus_loop.ogg",
+      "music/lotus_loop.mp3"
+    ],
+    "combat": [
+      "music/dragon_loop.ogg",
+      "music/dragon_loop.mp3"
+    ]
+  },
+  "characters": {
+    "maleHead": {
+      "file": "models/characters/male_head.glb",
+      "anchor": "origin"
+    },
+    "maleHandL": {
+      "file": "models/characters/male_hand_b.glb",
+      "anchor": "origin"
+    },
+    "maleHandR": {
+      "file": "models/characters/male_hand_a.glb",
+      "anchor": "origin"
+    },
+    "femaleHead": {
+      "file": "models/characters/female_head.glb",
+      "anchor": "origin"
+    }
   }
 }

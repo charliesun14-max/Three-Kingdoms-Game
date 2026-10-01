@@ -168,6 +168,8 @@ There are two places assets can go:
 
 `npm run assets:optimize` compresses every model in `assets-src/` (Meshopt geometry, WebP textures up to 2048 px) and writes it to `public/assets/`. It often cuts a large download to a tenth of its size.
 
+The assets already in the game are built by `npm run assets:build`: Blender scripts in `tools/blender/` pull single pieces out of large scenes, convert FBX/.blend files and decimate heavy meshes, `tools/assets/skin-textures.mjs` prepares the character skin atlases, and `tools/assets/build-assets.mjs` attaches the PBR textures and compresses everything.
+
 ## Development
 
 - `node tools/shoot.mjs <name> "<query>" [frames]` takes a headless screenshot, for example `play&mission=m7_daxing`, `scene=chars`, or `foes=3&attackAt=5:overhead`.

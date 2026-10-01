@@ -42,7 +42,7 @@ for (const f of files) {
   x += s.x + Math.max(0.5, s.x * 0.25); maxH = Math.max(maxH, s.y);
 }
 const span = Math.max(x, maxH * 1.6);
-cam.position.set(x / 2, maxH * 0.9 + span * 0.18, span * 0.95);
+cam.position.set(x / 2 + (+(q.get('cx') || 0)), maxH * 0.9 + span * 0.18 + (+(q.get('cy') || 0)), span * 0.95 * (+(q.get('cz') || 1)));
 cam.lookAt(x / 2, maxH * 0.35, 0);
 renderer.render(scene, cam);
 const l = document.getElementById('l');

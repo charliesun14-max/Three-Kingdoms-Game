@@ -147,6 +147,19 @@ export class Vegetation {
         if (this.canPlace(px, pz, 2)) this.addTree(rng.next() < 0.75 ? 'willow' : 'poplar', px, pz, rng.range(0.85, 1.2));
       }
     }
+    // River stones: boulders along the banks and a few breaking the shallows
+    if (hf.riverPts) {
+      const hw = R.river.width / 2;
+      for (let k = 2; k < hf.riverPts.length - 2; k += 2) {
+        if (rng.next() > 0.45) continue;
+        const a = hf.riverPts[k - 1], b = hf.riverPts[k + 1];
+        const dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz) || 1;
+        const side = rng.sign(), off = hw * rng.range(0.55, 1.15);
+        const px = hf.riverPts[k][0] - (dz / L) * off * side, pz = hf.riverPts[k][1] + (dx / L) * off * side;
+        if (hf.maskAt(px, pz, 0) > 0.05) continue; // keep fords and bridges clear
+        this.addRock(px, pz, rng.next() < 0.3 ? rng.range(0.9, 1.6) : rng.range(0.3, 0.75), rng.int(0, 2));
+      }
+    }
     // Roadside poplars occasionally
     for (const road of hf.roads) {
       for (let k = 10; k < road.pts.length; k += 22) {
@@ -455,7 +468,7 @@ class GrassField {
       sh.vertexShader = sh.vertexShader
         .replace('#include <common>', `#include <common>
 attribute vec2 aOff;
-varying float vT; varying vec3 vGCol;
+varying float vT; varying vec3 vGCol; varying float vFlower; varying vec3 vFlowerCol;
 ${HEIGHT_SAMPLER}`)
         .replace('#include <begin_vertex>', `
   vec2 snap = floor(uCam.xz / uSpacing) * uSpacing;
@@ -491,12 +504,18 @@ ${HEIGHT_SAMPLER}`)
   vec3 green = mix(vec3(0.08, 0.13, 0.03), vec3(0.2, 0.26, 0.07), r3);
   vec3 straw = vec3(0.34, 0.28, 0.12);
   vGCol = mix(green, straw, dry * 0.45 + m.a * 0.2);
+  // wildflowers in drifts: a few blades in a patch carry white, yellow or violet heads
+  float fl = smoothstep(0.62, 0.8, gvn(wxz * 0.045 + 11.0)) * step(0.82, gh21(cellId + 3.7));
+  float hue = gh21(cellId + 9.1);
+  vFlower = fl * (1.0 - m.b) * (1.0 - m.r);
+  vFlowerCol = hue < 0.4 ? vec3(0.95, 0.92, 0.8) : hue < 0.75 ? vec3(0.95, 0.78, 0.2) : vec3(0.55, 0.38, 0.8);
 `)
         .replace('#include <beginnormal_vertex>', 'vec3 objectNormal = vec3(0.0, 1.0, 0.0);');
       sh.fragmentShader = sh.fragmentShader
-        .replace('#include <common>', '#include <common>\nvarying float vT; varying vec3 vGCol;')
+        .replace('#include <common>', '#include <common>\nvarying float vT; varying vec3 vGCol; varying float vFlower; varying vec3 vFlowerCol;')
         .replace('#include <map_fragment>', `
   vec3 gc = vGCol * mix(0.5, 1.25, vT) + vec3(0.03, 0.04, 0.0) * vT * vT;
+  gc = mix(gc, vFlowerCol * 0.8, vFlower * smoothstep(0.78, 0.95, vT));
   diffuseColor.rgb *= gc;`);
     };
     mat.customProgramCacheKey = () => 'grassGPU';

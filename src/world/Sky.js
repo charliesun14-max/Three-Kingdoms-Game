@@ -116,7 +116,7 @@ export class SkySystem {
       this.sun.intensity = 0.28 * night;
     } else {
       this.sun.color.copy(sunCol);
-      this.sun.intensity = lerp(0.2, 3.1, day) * lerp(1, 0.35, ov);
+      this.sun.intensity = lerp(0.2, 3.5, day) * lerp(1, 0.35, ov);
     }
     const f = focus || new THREE.Vector3();
     this.sun.position.copy(f).addScaledVector(lightDir, 250);
@@ -124,7 +124,8 @@ export class SkySystem {
     // Snap shadow camera to texel grid to reduce shimmering.
     this.sun.target.updateMatrixWorld();
 
-    this.hemi.intensity = lerp(0.14, 1.05, day) * lerp(1, 0.8, ov);
+    // a strong key and a softer sky fill: shadows read as shapes, not as flat grey
+    this.hemi.intensity = lerp(0.12, 0.78, day) * lerp(1, 1.15, ov);
     this.hemi.color.setRGB(lerp(0.35, 0.72, day), lerp(0.42, 0.8, day), lerp(0.62, 0.95, day));
     this.hemi.groundColor.setRGB(lerp(0.1, 0.42, day), lerp(0.1, 0.36, day), lerp(0.14, 0.26, day));
 

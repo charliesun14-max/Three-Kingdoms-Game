@@ -60,10 +60,17 @@ const MODELS = [
   ['models/props/stone_jar.glb', 'pot.glb', 1024, () => ({ base: `${POT}BaseCol.png`, normal: `${POT}Normal.png`, orm: { g: `${POT}Roughne.png`, b: `${POT}Metalli.png` } })],
   ['models/props/stone_lantern.glb', 'lantern.glb', 1024, () => ({ base: `${LAMP}BaseColor.1001.png`, normal: `${LAMP}Normal.1001.png`, mr: `${LAMP}OcclusionRoughnessMetallic.1001.png`, ao: `${LAMP}OcclusionRoughnessMetallic.1001.png` })],
   ['models/props/cup.glb', 'cup.glb', 512, (m) => (m.endsWith('001') ? { base: `${CUP}/китай.jpg` } : null)],
+  // character skin parts (skin atlases prepared by tools/assets/skin-textures.mjs)
+  ['models/characters/male_head.glb', 'char/male_head_lo.glb', 2048, () => SKIN],
+  ['models/characters/female_head.glb', 'char/female_head.glb', 1024, () => ({ base: `${RAW}/char/skin_female.png`, normal: `${RAW}/char/Female_3_Body_normal.png`, mr: `${RAW}/char/skin_female_orm.png` })],
+  ['models/characters/male_hand_a.glb', 'char/male_hand_a.glb', 1024, () => SKIN],
+  ['models/characters/male_hand_b.glb', 'char/male_hand_b.glb', 1024, () => SKIN],
 ];
+const SKIN = { base: `${RAW}/char/skin_male_clean.png`, normal: `${RAW}/char/skin_male_normal.png`, orm: null, mr: `${RAW}/char/skin_male_orm.png` };
 
 // Tileable ground textures: [output, source, size, quality]
 const TEXTURES = [
+  ['textures/skin_male_stubble.webp', `${RAW}/char/skin_male_stubble.png`, 2048, 90],
   ['textures/ground024_color.webp', `${GROUND}Color.jpg`, 2048, 88],
   ['textures/ground024_normal.webp', `${GROUND}Normal.jpg`, 2048, 92],
   ['textures/ground024_rough.webp', `${GROUND}Roughness.jpg`, 1024, 85],

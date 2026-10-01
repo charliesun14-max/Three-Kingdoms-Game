@@ -46,7 +46,7 @@ If you'd rather not keep the files in Git at all, the desktop game also loads an
   - `anchor`.
 - Give a list of entries to provide variants. Each tree, building or prop picks one of them.
 
-Characters and horses stay procedural, because their animation system is built around their own skeletons.
+Characters keep their procedural skeleton, animation, clothing and hairstyles, but their **heads and hands can come from scanned models** (the `characters` section: `maleHead`, `femaleHead`, `maleHandL`, `maleHandR`). Each head is measured on load (crown, chin, nose tip), fitted to the skeleton's head and trimmed at the collar; hands are placed at the wrists. Skin textures are prepared by `node tools/assets/skin-textures.mjs` (beard shadow removed or thinned to stubble, irises and lips made natural, the tone normalised to a neutral that the game tints per character). Horses stay procedural.
 
 ## Good free sources (check each licence)
 

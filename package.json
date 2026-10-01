@@ -14,7 +14,8 @@
     "dist:mac": "npm run build && electron-builder --mac --publish never",
     "dist:linux": "npm run build && electron-builder --linux --publish never",
     "assets:optimize": "node tools/optimize-assets.mjs",
-    "shots": "node tools/shoot.mjs"
+    "shots": "node tools/shoot.mjs",
+    "assets:build": "node tools/assets/skin-textures.mjs && node tools/assets/build-assets.mjs"
   },
   "repository": {
     "type": "git",
@@ -36,7 +37,7 @@
   },
   "type": "module",
   "private": true,
-  "description": "Mandate of Heaven — an open-world Three Kingdoms RPG, from peasant to emperor.",
+  "description": "Mandate of Heaven \u2014 an open-world Three Kingdoms RPG, from peasant to emperor.",
   "author": "Mandate of Heaven",
   "main": "electron/main.cjs",
   "build": {

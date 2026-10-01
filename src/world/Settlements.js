@@ -296,6 +296,14 @@ export class Settlements {
       const x = s.x + Math.cos(a) * r, z = s.z + Math.sin(a) * r;
       if (this.hf.maskAt(x, z, 0) < 0.05 && this.hf.maskAt(x, z, 1) < 0.1) this.prop(haystack, x, z, 0, 1.4, rng.range(0.8, 1.1));
     }
+    // shrubs and bushes hugging the farmsteads, as in any lived-in village
+    for (const b of this.buildings.filter((b) => Math.hypot(b.x - s.x, b.z - s.z) < Math.max(s.w, s.d))) {
+      for (let k = 0; k < 5; k++) {
+        const a = rng.range(0, Math.PI * 2), r = Math.max(b.w, b.d) / 2 + rng.range(1.4, 3.2);
+        const x = b.x + Math.cos(a) * r, z = b.z + Math.sin(a) * r;
+        if (this.world.vegetation.canPlace(x, z, 0.8, true)) this.world.vegetation.addTree('shrub', x, z, rng.range(0.8, 1.5));
+      }
+    }
     // trees in and around the village (scholar trees, jujube, elms)
     for (let i = 0; i < 26; i++) {
       const x = s.x + rng.range(-s.w / 2, s.w / 2), z = s.z + rng.range(-s.d / 2, s.d / 2);

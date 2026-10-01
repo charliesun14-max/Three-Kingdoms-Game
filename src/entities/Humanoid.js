@@ -4,6 +4,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { faceTexture, Tex } from '../world/TextureGen.js';
+import { assets } from '../core/Assets.js';
 
 export const BONES = [
   'root', 'hips', 'spine', 'chest', 'neck', 'head',
@@ -85,7 +86,7 @@ function boxAt(c, w, h, d, rx = 0) {
 }
 
 class SkinBuilder {
-  constructor() { this.groups = [[], [], []]; } // 0 cloth/skin, 1 metal/lacquer, 2 hair (glossy)
+  constructor() { this.groups = [[], [], [], [], [], []]; } // 0 cloth/skin, 1 metal/lacquer, 2 hair (glossy), 3 scanned skin, 4 scanned skin with stubble, 5 scanned female head
   // weightsFn(vertexPos) -> [[bone, w], ...] ; or a single bone name
   add(geo, bone, color, group = 0, weightsFn = null) {
     let g = geo.index ? geo.toNonIndexed() : geo;
@@ -126,6 +127,90 @@ class SkinBuilder {
 }
 
 // ---------------------------------------------------------------------------
+// Scanned heads and hands from the asset manifest, fitted once to the skeleton's bind pose.
+export const SKIN_NEUTRAL = new THREE.Color(226 / 255, 188 / 255, 158 / 255);
+const partCache = new Map();
+function mergedGeometry(model) {
+  const geos = [];
+  model.root.updateMatrixWorld(true);
+  model.root.traverse((o) => {
+    if (!o.isMesh) return;
+    // dequantise (Meshopt-compressed models use normalised integer attributes) before transforming
+    const src = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry;
+    const g = new THREE.BufferGeometry();
+    for (const k of ['position', 'normal', 'uv']) {
+      const a = src.attributes[k];
+      if (!a) continue;
+      const f = new Float32Array(a.count * a.itemSize);
+      for (let i = 0; i < a.count; i++) for (let c = 0; c < a.itemSize; c++) f[i * a.itemSize + c] = a.getComponent(i, c);
+      g.setAttribute(k, new THREE.BufferAttribute(f, a.itemSize));
+    }
+    g.applyMatrix4(o.matrixWorld);
+    geos.push(g);
+  });
+  return geos.length ? mergeGeometries(geos) : null;
+}
+// The head: crown, chin and nose tip are found on the mesh, then it is scaled and moved so they
+// land where the skeleton's head expects them, and everything below the collar is cut away.
+function fittedHead(key) {
+  if (partCache.has(key)) return partCache.get(key);
+  const m = assets.model('characters', key);
+  let geo = m && mergedGeometry(m);
+  if (geo) {
+    const p = geo.attributes.position;
+    let top = -1e9, front = -1e9, cx = 0;
+    for (let i = 0; i < p.count; i++) { top = Math.max(top, p.getY(i)); front = Math.max(front, p.getZ(i)); }
+    let chin = 1e9, n = 0;
+    for (let i = 0; i < p.count; i++) {
+      if (p.getY(i) > top - 0.08) { cx += p.getX(i); n++; }
+      if (p.getZ(i) > front - 0.045 && Math.abs(p.getX(i)) < 1e9 && p.getY(i) < top - 0.1) chin = Math.min(chin, p.getY(i));
+    }
+    cx /= Math.max(1, n);
+    const OUR_TOP = 1.727, OUR_CHIN = 1.505, OUR_FRONT = 0.128;
+    const k = (OUR_TOP - OUR_CHIN) / (top - chin);
+    geo.translate(-cx, -chin, -front);
+    geo.scale(k, k, k);
+    geo.translate(0, OUR_CHIN, OUR_FRONT);
+    // keep the neck down into the collar, drop the shoulders
+    const keep = [], pos = geo.attributes.position;
+    for (let t = 0; t < pos.count; t += 3) {
+      const yMax = Math.max(pos.getY(t), pos.getY(t + 1), pos.getY(t + 2));
+      const xMax = Math.max(Math.abs(pos.getX(t)), Math.abs(pos.getX(t + 1)), Math.abs(pos.getX(t + 2)));
+      // the neck column only: anything wide and low is shoulder, which the clothes cover
+      if (yMax > 1.425 && !(yMax < 1.52 && xMax > 0.062)) keep.push(t);
+    }
+    const out = new THREE.BufferGeometry();
+    for (const name of ['position', 'normal', 'uv']) {
+      const a = geo.attributes[name]; if (!a) continue;
+      const arr = new Float32Array(keep.length * 3 * a.itemSize);
+      keep.forEach((t, j) => { for (let v = 0; v < 3; v++) for (let c = 0; c < a.itemSize; c++) arr[(j * 3 + v) * a.itemSize + c] = a.array[(t + v) * a.itemSize + c]; });
+      out.setAttribute(name, new THREE.BufferAttribute(arr, a.itemSize));
+    }
+    geo = out;
+  }
+  partCache.set(key, geo);
+  return geo;
+}
+// A hand: its wrist (the top of the mesh) is placed on the hand joint.
+function fittedHand(key, joint, scale) {
+  const ck = key + scale.toFixed(3);
+  if (!partCache.has(ck)) {
+    const m = assets.model('characters', key);
+    let geo = m && mergedGeometry(m);
+    if (geo) {
+      const p = geo.attributes.position;
+      let top = -1e9; for (let i = 0; i < p.count; i++) top = Math.max(top, p.getY(i));
+      let x = 0, z = 0, n = 0;
+      for (let i = 0; i < p.count; i++) if (p.getY(i) > top - 0.012) { x += p.getX(i); z += p.getZ(i); n++; }
+      geo.translate(-x / n, -top, -z / n);
+      geo.scale(scale, scale, scale);
+    }
+    partCache.set(ck, geo);
+  }
+  const g = partCache.get(ck);
+  return g ? g.clone().translate(joint[0], joint[1] + 0.012, joint[2]) : null;
+}
+
 const matCache = new Map();
 // Soft rim light on characters so they separate from the landscape behind them (driven by daylight).
 export const CHAR_LIGHT = { uRim: { value: 0.08 }, uRimCol: { value: new THREE.Color(1.0, 0.93, 0.8) } };
@@ -151,7 +236,23 @@ function bodyMaterials() {
   // lacquered iron lamellae: plates and lacing stand out
   const metal = withRim(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.42, metalness: 0.55, map: Tex.lamellar(), bumpMap: Tex.lamellar(), bumpScale: 2.2 }), 'm');
   const hair = withRim(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.55, metalness: 0.0 }), 'h');
-  const res = [cloth, metal, hair];
+  // scanned skin (heads and hands from the asset manifest): the texture is a neutral tone and each
+  // character's own skin colour arrives as a vertex-colour tint
+  const src = assets.model('characters', 'maleHead');
+  let skinMat = null;
+  src?.root.traverse((o) => { if (o.isMesh && !skinMat) skinMat = o.material; });
+  const mk = (map) => {
+    if (!skinMat) return cloth;
+    const m = new THREE.MeshStandardMaterial({ vertexColors: true, map, normalMap: skinMat.normalMap, roughnessMap: skinMat.roughnessMap ?? skinMat.metalnessMap, roughness: 0.85, metalness: 0 });
+    m.normalScale.set(0.8, 0.8);
+    return withRim(m, 's' + (map === skinMat.map ? 'c' : 's'));
+  };
+  const stubbleTex = assets.texture('skinStubble');
+  if (stubbleTex) { stubbleTex.flipY = false; stubbleTex.wrapS = stubbleTex.wrapT = THREE.ClampToEdgeWrapping; stubbleTex.needsUpdate = true; }
+  let femMat = null;
+  assets.model('characters', 'femaleHead')?.root.traverse((o) => { if (o.isMesh && !femMat) femMat = o.material; });
+  const fem = femMat ? withRim(Object.assign(new THREE.MeshStandardMaterial({ vertexColors: true, map: femMat.map, normalMap: femMat.normalMap, roughnessMap: femMat.roughnessMap ?? femMat.metalnessMap, roughness: 0.8, metalness: 0 })), 'sf') : cloth;
+  const res = [cloth, metal, hair, mk(skinMat?.map), mk(stubbleTex || skinMat?.map), fem];
   matCache.set('body', res);
   return res;
 }
@@ -192,8 +293,16 @@ export function buildHumanoid(ap = {}) {
 
   // --- head & neck
   S.add(limbGeo([0, 1.44, 0], [0, 1.57, 0.005], 0.052 * g, 0.048, 8), 'neck', skin);
-  S.add(shapeHead(sphereAt([0, 1.615, 0.005], 0.1, 0.9, 1.12, 1.0, 20), 0, 1.615, 0.005), 'head', skin); // skull (face mesh overlays the front)
-  for (const s of [-1, 1]) S.add(sphereAt([s * 0.093, 1.6, -0.005], 0.022, 0.5, 1.2, 0.9, 6), 'head', ap.bigEars ? shade(skin, 1.0) : skin); // ears
+  // a scanned head when the asset manifest has one (tinted to this character's skin), else the
+  // sculpted sphere with a painted face shell
+  const scanHead = !ap.proceduralHead && fittedHead(ap.female ? 'femaleHead' : 'maleHead');
+  const skinTint = new THREE.Color(skin).multiply(new THREE.Color(1 / SKIN_NEUTRAL.r, 1 / SKIN_NEUTRAL.g, 1 / SKIN_NEUTRAL.b));
+  const bearded = ap.beard && ap.beard !== 'none' || ap.face?.stubble;
+  if (scanHead) S.add(scanHead.clone(), 'head', skinTint, ap.female ? 5 : bearded ? 4 : 3);
+  else {
+    S.add(shapeHead(sphereAt([0, 1.615, 0.005], 0.1, 0.9, 1.12, 1.0, 20), 0, 1.615, 0.005), 'head', skin); // skull (face mesh overlays the front)
+    for (const s of [-1, 1]) S.add(sphereAt([s * 0.093, 1.6, -0.005], 0.022, 0.5, 1.2, 0.9, 6), 'head', ap.bigEars ? shade(skin, 1.0) : skin); // ears
+  }
   if (ap.bigEars) for (const s of [-1, 1]) S.add(sphereAt([s * 0.1, 1.58, -0.005], 0.026, 0.5, 1.7, 0.9, 6), 'head', skin);
 
   // --- torso (under-robe / skin shape)
@@ -288,9 +397,13 @@ export function buildHumanoid(ap = {}) {
     }
     S.add(sphereAt([el[0], el[1], el[2]], 0.055 * g, 1, 1, 1, 8), 'elbow' + s, ap.bare ? skin : robe);
     // hand: palm + fingers block + thumb
-    S.add(sphereAt([hd[0], hd[1] - 0.035, hd[2] + 0.005], 0.04, 0.55, 1.0, 0.9, 8), 'hand' + s, skin);
-    S.add(sphereAt([hd[0], hd[1] - 0.085, hd[2] + 0.012], 0.034, 0.5, 0.9, 0.75, 8), 'hand' + s, skin);
-    S.add(sphereAt([hd[0] - sign * 0.004, hd[1] - 0.05, hd[2] + 0.035], 0.016, 1, 1.6, 1, 6), 'hand' + s, skin);
+    const scanHand = fittedHand(s === 'L' ? 'maleHandL' : 'maleHandR', hd, (ap.female ? 0.82 : 0.92) * g);
+    if (scanHand) S.add(scanHand, 'hand' + s, new THREE.Color(skin).multiply(new THREE.Color(1 / SKIN_NEUTRAL.r, 1 / SKIN_NEUTRAL.g, 1 / SKIN_NEUTRAL.b)), 3);
+    else {
+      S.add(sphereAt([hd[0], hd[1] - 0.035, hd[2] + 0.005], 0.04, 0.55, 1.0, 0.9, 8), 'hand' + s, skin);
+      S.add(sphereAt([hd[0], hd[1] - 0.085, hd[2] + 0.012], 0.034, 0.5, 0.9, 0.75, 8), 'hand' + s, skin);
+      S.add(sphereAt([hd[0] - sign * 0.004, hd[1] - 0.05, hd[2] + 0.035], 0.016, 1, 1.6, 1, 6), 'hand' + s, skin);
+    }
   }
 
   // --- armour
@@ -460,7 +573,8 @@ export function buildHumanoid(ap = {}) {
   mesh.frustumCulled = false;
   byName.head.scale.setScalar(ap.female ? 1.04 : 1.08);
 
-  // face overlay (separate mesh with its own texture, parented to head bone)
+  // face overlay (separate mesh with its own texture, parented to head bone) — procedural heads only
+  if (scanHead) return { mesh, bones: byName, face: null, joints: J };
   const faceOpts = {
     skin: '#' + new THREE.Color(skin).getHexString(), hair: '#' + new THREE.Color(hair).getHexString(),
     ...(ap.face || {}), seed: ap.seed ?? 1,
