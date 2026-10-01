@@ -1,0 +1,93 @@
+{
+	"assetNamespace": "fab",
+	"listing":
+	{
+		"averageRating": 0,
+		"createdAt": "",
+		"description": "<p>I wanted to model my cup) If someone needs to put it in some kind of interior, take it)</p>",
+		"isAiForbidden": true,
+		"isAiGenerated": false,
+		"lastUpdatedAt": "",
+		"listingType": "3d-model",
+		"media": "https://media.fab.com/image_previews/gallery_images/c3d75be1-4f8e-427d-bd1f-acd3e6e980df/b786962e-57ba-4218-8014-57b228d38f66.jpeg",
+		"publishedAt": "2024-10-05T16:14:11.206413Z",
+		"reviewCount": 0,
+		"thumbnail": "https://media.fab.com/image_previews/gallery_images/2daa903a-7b1f-4de0-816c-197ede930652/3cae2057-5f0e-4afb-9c7b-03214d0d4df6.jpeg",
+		"title": "chinese cup",
+		"uid": "10fd1206-e6a5-48c3-8cec-4e90989b4a60",
+		"updatedAt": "",
+		"user":
+		{
+			"coverImageUrl": "https://cdn1.epicgames.com/fab/seller/o-dl4744quvre7dc6bt49y598zgmmzmd/backgroundImage/blob-1920x540-e800380c6c179d770d941b48aeac3ac1.jpg",
+			"profileImageUrl": "https://cdn1.epicgames.com/fab/seller/o-dl4744quvre7dc6bt49y598zgmmzmd/profileImage/blob-500x500-9112fdb8281a7f1abbd0c21596c219b6.jpg",
+			"sellerName": "Morozov Konstantin",
+			"uid": "beb62d76-c398-451c-8036-f746650218d8"
+		},
+		"tags": [
+			{
+				"name": "Porcelain",
+				"slug": "porcelain",
+				"uid": "1f0bc578-bd4b-4e7a-ab37-ec4cd8d90f3a"
+			},
+			{
+				"name": "Blue",
+				"slug": "blue",
+				"uid": "acfcb40f-a956-4906-82a3-a12549f5cc67"
+			},
+			{
+				"name": "Tea",
+				"slug": "tea",
+				"uid": "c1766e16-f930-46d1-8ea9-5850bd572de2"
+			},
+			{
+				"name": "Cup",
+				"slug": "cup",
+				"uid": "cf8ca5e1-7d38-4e02-8b30-76c3f1372035"
+			},
+			{
+				"name": "Chinese",
+				"slug": "chinese",
+				"uid": "d2cbfe27-84ee-4fa6-b738-6efb53c1932a"
+			}
+		],
+		"category":
+		{
+			"name": "Food & Drink",
+			"path": "food-drink",
+			"slug": "food-drink",
+			"uid": "19e2ae56-4ba7-4a79-9c85-717756af10be"
+		},
+		"assetFormats": [
+			{
+				"assetFormatType":
+				{
+					"name": "Blender",
+					"groupName": "3D DCC Formats",
+					"code": "blender",
+					"icon": "blender",
+					"extensions": [
+						"blend"
+					]
+				}
+			}
+		],
+		"_PluginMetas":
+		{
+			"apiDataVersion": "0.0.1",
+			"entitlementUid": "",
+			"cacheSize": 0,
+			"downloaded": []
+		}
+	},
+	"target": "",
+	"quality": "",
+	"format": "blender",
+	"fileId": "e7b8c026-0a8e-4859-b4d5-1177ff882f27",
+	"platformIncluded": "",
+	"distributionPointBaseUrls": [],
+	"distributionMethod": "",
+	"entitlementUid": "",
+	"invertedNormal": false,
+	"isConverted": false,
+	"isQuixel": false
+}

@@ -1,0 +1,93 @@
+{
+	"assetNamespace": "fab",
+	"listing":
+	{
+		"averageRating": 0,
+		"createdAt": "",
+		"description": "<p>My China lantern for Unreal Engine and Vizualization. </p><p><br><span>If anything is wrong, please write to me and I'll be sure to get back to you. I hope you like my outdoor lamp.</span></p>",
+		"isAiForbidden": true,
+		"isAiGenerated": false,
+		"lastUpdatedAt": "",
+		"listingType": "3d-model",
+		"media": "https://media.fab.com/image_previews/gallery_images/7b634f62-6619-4e3b-9774-011cef3f2d3a/a1488c31-a6d5-41ac-9369-336cd4b320f1.jpg",
+		"publishedAt": "2025-10-05T19:32:47.530069Z",
+		"reviewCount": 0,
+		"thumbnail": "https://media.fab.com/image_previews/gallery_images/d52c52f7-2f4a-44ab-9aa7-513cb5e3c4d6/a6a93e72-b33d-49a5-9ade-6c1bfa424ad0.jpg",
+		"title": "China lantern",
+		"uid": "25e905a6-2b52-46ca-8824-5b969510eb5d",
+		"updatedAt": "",
+		"user":
+		{
+			"coverImageUrl": "https://cdn1.epicgames.com/fab/seller/o-9n36l7vs3rcpna9vlgwkj7zaqsl889/backgroundImage/blob-1920x540-bfc5461b2054935a57196b635c34509e.jpg",
+			"profileImageUrl": "https://cdn1.epicgames.com/fab/seller/o-9n36l7vs3rcpna9vlgwkj7zaqsl889/profileImage/blob-500x500-2ebb5b3e26f6ac6f35993ce0c97daf9e.jpg",
+			"sellerName": "KIVIDO",
+			"uid": "1c232bab-52f7-46a2-bf09-902bd05ecaea"
+		},
+		"tags": [
+			{
+				"name": "Lantern",
+				"slug": "lantern",
+				"uid": "8f1ddd43-8498-4039-af68-af652a7236ef"
+			},
+			{
+				"name": "Concrete",
+				"slug": "concrete",
+				"uid": "9626f858-b7f1-4677-bd48-369c43eebbd1"
+			},
+			{
+				"name": "Light",
+				"slug": "light",
+				"uid": "9ac7d3c8-eb97-4c82-bb75-ff5dcbf845c1"
+			},
+			{
+				"name": "China",
+				"slug": "china",
+				"uid": "c6e7cc61-a817-4a77-8d6b-fad3c902076d"
+			},
+			{
+				"name": "Lamp",
+				"slug": "lamp",
+				"uid": "d7b5e9ca-33f3-46fe-bed5-c2fb5d989087"
+			}
+		],
+		"category":
+		{
+			"name": "Streets & Construction",
+			"path": "environments/streets-construction",
+			"slug": "environments--streets-construction",
+			"uid": "358393e0-cc6d-409e-af64-398359fea899"
+		},
+		"assetFormats": [
+			{
+				"assetFormatType":
+				{
+					"name": "FBX",
+					"groupName": "3D Exchange Formats",
+					"code": "fbx",
+					"icon": "cube",
+					"extensions": [
+						"fbx"
+					]
+				}
+			}
+		],
+		"_PluginMetas":
+		{
+			"apiDataVersion": "0.0.1",
+			"entitlementUid": "654bc4dd-65e1-4698-b009-cf980e703abc",
+			"cacheSize": 0,
+			"downloaded": []
+		}
+	},
+	"target": "",
+	"quality": "",
+	"format": "fbx",
+	"fileId": "44ab63f7-7d8f-4949-926c-e1f1d74fe111",
+	"platformIncluded": "",
+	"distributionPointBaseUrls": [],
+	"distributionMethod": "",
+	"entitlementUid": "654bc4dd-65e1-4698-b009-cf980e703abc",
+	"invertedNormal": false,
+	"isConverted": false,
+	"isQuixel": false
+}

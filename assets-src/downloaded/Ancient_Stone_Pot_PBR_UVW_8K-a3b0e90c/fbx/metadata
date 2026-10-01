@@ -1,0 +1,112 @@
+{
+	"assetNamespace": "fab",
+	"listing":
+	{
+		"averageRating": 0,
+		"createdAt": "",
+		"description": "<p>Ancient Stone Pot PBR|UVW|8K</p>\n<p>A quick Prop to test some new Smart Materials</p>\n<p>Textured In Substance Painter Modeled in 3DS</p>\n<p>Check out my Artstation for more content</p>\n<p><a target=\"_blank\" href=\"https://www.artstation.com/emrysryan\" rel=\"noopener noreferrer nofollow\">https://www.artstation.com/emrysryan</a></p>\n<p>Enjoy.</p>",
+		"isAiForbidden": false,
+		"isAiGenerated": false,
+		"lastUpdatedAt": "",
+		"listingType": "3d-model",
+		"media": "https://media.fab.com/image_previews/gallery_images/f3178c2d-a8b1-4972-bdd2-c90a3bbafd2f/2432a38b-4df3-4d84-926a-ee0bafafa11a.jpeg",
+		"publishedAt": "2024-12-28T14:19:04.863697Z",
+		"reviewCount": 0,
+		"thumbnail": "https://media.fab.com/image_previews/gallery_images/c48cb0db-ab6d-4d87-ad11-ae98aaa31f71/0e9a96a3-037f-4256-95f8-8c1d74e5a5f0.jpeg",
+		"title": "Ancient Stone Pot PBR|UVW|8K",
+		"uid": "a3b0e90c-0d08-4a2b-a27a-5424f104b968",
+		"updatedAt": "",
+		"user":
+		{
+			"coverImageUrl": "",
+			"profileImageUrl": "",
+			"sellerName": "Emrys Ryan",
+			"uid": "de2fa4e1-c644-471b-a248-ac51f2a5f9be"
+		},
+		"tags": [
+			{
+				"name": "Antique",
+				"slug": "antique",
+				"uid": "05c128da-c923-4f5d-b84b-fde612ae6bd4"
+			},
+			{
+				"name": "Stone",
+				"slug": "stone",
+				"uid": "3b7b9846-a26c-48e0-99e0-866350f162aa"
+			},
+			{
+				"name": "Pot",
+				"slug": "pot",
+				"uid": "5f4348b8-2c6c-4af2-8e9f-21fe41ca32a0"
+			},
+			{
+				"name": "Urn",
+				"slug": "urn",
+				"uid": "7e7114f2-d3f4-495e-8831-7990394de5ad"
+			},
+			{
+				"name": "History",
+				"slug": "history",
+				"uid": "e8813717-24d7-4073-833a-53a7be2a8427"
+			},
+			{
+				"name": "Ancient",
+				"slug": "ancient",
+				"uid": "f0419e2c-b888-4e2d-8713-61c203152231"
+			}
+		],
+		"category":
+		{
+			"name": "Buildings & Architecture",
+			"path": "buildings-architecture",
+			"slug": "buildings-architecture",
+			"uid": "eec3bdd5-ba7a-45a8-b15d-67462b9630f6"
+		},
+		"assetFormats": [
+			{
+				"assetFormatType":
+				{
+					"name": "FBX",
+					"groupName": "3D Exchange Formats",
+					"code": "fbx",
+					"icon": "cube",
+					"extensions": [
+						"fbx"
+					]
+				}
+			},
+			{
+				"assetFormatType":
+				{
+					"name": "Converted Files",
+					"groupName": "",
+					"code": "converted-files",
+					"icon": "cube",
+					"extensions": [
+						"gltf",
+						"glb",
+						"usdz"
+					]
+				}
+			}
+		],
+		"_PluginMetas":
+		{
+			"apiDataVersion": "0.0.1",
+			"entitlementUid": "d4b56739-1af4-4dc3-8384-398d643c5439",
+			"cacheSize": 0,
+			"downloaded": []
+		}
+	},
+	"target": "",
+	"quality": "",
+	"format": "fbx",
+	"fileId": "5fc86b41-fb60-4ed0-898c-1d4f7513c187",
+	"platformIncluded": "",
+	"distributionPointBaseUrls": [],
+	"distributionMethod": "",
+	"entitlementUid": "d4b56739-1af4-4dc3-8384-398d643c5439",
+	"invertedNormal": false,
+	"isConverted": false,
+	"isQuixel": false
+}

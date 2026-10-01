@@ -1,0 +1,125 @@
+{
+	"assetNamespace": "fab",
+	"listing":
+	{
+		"averageRating": 5,
+		"createdAt": "",
+		"description": "<p>2 pieces of music, designed for a Chinese martial arts setting, using mainly the Guzheng, Flute &amp; Drums.</p><p></p><p>Both songs are 60s long and have a looping and non-looping version.</p><p></p><p>One calm track (Lotus Pond) and one battle track (Dragon Dance).</p>",
+		"isAiForbidden": true,
+		"isAiGenerated": false,
+		"lastUpdatedAt": "",
+		"listingType": "audio",
+		"media": "https://media.fab.com/image_previews/gallery_images/fcd2ae6e-af38-44c5-bc7d-3f538bb0ce95/3ab41f43-d054-4928-87cc-f381c4e7c1f7.png",
+		"publishedAt": "2024-10-28T15:14:51.953617Z",
+		"reviewCount": 1,
+		"thumbnail": "https://media.fab.com/image_previews/gallery_images/f9e8e52e-dea9-48a1-b0f1-0e0e967f2db2/5f53a05f-3c3f-4f4f-bc9a-85912a7f83e3.png",
+		"title": "Chinese Fantasy Music",
+		"uid": "f8be9afd-4452-4a4a-be18-f9dff7baeec7",
+		"updatedAt": "",
+		"user":
+		{
+			"coverImageUrl": "https://cdn1.epicgames.com/fab/seller/o-wnbp8k3rbfcvant4sb3pa5bjr7vcnm/cover/5b3a498c.png",
+			"profileImageUrl": "https://cdn1.epicgames.com/fab/seller/o-wnbp8k3rbfcvant4sb3pa5bjr7vcnm/profile/d4080a66.png",
+			"sellerName": "BiteMe Games",
+			"uid": "3a1963e0-719d-42b5-8187-49e98cb93ab2"
+		},
+		"tags": [
+			{
+				"name": "Asia",
+				"slug": "asia",
+				"uid": "0508dd24-06ed-4516-9151-290f09be0e13"
+			},
+			{
+				"name": "Fantasy",
+				"slug": "fantasy",
+				"uid": "5c48e966-39f9-4b98-9803-78335e942570"
+			},
+			{
+				"name": "Music",
+				"slug": "music",
+				"uid": "76d3689a-6e84-4d37-9d54-20cc3548b2fd"
+			},
+			{
+				"name": "Loop",
+				"slug": "loop",
+				"uid": "9f03a4dc-8e32-48e6-bf53-6bd071cd219c"
+			},
+			{
+				"name": "Combat",
+				"slug": "combat",
+				"uid": "b57545a1-ab9a-4869-a553-76bcb0b0de2d"
+			},
+			{
+				"name": "Asian",
+				"slug": "asian",
+				"uid": "b7f3f585-98b9-4000-add6-cdf5d5ef68e8"
+			},
+			{
+				"name": "China",
+				"slug": "china",
+				"uid": "c6e7cc61-a817-4a77-8d6b-fad3c902076d"
+			},
+			{
+				"name": "Chinese",
+				"slug": "chinese",
+				"uid": "d2cbfe27-84ee-4fa6-b738-6efb53c1932a"
+			},
+			{
+				"name": "Martialarts",
+				"slug": "martialarts",
+				"uid": "e3d40bd7-ef21-45ef-8b2d-da578e6202cc"
+			}
+		],
+		"category":
+		{
+			"name": "Music",
+			"path": "music",
+			"slug": "music",
+			"uid": "d4661810-f923-4145-849a-192effd450a5"
+		},
+		"assetFormats": [
+			{
+				"assetFormatType":
+				{
+					"name": "Unity",
+					"groupName": "Game Engine Formats",
+					"code": "unity",
+					"icon": "unity",
+					"extensions": [
+						"unitypackage"
+					]
+				}
+			},
+			{
+				"assetFormatType":
+				{
+					"name": "Additional files",
+					"groupName": "Other Formats",
+					"code": "additional-files",
+					"icon": "file",
+					"extensions": [
+						"zip"
+					]
+				}
+			}
+		],
+		"_PluginMetas":
+		{
+			"apiDataVersion": "0.0.1",
+			"entitlementUid": "",
+			"cacheSize": 0,
+			"downloaded": []
+		}
+	},
+	"target": "",
+	"quality": "",
+	"format": "unity",
+	"fileId": "cabf3a6d-86ff-4b55-a108-8035865dddd0",
+	"platformIncluded": "",
+	"distributionPointBaseUrls": [],
+	"distributionMethod": "",
+	"entitlementUid": "",
+	"invertedNormal": false,
+	"isConverted": false,
+	"isQuixel": false
+}
