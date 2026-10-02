@@ -3,13 +3,18 @@
 // specs.json: [{ "name": "crag", "js": "g.time.hour = 10; g.photoCam = {pos:[..], look:[..]}" }, ...]
 // Inside "js", g is the game. Shots are written to screenshots/tmp/<name>.png.
 import { chromium } from 'playwright';
-import { spawn } from 'child_process';
+import { spawn, spawnSync } from 'child_process';
 import fs from 'fs';
 
 const [query, specFile, W = 960, H = 540, frames = 4] = process.argv.slice(2);
 const specs = JSON.parse(fs.readFileSync(specFile, 'utf8'));
 const port = 5100 + Math.floor(Math.random() * 800);
-const server = spawn('npx', ['vite', '--port', String(port), '--strictPort'], { stdio: ['ignore', 'pipe', 'pipe'] });
+// Shoot a frozen build so source edits during the run don't reload the page.
+const snap = `node_modules/.multishot-${port}`;
+spawnSync('npx', ['vite', 'build', '--outDir', snap, '--emptyOutDir'], { stdio: 'ignore' });
+const server = spawn('npx', ['vite', 'preview', '--outDir', snap, '--port', String(port), '--strictPort'], { stdio: ['ignore', 'pipe', 'pipe'], detached: true });
+// stop the whole npx > vite process group, then drop the snapshot
+process.on('exit', () => { try { process.kill(-server.pid); } catch {} try { fs.rmSync(snap, { recursive: true, force: true }); } catch {} });
 await new Promise((res) => { server.stdout.on('data', (d) => { if (String(d).includes('Local')) res(); }); setTimeout(res, 8000); });
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
 const page = await browser.newPage({ viewport: { width: +W, height: +H } });
@@ -43,4 +48,4 @@ for (const s of specs) {
   console.log(`shot ${s.name} in ${((Date.now() - t1) / 1000).toFixed(0)}s`);
 }
 console.log('ERRORS', [...new Set(errs)].slice(0, 8).join('\n'));
-await browser.close(); server.kill(); process.exit(0);
+await browser.close(); process.exit(0);

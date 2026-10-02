@@ -34,7 +34,7 @@ function limb(a, b, r0, r1, seg = 7) {
 }
 
 // Skinned quadruped from a species description (faces +z).
-function buildQuadruped(S, stag = false) {
+export function buildQuadruped(S, stag = false) {
   const L = S.len / 2, y = S.bodyY;
   const J = {
     root: [0, 0, 0], body: [0, y, 0], neck: [0, y + 0.1, L * 0.85], head: S.neck, tail: [0, y + 0.06, -L * 0.95],

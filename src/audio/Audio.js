@@ -285,6 +285,58 @@ export class Audio {
     o.connect(f); f.connect(g); this.route(g, pos, 1, 0.6); o.start(t); o.stop(t + 1.45);
   }
 
+  // a hen's "buk-buk", or a squawk when startled
+  cluck(pos, alarm = false) {
+    if (!this.enabled) return;
+    const n = alarm ? 3 + Math.floor(Math.random() * 3) : 2 + Math.floor(Math.random() * 3);
+    for (let i = 0; i < n; i++) setTimeout(() => {
+      if (!this.enabled) return;
+      const c = this.ctx, t = c.currentTime, f0 = alarm ? 900 + Math.random() * 300 : 480 + Math.random() * 120;
+      const o = c.createOscillator(); o.type = 'sawtooth';
+      o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f0 * (alarm ? 1.4 : 0.7), t + (alarm ? 0.18 : 0.07));
+      const f = c.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = alarm ? 2200 : 1400; f.Q.value = 4;
+      const g = c.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(alarm ? 0.12 : 0.07, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + (alarm ? 0.2 : 0.08));
+      o.connect(f); f.connect(g); this.route(g, pos, 1, 0.3); o.start(t); o.stop(t + 0.25);
+    }, i * (alarm ? 130 : 160 + Math.random() * 120));
+  }
+  // a pig's snuffling grunt: low pulsed noise through a nasal formant
+  grunt(pos) {
+    if (!this.enabled) return;
+    const c = this.ctx, t = c.currentTime, dur = 0.25 + Math.random() * 0.2;
+    const s = c.createBufferSource(); s.buffer = this.noiseBuf;
+    const f = c.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 320 + Math.random() * 80; f.Q.value = 5;
+    const am = c.createGain(); am.gain.value = 0;
+    const lfo = c.createOscillator(); lfo.frequency.value = 22 + Math.random() * 10; const lg = c.createGain(); lg.gain.value = 0.6; lfo.connect(lg); lg.connect(am.gain);
+    const g = c.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.5, t + 0.03); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    s.connect(f); f.connect(am); am.connect(g); this.route(g, pos, 1, 0.2);
+    s.start(t, Math.random()); s.stop(t + dur + 0.05); lfo.start(t); lfo.stop(t + dur + 0.05);
+  }
+  // an ox lowing: a long low call that rises and falls
+  moo(pos) {
+    if (!this.enabled) return;
+    const c = this.ctx, t = c.currentTime, dur = 1.3 + Math.random() * 0.6;
+    const o = c.createOscillator(); o.type = 'sawtooth';
+    o.frequency.setValueAtTime(95, t); o.frequency.linearRampToValueAtTime(140, t + dur * 0.35); o.frequency.linearRampToValueAtTime(110, t + dur);
+    const f = c.createBiquadFilter(); f.type = 'lowpass'; f.frequency.setValueAtTime(300, t); f.frequency.linearRampToValueAtTime(900, t + dur * 0.4); f.frequency.linearRampToValueAtTime(400, t + dur); f.Q.value = 3;
+    const g = c.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.16, t + 0.2); g.gain.setValueAtTime(0.16, t + dur * 0.7); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(f); f.connect(g); this.route(g, pos, 1, 0.5); o.start(t); o.stop(t + dur + 0.05);
+  }
+  // the town's great bronze bell (morning) - inharmonic partials with a long hum
+  bell(pos) {
+    if (!this.enabled) return;
+    const c = this.ctx, t = c.currentTime;
+    for (const [r, a, d] of [[0.5, 0.12, 9], [1, 0.1, 7], [1.19, 0.05, 5], [1.56, 0.04, 4], [2.0, 0.03, 3], [2.74, 0.02, 2]]) {
+      const o = c.createOscillator(); o.frequency.value = 110 * r;
+      const g = c.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(a, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+      o.connect(g); this.route(g, pos, 3, 0.8); o.start(t); o.stop(t + d + 0.1);
+    }
+  }
+  // the drum tower at dusk
+  drum(pos, gain = 0.35) {
+    if (!this.enabled) return;
+    this.tone(70, 0.9, gain, pos, 'sine', 48, 0.7);
+    this.noise(0.12, 300, 1, gain * 0.4, pos, 'lowpass');
+  }
 
   // ---- ambience -----------------------------------------------------------
   startAmbience() {
@@ -300,6 +352,41 @@ export class Audio {
     this.river = mk(900, 'bandpass', 0.35);
     this.crowd = mk(500, 'bandpass', 0.9);
     this.fireAmb = mk(2500, 'highpass', 0.5);
+    this.leaves = mk(3200, 'bandpass', 0.6); // wind in the trees
+    // crowd murmur: several voices, each noise through two drifting vowel formants, chopped into syllables
+    this.babble = [];
+    for (let i = 0; i < 5; i++) {
+      const s = c.createBufferSource(); s.buffer = this.makeNoise(3); s.loop = true;
+      const f1 = c.createBiquadFilter(); f1.type = 'bandpass'; f1.Q.value = 6; f1.frequency.value = 500;
+      const f2 = c.createBiquadFilter(); f2.type = 'bandpass'; f2.Q.value = 8; f2.frequency.value = 1500;
+      const syl = c.createGain(); syl.gain.value = 0;
+      const g = c.createGain(); g.gain.value = 0;
+      const pan = c.createStereoPanner ? c.createStereoPanner() : null;
+      s.connect(f1); s.connect(f2); f1.connect(syl); f2.connect(syl); syl.connect(g);
+      if (pan) { pan.pan.value = (i / 4) * 1.6 - 0.8; g.connect(pan); pan.connect(this.amb); } else g.connect(this.amb);
+      s.start(0, Math.random() * 2);
+      this.babble.push({ f1, f2, syl, g, next: Math.random() });
+    }
+    // frogs in the paddies and by the river on warm nights
+    this.frogs = mk(1800, 'bandpass', 12);
+  }
+
+  // ambient voices of a crowd: n is the number of people close by
+  updateBabble(n, dt) {
+    const c = this.ctx, t = c.currentTime;
+    const level = Math.min(1, n / 12);
+    this.babble.forEach((v, i) => {
+      v.g.gain.setTargetAtTime(i < Math.ceil(level * 5) ? 0.5 * (0.4 + level * 0.6) : 0, t, 0.8);
+      v.next -= dt;
+      if (v.next > 0) return;
+      // a syllable: pick a vowel (F1/F2 pair) and a short envelope, then sometimes a pause between phrases
+      const V = [[730, 1090], [270, 2290], [300, 870], [530, 1840], [640, 1190], [400, 2000]][Math.floor(Math.random() * 6)];
+      const pitch = i % 2 ? 1.15 : 0.92;
+      v.f1.frequency.setTargetAtTime(V[0] * pitch, t, 0.02); v.f2.frequency.setTargetAtTime(V[1] * pitch, t, 0.02);
+      const len = 0.08 + Math.random() * 0.14;
+      v.syl.gain.setTargetAtTime(0.9, t, 0.015); v.syl.gain.setTargetAtTime(0, t + len, 0.03);
+      v.next = len + 0.04 + (Math.random() < 0.12 ? 0.6 + Math.random() * 1.2 : Math.random() * 0.08);
+    });
   }
 
   update(dt) {
@@ -364,6 +451,35 @@ export class Audio {
       } else {
         for (let i = 0; i < 6; i++) setTimeout(() => this.tone(4400, 0.03, 0.012, null, 'square', null, 0.2), i * 55);
         this.nextBird = 0.6 + Math.random() * 1.2;
+      }
+    }
+    // wind in nearby trees
+    const veg = g.world.vegetation;
+    if (veg && (this.treeCheck = (this.treeCheck ?? 0) - dt) <= 0) {
+      this.treeCheck = 1;
+      let n = 0;
+      for (const tr of veg.trees) if (Math.abs(tr.x - p.pos.x) < 25 && Math.abs(tr.z - p.pos.z) < 25 && ++n > 12) break;
+      this.treeN = n;
+    }
+    this.leaves.g.gain.setTargetAtTime(Math.min(1, (this.treeN || 0) / 10) * windV * 0.5 * (1 + (g.weather?.rain || 0)), t, 0.6);
+    this.leaves.f.frequency.setTargetAtTime(2600 + 900 * Math.sin(t * 0.37), t, 0.4);
+    // voices of the people around you
+    if ((this.crowdCheck = (this.crowdCheck ?? 0) - dt) <= 0) {
+      this.crowdCheck = 0.5;
+      this.crowdN = g.entities?.list?.filter((e) => !e.dead && e !== p && e.pos && !e.ai?.hidden && Math.abs(e.pos.x - p.pos.x) < 22 && Math.abs(e.pos.z - p.pos.z) < 22).length || 0;
+    }
+    this.updateBabble(night > 0.7 ? this.crowdN * 0.3 : this.crowdN, dt);
+    // frogs: warm months, after dusk, near water
+    const warm = g.time && g.time.month >= 4 && g.time.month <= 9 ? 1 : 0;
+    this.frogs.g.gain.setTargetAtTime(warm * night * Math.max(0, 1 - rd / 60) * 0.05 * (0.5 + 0.5 * Math.sin(t * 2.3) * Math.sin(t * 0.31)), t, 0.08);
+    // morning bell and evening drum from the town's bell-and-drum tower (晨鐘暮鼓)
+    const town = g.world.region.settlements?.find((s) => s.type === 'walledTown' && Math.hypot(s.x - p.pos.x, s.z - p.pos.z) < 260);
+    if (town) {
+      const slot = hr >= 5.9 && hr < 6.4 ? 'bell' : hr >= 18.4 && hr < 18.9 ? 'drum' : null;
+      if (slot && this.towerDay !== `${slot}${g.time?.day}`) { this.towerDay = `${slot}${g.time?.day}`; this.towerN = slot === 'bell' ? 9 : 18; this.towerNext = 0; }
+      if (this.towerN > 0 && (this.towerNext -= dt) <= 0) {
+        if (this.towerDay.startsWith('bell')) { this.bell(town); this.towerNext = 5; } else { this.drum(town, 0.25 + 0.15 * Math.random()); this.towerNext = 0.5 + (this.towerN % 6 === 0 ? 1.4 : 0); }
+        this.towerN--;
       }
     }
     // music

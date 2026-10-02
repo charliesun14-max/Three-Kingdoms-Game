@@ -1,6 +1,7 @@
 // Shared materials for architecture and props.
 import * as THREE from 'three';
 import { Tex } from './TextureGen.js';
+import { assets } from '../core/Assets.js';
 
 let M = null;
 
@@ -58,6 +59,17 @@ export function materials() {
     if (!m?.map) continue;
     m.bumpMap = m.map;
     m.bumpScale = sc;
+  }
+  // photo-scanned surfaces from the asset manifest (built by tools/assets/terrain-textures.mjs) replace the
+  // generated ones: weathered stone blocks for footings and platforms, grey brick, worn timber planks.
+  // Builder UVs are metres / 2 (or the box's uv option), so each 1024 px scan covers about 2 m.
+  for (const [mat, key, color, normalScale] of [['stone', 'wallStone', 0xe6e2da, 1.0], ['brick', 'brick', 0xd8d4cc, 1.0], ['wood', 'planks', 0xc8b4a0, 0.8]]) {
+    const map = assets.texture(key), nrm = assets.texture(key, 'normal');
+    if (!map) continue;
+    const m = M[mat];
+    m.map = map; m.color.set(color);
+    if (nrm) { m.normalMap = nrm; m.normalScale.set(normalScale, normalScale); m.bumpMap = null; } // OpenGL-convention maps on flipY textures
+    m.needsUpdate = true;
   }
   return M;
 }

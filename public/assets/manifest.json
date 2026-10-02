@@ -8,11 +8,34 @@
     },
     "mud": {
       "file": "textures/forest_floor_color.webp",
-      "normal": "textures/forest_floor_normal.webp"
+      "normal": "textures/forest_floor_normal.webp",
+      "roughness": "textures/forest_floor_rough.webp"
     },
     "skinStubble": "textures/skin_male_stubble.webp",
     "water": {
       "normal": "textures/water_normal.webp"
+    },
+    "gravel": {
+      "file": "textures/gravel_color.webp",
+      "normal": "textures/gravel_normal.webp",
+      "roughness": "textures/gravel_rough.webp"
+    },
+    "terrainRock": {
+      "file": "textures/rock_color.webp",
+      "normal": "textures/rock_normal.webp",
+      "roughness": "textures/rock_rough.webp"
+    },
+    "wallStone": {
+      "file": "textures/wall_stone_color.webp",
+      "normal": "textures/wall_stone_normal.webp"
+    },
+    "brick": {
+      "file": "textures/brick_color.webp",
+      "normal": "textures/brick_normal.webp"
+    },
+    "planks": {
+      "file": "textures/planks_color.webp",
+      "normal": "textures/planks_normal.webp"
     }
   },
   "rocks": {

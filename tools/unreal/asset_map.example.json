@@ -1,0 +1,23 @@
+{
+  "_comment": "Copy to asset_map.json and point each game name at an Unreal asset (right-click an asset > Copy Reference, keep the /Game/... part). Unmapped names are listed in the Output Log after import.",
+  "trees": {
+    "elm": "/Game/Fab/Trees/SM_BroadleafTree_A.SM_BroadleafTree_A",
+    "mulberry": "/Game/Fab/Trees/SM_BroadleafTree_B.SM_BroadleafTree_B",
+    "jujube": "",
+    "pine": "",
+    "poplar": "",
+    "willow": "",
+    "peach": "",
+    "shrub": ""
+  },
+  "building": {
+    "farmhouse": "",
+    "tiled": "",
+    "twoStorey": "",
+    "watchtower": ""
+  },
+  "rock": { "0": "", "1": "", "crag": "" },
+  "scatter": { "stump": "", "fallenPine": "", "deadTree": "" },
+  "props": { "stepStones": "", "roofTiles": "", "cup": "" },
+  "food": { "apple": "", "pear": "", "bread": "", "fowl": "", "meat": "", "sausage": "", "fish": "", "bowl": "", "plate_wood": "" }
+}

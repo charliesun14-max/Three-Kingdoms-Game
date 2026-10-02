@@ -5,6 +5,7 @@ import { CHAR_LIGHT } from '../entities/Humanoid.js';
 import { REGIONS } from './regions.js';
 import { Heightfield } from './Heightfield.js';
 import { Terrain } from './Terrain.js';
+import { setTextureDetail } from './TextureGen.js';
 import { Water } from './Water.js';
 import { SkySystem } from './Sky.js';
 import { Colliders } from './Colliders.js';
@@ -21,6 +22,7 @@ export class World {
     onProgress('Shaping the land…', 0.1);
     this.hf = new Heightfield(this.region);
     onProgress('Raising the earth…', 0.3);
+    setTextureDetail(engine.quality);
     this.terrain = new Terrain(this.hf, this.scene, engine.quality);
     engine.atmosBase = this.hf.region.baseHeight ?? 10;
     this.water = new Water(this.hf, this.scene);

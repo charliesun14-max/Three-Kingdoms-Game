@@ -319,6 +319,43 @@ export class Settlements {
     if (F('knife')) put('food', 'knife', w * 0.08, top, d * 0.36, 1.3);
   }
 
+  // Everyday clutter of a lived-in farmstead (own RNG stream, so the village layout is unchanged):
+  // strings of garlic and dried persimmons under the eaves, washing on a line across the yard.
+  farmLife(x, z, rot, w, d, xl, zf) {
+    const rng = new Rng(Math.abs(Math.floor(x * 17 + z * 5)) + 9);
+    const B = this.site(x, z, rot, w + 1, d + 1);
+    const V = (a, b, c) => new THREE.Vector3(a, b, c);
+    const h = 2.5;
+    if (rng.chance(0.55)) {
+      // 2-4 strings hung from the wall plate between the window and the corner
+      const n = rng.int(2, 4);
+      for (let i = 0; i < n; i++) {
+        const sx = w * 0.06 + i * 0.32 + rng.range(-0.05, 0.05), sz = d / 2 + 0.24, len = rng.range(0.7, 1.05);
+        B.cyl('straw', sx, h - 0.25 - len, sz, 0.012, len, { seg: 4 });
+        const garlic = rng.chance(0.5), k = Math.floor(len / 0.075);
+        for (let j = 0; j < k; j++) {
+          const yy = h - 0.3 - j * 0.075, a = j * 2.1;
+          if (garlic) B.sphere('pottery', sx + Math.cos(a) * 0.035, yy, sz + Math.sin(a) * 0.035, 0.038, { color: rng.pick([0xe8e0cc, 0xddd2bc, 0xeee6d6]), seg: 6, sy: 0.85 });
+          else B.sphere('pottery', sx + Math.cos(a) * 0.03, yy, sz + Math.sin(a) * 0.03, 0.033, { color: rng.pick([0xc8501a, 0xb84418, 0xd86a20]), seg: 6, sy: 0.75 });
+        }
+      }
+    }
+    if (rng.chance(0.4)) {
+      // washing line on two poles along the left side of the yard
+      const lx = xl + 1.1, z0 = d / 2 + 2.2, z1 = Math.min(zf - 1.2, z0 + 3.6), top = 1.85;
+      if (z1 - z0 > 2) {
+        for (const zz of [z0, z1]) B.cyl('darkwood', lx, 0, zz, 0.045, top + 0.1, { seg: 5 });
+        B.beam('straw', V(lx, top, z0), V(lx, top - 0.06, z1), 0.012);
+        const cols = [0x2a3a5a, 0x8a7a5a, 0xd8ccb0, 0x5a3a2a, 0x3a4a3a, 0x9a3a2a];
+        for (let zz = z0 + 0.35; zz < z1 - 0.5; zz += rng.range(0.75, 1.0)) {
+          const cw = rng.range(0.5, 0.8), ch = rng.range(0.6, 0.95), sag = (zz - z0) / (z1 - z0) * 0.06 + 0.02, sk = rng.range(-0.06, 0.06);
+          const yt = top - sag;
+          B.quad('cloth', [V(lx + sk, yt - ch, zz), V(lx + sk, yt - ch, zz + cw), V(lx, yt, zz + cw), V(lx, yt, zz)], null, rng.pick(cols));
+        }
+      }
+    }
+  }
+
   tilePile(fx, fz, frot, lx, lz, yaw = 0) {
     const [wx, wz] = this.lw(fx, fz, frot, lx, lz);
     this.inst('props', 'roofTiles', wx, this.ground(wx, wz, 1.4, 1.4) - 0.04, wz, frot + yaw);
@@ -394,6 +431,7 @@ export class Settlements {
     if (o.path !== false) this.stonePath(x, z, rot, -w * 0.18, d / 2 + 0.9, 0, zf + 0.2);
     // spare roof tiles stacked against the gable end of some houses (own RNG stream: layout unchanged)
     if (assets.has('props', 'roofTiles') && new Rng(Math.abs(Math.floor(x * 7 - z * 11)) + 3).chance(0.35)) this.tilePile(x, z, rot, w / 2 + 1.0, -d / 2 + 1.0, Math.PI / 2);
+    this.farmLife(x, z, rot, w, d, xl, zf);
     return house;
   }
 

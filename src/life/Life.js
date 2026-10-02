@@ -9,6 +9,8 @@ import { randomName } from '../entities/Population.js';
 import { randomAppearance } from '../entities/Humanoid.js';
 import { Activities } from './Activities.js';
 import { Wildlife } from './Wildlife.js';
+import { Livestock } from './Livestock.js';
+import { Critters } from '../world/Critters.js';
 import { Atmos } from '../world/Atmos.js';
 import { Encounters } from './Encounters.js';
 
@@ -28,6 +30,8 @@ export class Life {
     this.act = new Activities(this);
     try { game.wildlife = new Wildlife(game); } catch (e) { console.warn('wildlife', e); game.wildlife = null; }
     try { this.atmos = new Atmos(game); } catch (e) { console.warn('atmos', e); }
+    try { this.livestock = new Livestock(game); } catch (e) { console.warn('livestock', e); }
+    try { this.critters = new Critters(game); } catch (e) { console.warn('critters', e); }
     this.enc = new Encounters(game);
     this.nextShelter = 0;
     this.nextLamp = 0;
@@ -257,6 +261,8 @@ export class Life {
     this.act.update(dt);
     this.g.wildlife?.update(dt);
     this.atmos?.update(dt);
+    this.livestock?.update(dt);
+    this.critters?.update(dt);
     this.enc.update(dt);
     this.shelter(dt);
     this.lamps(dt);

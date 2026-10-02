@@ -168,7 +168,11 @@ There are two places assets can go:
 
 `npm run assets:optimize` compresses every model in `assets-src/` (Meshopt geometry, WebP textures up to 2048 px) and writes it to `public/assets/`. It often cuts a large download to a tenth of its size.
 
-The assets already in the game are built by `npm run assets:build`: Blender scripts in `tools/blender/` pull single pieces out of large scenes, convert FBX/.blend files and decimate heavy meshes, `tools/assets/skin-textures.mjs` prepares the character skin atlases, and `tools/assets/build-assets.mjs` attaches the PBR textures and compresses everything.
+The assets already in the game are built by `npm run assets:build`: Blender scripts in `tools/blender/` pull single pieces out of large scenes, convert FBX/.blend files and decimate heavy meshes, `tools/assets/skin-textures.mjs` prepares the character skin atlases, `tools/assets/terrain-textures.mjs` turns the scanned surfaces into tileable 1–2K ground, rock, gravel, stone, brick and plank maps, and `tools/assets/build-assets.mjs` attaches the PBR textures and compresses everything.
+
+## Moving to Unreal Engine
+
+`npm run export:unreal` writes every region as Unreal Engine 5 Landscape heightmaps and paint layers, plus CSVs of every tree, building, prop and story spot in Unreal coordinates. `tools/unreal/import_world.py` places them in the editor. See [`docs/UNREAL_MIGRATION.md`](docs/UNREAL_MIGRATION.md) for what this engine can and cannot match, and a step-by-step port plan.
 
 ## Development
 

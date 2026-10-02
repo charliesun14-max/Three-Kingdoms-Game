@@ -43,6 +43,13 @@ export class Terrain {
       tMud: { value: assets.texture('mud') },
       tMudN: { value: assets.texture('mud', 'normal') },
       tTown: { value: Tex.packedEarth() },
+      tMudR: { value: assets.texture('mud', 'roughness') },
+      tGravel: { value: assets.texture('gravel') },
+      tGravelN: { value: assets.texture('gravel', 'normal') },
+      tGravelR: { value: assets.texture('gravel', 'roughness') },
+      tRockC: { value: assets.texture('terrainRock') },
+      tRockN: { value: assets.texture('terrainRock', 'normal') },
+      tRockR: { value: assets.texture('terrainRock', 'roughness') },
     };
     const defines = {};
     if (this.quality >= 2) defines.DETAIL_NORMALS = '';
@@ -50,6 +57,14 @@ export class Terrain {
     if (uniforms.tLitterR.value) defines.HAS_LITTER_R = '';
     if (uniforms.tMud.value) defines.HAS_MUD = '';
     if (uniforms.tMudN.value) defines.HAS_MUD_N = '';
+    // scanned surfaces: gravel (roads, yards, river banks) and triplanar rock for slopes
+    if (uniforms.tGravel.value && uniforms.tGravelN.value && uniforms.tGravelR.value) defines.HAS_GRAVEL = '';
+    if (uniforms.tRockC.value && uniforms.tRockN.value && uniforms.tRockR.value) defines.HAS_ROCK = '';
+    if (uniforms.tMudR.value) defines.HAS_MUD_R = '';
+    for (const k of ['tGravel', 'tGravelN', 'tGravelR', 'tRockC', 'tRockN', 'tRockR', 'tMudR', 'tMud', 'tMudN', 'tLitterN', 'tLitterR']) {
+      if (uniforms[k].value) uniforms[k].value.anisotropy = 16;
+    }
+    for (const k of ['tGrass', 'tDry', 'tLoess', 'tRock', 'tField', 'tRoad', 'tLitter', 'tTown']) uniforms[k].value.anisotropy = 16;
     mat.defines = defines;
     this.uniforms = uniforms;
     mat.onBeforeCompile = (sh) => {
@@ -63,6 +78,7 @@ varying vec3 vWPos;
 varying vec3 vWNorm;
 uniform sampler2D tGrass, tDry, tLoess, tRock, tField, tRoad, tLitter, tMask, tWet;
 uniform sampler2D tLitterN, tLitterR, tMud, tMudN, tTown;
+uniform sampler2D tMudR, tGravel, tGravelN, tGravelR, tRockC, tRockN, tRockR;
 // partial-derivative blend of a tangent-space normal onto another, by weight
 vec3 blendN(vec3 a, vec3 b, float w) {
   b = normalize(mix(vec3(0.0, 0.0, 1.0), b, w));
@@ -75,6 +91,24 @@ uniform float uCloudT, uCloudK;
 float h21(vec2 p){ return fract(sin(dot(p, vec2(127.1,311.7))) * 43758.5453); }
 float vnoise(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.0-2.0*f);
   return mix(mix(h21(i),h21(i+vec2(1,0)),f.x), mix(h21(i+vec2(0,1)),h21(i+vec2(1,1)),f.x), f.y); }
+// Tile-breaking lookup (after Inigo Quilez): a slowly varying noise picks between two offset copies of the
+// texture, so a 2-3 m photo tile never repeats visibly. Gradients are taken once so mips stay continuous.
+float ntK, ntF; vec2 ntOa, ntOb;
+void noTileSetup(vec2 x){
+  float k = vnoise(x * 0.37) * 6.0;
+  ntF = fract(k);
+  float ia = floor(k), ib = ia + 1.0;
+  ntOa = sin(vec2(3.0, 7.0) * ia); ntOb = sin(vec2(3.0, 7.0) * ib);
+  ntK = smoothstep(0.25, 0.75, ntF);
+}
+vec4 noTile(sampler2D t, vec2 x){
+  vec2 dx = dFdx(x), dy = dFdy(x);
+  return mix(textureGrad(t, x + ntOa, dx, dy), textureGrad(t, x + ntOb, dx, dy), ntK);
+}
+// average colour of a texture (its last mip)
+vec3 avgOf(sampler2D t){ return textureLod(t, vec2(0.5), 12.0).rgb; }
+float lum(vec3 c){ return dot(c, vec3(0.299, 0.587, 0.114)); }
+vec3 triW(vec3 n){ vec3 w = pow(abs(n), vec3(4.0)); return w / (w.x + w.y + w.z); }
 vec3 tex2(sampler2D t, vec2 p){
   // two scales to break tiling
   vec3 a = texture2D(t, p * 0.19).rgb;
@@ -96,7 +130,24 @@ vec3 tex2(sampler2D t, vec2 p){
   vec3 field = texture2D(tField, wp * 0.09).rgb;
   vec3 road = texture2D(tRoad, wp * 0.16).rgb;
   vec3 litter = tex2(tLitter, wp);
-  float wLitter = 0.0, wMud = 0.0;
+  float wLitter = 0.0, wMud = 0.0, wGravel = 0.0;
+  float camD = length(vWPos - cameraPosition);
+  float near = 1.0 - smoothstep(30.0, 140.0, camD); // photo detail fades out where tiling would show
+  noTileSetup(wp * 0.4);
+#ifdef HAS_MUD
+  // photo detail: the meadow soil scan modulates every procedural ground layer near the camera
+  vec3 soil = noTile(tMud, wp * 0.42).rgb;
+  float det = clamp(lum(soil) / max(lum(avgOf(tMud)), 0.05), 0.35, 1.9);
+  float detK = near * 0.55;
+  grass *= mix(1.0, det, detK); dry *= mix(1.0, det, detK); loess *= mix(1.0, det, detK * 0.8); field *= mix(1.0, det, detK * 0.7);
+  // patches where the clover-and-leaf soil itself shows between the grass
+  float soilShow = smoothstep(0.55, 0.85, n2 * 0.6 + n3 * 0.5) * 0.55 * near;
+  grass = mix(grass, soil * vec3(0.92, 1.02, 0.86), soilShow);
+#endif
+#ifdef HAS_GRAVEL
+  vec3 gravel = noTile(tGravel, wp * 0.55).rgb;
+  road = mix(road, gravel * vec3(1.02, 0.98, 0.92), 0.55 * mix(0.6, 1.0, near));
+#endif
   // base meadow: grass patched with dry grass and bare loess
   float dryAmt = smoothstep(0.5, 0.95, n1 * 0.8 + n2 * 0.3 + uSeason * 0.5);
   vec3 col = mix(grass, dry, dryAmt * 0.45);
@@ -113,12 +164,30 @@ vec3 tex2(sampler2D t, vec2 p){
   col = mix(col, field, m.g);
   vec3 town = mix(texture2D(tTown, wp * 0.24).rgb, texture2D(tTown, wp * 0.061 + 0.4).rgb, 0.3);
   town = mix(town, loess * vec3(0.95, 0.93, 0.9), 0.25 + 0.3 * n2);
+#ifdef HAS_GRAVEL
+  // trodden yards and streets: packed loess with grit and pebbles worked into it
+  float grit = smoothstep(0.25, 0.7, n2 * 0.6 + n3 * 0.5);
+  town = mix(town * mix(1.0, clamp(lum(gravel) / max(lum(avgOf(tGravel)), 0.05), 0.35, 1.9), 0.85 * near), gravel * vec3(0.98, 0.9, 0.78), grit * 0.6) * 0.9;
+#endif
   col = mix(col, town, m.b * 0.92);
   float wTown = m.b * 0.92 * (1.0 - m.r);
   col = mix(col, road, m.r);
+#ifdef HAS_GRAVEL
+  wGravel = max(m.r * 0.6, wTown * 0.7);
+#endif
   wLitter *= (1.0 - m.g) * (1.0 - m.b * 0.9) * (1.0 - m.r);
   // rock on steep slopes
   float rk = smoothstep(0.22, 0.42, slope + (n3 - 0.5) * 0.12);
+#ifdef HAS_ROCK
+  {
+    // scanned rock, projected along the three world axes so steep faces don't stretch
+    vec3 tw = triW(normalize(vWNorm)); vec3 rp = vWPos * 0.3;
+    vec3 rc = texture2D(tRockC, rp.zy).rgb * tw.x + texture2D(tRockC, rp.xz).rgb * tw.y + texture2D(tRockC, rp.xy).rgb * tw.z;
+    // keep the region's rock colour at large scale, the scan's detail up close
+    vec3 scan = rc / max(avgOf(tRockC), vec3(0.05)) * lum(rock) * 1.05;
+    rock = mix(rock, mix(scan, rc * uRockTint, 0.35), mix(0.55, 0.95, near));
+  }
+#endif
   col = mix(col, rock, rk);
   wLitter *= 1.0 - rk;
   // wet banks: darker mud and sand
@@ -127,8 +196,14 @@ vec3 tex2(sampler2D t, vec2 p){
 #else
   vec3 mud = loess * vec3(0.55, 0.52, 0.48);
 #endif
+#ifdef HAS_GRAVEL
+  // river banks: wet sand and pebbles at the waterline, mud above
+  float bank = smoothstep(0.5, 0.95, wet) * smoothstep(0.3, 0.6, n3 * 0.7 + n2 * 0.3);
+  mud = mix(mud, gravel * vec3(0.78, 0.76, 0.72), bank * 0.8);
+  wGravel = max(wGravel, bank * wet * 0.8);
+#endif
   col = mix(col, mud, wet * 0.8);
-  wMud = wet * 0.8;
+  wMud = wet * 0.8 * (1.0 - wGravel);
   wLitter *= 1.0 - wMud;
   vec2 rockUv = (wp * 0.6 + vec2(0.0, vWPos.y * 0.1)) * 0.19;
   // macro variation
@@ -147,6 +222,15 @@ vec3 tex2(sampler2D t, vec2 p){
   roughnessFactor = mix(0.95, 0.55, max(wet * 0.7, uWetness * 0.6));
 #ifdef HAS_LITTER_R
   roughnessFactor = mix(roughnessFactor, texture2D(tLitterR, wp * 0.19).g, wLitter * 0.8);
+#endif
+#ifdef HAS_GRAVEL
+  roughnessFactor = mix(roughnessFactor, noTile(tGravelR, wp * 0.55).r * (1.0 - wet * 0.4), wGravel);
+#endif
+#ifdef HAS_MUD_R
+  roughnessFactor = mix(roughnessFactor, noTile(tMudR, wp * 0.42).r * 0.9, wMud * 0.7);
+#endif
+#ifdef HAS_ROCK
+  roughnessFactor = mix(roughnessFactor, texture2D(tRockR, vWPos.xz * 0.3).r, rk * 0.8);
 #endif`)
         .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
 #ifdef DETAIL_NORMALS
@@ -170,6 +254,21 @@ vec3 tex2(sampler2D t, vec2 p){
       float ty = dot(texture2D(tTown, tu + vec2(0.0, e2)).rgb, vec3(0.333));
       tn = blendN(tn, vec3((t0 - tx) * 6.0, (t0 - ty) * 6.0, 1.0), wTown);
     }
+  #ifdef HAS_GRAVEL
+    if (wGravel > 0.01) tn = blendN(tn, noTile(tGravelN, wp * 0.55).xyz * 2.0 - 1.0, wGravel);
+  #endif
+  #ifdef HAS_ROCK
+    if (rk > 0.01) {
+      // triplanar normal (whiteout blend), brought back into this heightfield's tangent frame
+      vec3 tw = triW(wn); vec3 rp = vWPos * 0.3;
+      vec3 nx = texture2D(tRockN, rp.zy).xyz * 2.0 - 1.0, ny = texture2D(tRockN, rp.xz).xyz * 2.0 - 1.0, nz = texture2D(tRockN, rp.xy).xyz * 2.0 - 1.0;
+      nx = vec3(nx.xy + wn.zy, abs(nx.z) * wn.x);
+      ny = vec3(ny.xy + wn.xz, abs(ny.z) * wn.y);
+      nz = vec3(nz.xy + wn.xy, abs(nz.z) * wn.z);
+      vec3 rwn = normalize(nx.zyx * tw.x + ny.xzy * tw.y + nz.xyz * tw.z);
+      tn = blendN(tn, vec3(dot(rwn, T), dot(rwn, Bt), max(dot(rwn, wn), 0.2)), rk);
+    }
+  #else
     // rock faces: relief from the rock texture's own luminance (finite differences, mip-filtered)
     if (rk > 0.01) {
       float e = 0.006;
@@ -178,6 +277,7 @@ vec3 tex2(sampler2D t, vec2 p){
       float hy = dot(texture2D(tRock, rockUv + vec2(0.0, e)).rgb, vec3(0.333));
       tn = blendN(tn, vec3((h0 - hx) * 7.0, (h0 - hy) * 7.0, 1.0), rk);
     }
+  #endif
     vec3 wN = normalize(T * tn.x + Bt * tn.y + wn * tn.z);
     normal = normalize((viewMatrix * vec4(wN, 0.0)).xyz);
   }

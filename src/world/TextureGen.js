@@ -77,6 +77,12 @@ function colorField(seed, size, fn) {
   });
 }
 
+// Procedural texture resolution follows the graphics setting (set by the world before it builds anything).
+let detail = 1;
+export function setTextureDetail(quality) { detail = quality >= 2 ? 2 : 1; }
+const R = (n) => n * detail;
+const R4 = (n) => n * detail * detail; // 256 px building textures become 1024 px on High/Ultra
+
 const cache = new Map();
 function cached(key, gen) {
   // an image listed under "textures" in the asset manifest replaces the generated one
@@ -85,22 +91,22 @@ function cached(key, gen) {
 }
 
 export const Tex = {
-  grass: () => cached('grass', () => colorField(11, 512, (a, b) => {
+  grass: () => cached('grass', () => colorField(11, R(512), (a, b) => {
     const t = a * 0.7 + b * 0.3;
     // living meadow green with a little straw showing through
     const dry = Math.max(0, (a - 0.66) * 2.2);
     return [mix(58, 104, dry) + b * 18 - 6, mix(88, 104, dry) + t * 34, mix(34, 52, dry) + b * 10];
   })),
-  dryGrass: () => cached('dryGrass', () => colorField(21, 512, (a, b) => {
+  dryGrass: () => cached('dryGrass', () => colorField(21, R(512), (a, b) => {
     return [126 + a * 36 + b * 16, 120 + a * 28, 70 + b * 18];
   })),
-  loess: () => cached('loess', () => colorField(31, 512, (a, b, u, v, x, y) => {
+  loess: () => cached('loess', () => colorField(31, R(512), (a, b, u, v, x, y) => {
     const peb = ((x * 7919 + y * 104729) % 97) < 2 ? -30 : 0;
     return [150 + a * 40 + peb, 122 + a * 32 + peb, 84 + b * 26 + peb];
   })),
   rock: () => cached('rock', () => {
     const f = makeFbm(41, 8, 6), g = makeFbm(43, 2, 3);
-    return canvasTex(512, (d, S) => {
+    return canvasTex(R(512), (d, S) => {
       for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
         const u = x / S, v = y / S;
         const n = f(u, v), m = g(u, v);
@@ -114,7 +120,7 @@ export const Tex = {
   }),
   field: () => cached('field', () => {
     const f = makeFbm(51, 8, 5);
-    return canvasTex(512, (d, S) => {
+    return canvasTex(R(512), (d, S) => {
       for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
         const u = x / S, v = y / S;
         const n = f(u, v);
@@ -141,11 +147,11 @@ export const Tex = {
       }
     });
   }),
-  litter: () => cached('litter', () => colorField(71, 512, (a, b, u, v, x, y) => {
+  litter: () => cached('litter', () => colorField(71, R(512), (a, b, u, v, x, y) => {
     const leaf = ((x * 31 + y * 17) % 13 === 0 && a > 0.5) ? 25 : 0;
     return [88 + a * 40 + leaf, 74 + a * 28, 44 + b * 14];
   })),
-  plaster: () => cached('plaster', () => colorField(81, 512, (a, b, u, v) => {
+  plaster: () => cached('plaster', () => colorField(81, R(512), (a, b, u, v) => {
     // lime plaster gone warm with age: patchy, with rain streaks running down
     const streak = Math.max(0, Math.sin(u * Math.PI * 20 + b * 3) * 0.5 + 0.5) * (0.4 + 0.6 * a) * 14;
     const c = 182 + a * 30 - b * 18 - streak;
@@ -154,7 +160,7 @@ export const Tex = {
   rammedEarth: () => cached('rammedEarth', () => {
     // tamped earth in formwork courses, the course joints darker, rain-cut runnels down the face
     const f = makeFbm(91, 4, 5), g = makeFbm(93, 16, 3);
-    return canvasTex(512, (d, S) => {
+    return canvasTex(R(512), (d, S) => {
       for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
         const u = x / S, v = y / S;
         const n = f(u, v), m = g(u, v);
@@ -196,7 +202,7 @@ export const Tex = {
   }),
   mudBrick: () => cached('mudBrick', () => {
     const f = makeFbm(101, 8, 4);
-    return canvasTex(256, (d, S) => {
+    return canvasTex(R4(256), (d, S) => {
       for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
         const u = x / S, v = y / S;
         const n = f(u, v);
@@ -210,7 +216,7 @@ export const Tex = {
   }),
   mudPlaster: () => cached('mudPlaster', () => {
     const f = makeFbm(105, 4, 6), f2 = makeFbm(107, 16, 3);
-    return canvasTex(256, (d, S) => {
+    return canvasTex(R4(256), (d, S) => {
       for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
         const u = x / S, v = y / S;
         const n = f(u, v), m = f2(u, v);
@@ -224,16 +230,17 @@ export const Tex = {
   }),
   thatch: () => cached('thatch', () => {
     const rng = new Rng(111);
-    return canvasTex(256, (d, S, ctx) => {
+    return canvasTex(R4(256), (d, S, ctx) => {
       for (let i = 0; i < d.length; i += 4) put(d, i, 120, 98, 58);
       ctx.putImageData(new ImageData(d, S, S), 0, 0);
-      for (let i = 0; i < 2600; i++) {
-        const x = rng.range(0, S), y = rng.range(-20, S);
-        const l = rng.range(18, 44);
+      const k = S / 256; // same straws at any resolution
+      for (let i = 0; i < 2600 * k * k; i++) {
+        const x = rng.range(0, S), y = rng.range(-20 * k, S);
+        const l = rng.range(18, 44) * k;
         const c = rng.range(0.6, 1.25);
         ctx.strokeStyle = `rgb(${170 * c | 0},${140 * c | 0},${82 * c | 0})`;
-        ctx.lineWidth = rng.range(0.6, 1.8);
-        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + rng.range(-3, 3), y + l); ctx.stroke();
+        ctx.lineWidth = rng.range(0.6, 1.8) * k;
+        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + rng.range(-3, 3) * k, y + l); ctx.stroke();
       }
       const id = ctx.getImageData(0, 0, S, S);
       d.set(id.data);
@@ -241,7 +248,7 @@ export const Tex = {
   }),
   roofTile: () => cached('roofTile', () => {
     const f = makeFbm(121, 4, 4);
-    return canvasTex(256, (d, S) => {
+    return canvasTex(R4(256), (d, S) => {
       for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
         const u = x / S, v = y / S;
         const n = f(u, v);
@@ -257,7 +264,7 @@ export const Tex = {
   }),
   wood: () => cached('wood', () => {
     const f = makeFbm(131, 4, 5);
-    return canvasTex(256, (d, S) => {
+    return canvasTex(R4(256), (d, S) => {
       for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
         const u = x / S, v = y / S;
         const n = f(u * 0.5, v * 4);
@@ -297,7 +304,7 @@ export const Tex = {
   }),
   stone: () => cached('stone', () => {
     const f = makeFbm(161, 8, 5);
-    return canvasTex(256, (d, S) => {
+    return canvasTex(R4(256), (d, S) => {
       for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
         const u = x / S, v = y / S;
         const n = f(u, v);

@@ -15,7 +15,8 @@
     "dist:linux": "npm run build && electron-builder --linux --publish never",
     "assets:optimize": "node tools/optimize-assets.mjs",
     "shots": "node tools/shoot.mjs",
-    "assets:build": "node tools/assets/skin-textures.mjs && node tools/assets/build-assets.mjs"
+    "assets:build": "node tools/assets/skin-textures.mjs && node tools/assets/terrain-textures.mjs && node tools/assets/build-assets.mjs",
+    "export:unreal": "node tools/unreal/export-world.mjs"
   },
   "repository": {
     "type": "git",
