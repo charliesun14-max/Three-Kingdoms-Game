@@ -14,8 +14,8 @@ export class Critters {
     const wing = new THREE.BufferGeometry();
     const P = [], U = [];
     for (const s of [-1, 1]) {
-      const q = [[0, 0, -0.012], [s * 0.05, 0, -0.03], [s * 0.055, 0, 0.022], [0, 0, 0.012]];
-      for (const k of [0, 1, 2, 0, 2, 3]) { P.push(...q[k]); U.push(s, Math.abs(q[k][0]) / 0.055); }
+      const q = [[0, 0, -0.02], [s * 0.08, 0, -0.05], [s * 0.088, 0, 0.035], [0, 0, 0.02]]; // a little larger than life, so they read at a distance
+      for (const k of [0, 1, 2, 0, 2, 3]) { P.push(...q[k]); U.push(s, Math.abs(q[k][0]) / 0.088); }
     }
     wing.setAttribute('position', new THREE.Float32BufferAttribute(P, 3));
     wing.setAttribute('uv', new THREE.Float32BufferAttribute(U, 2));
@@ -27,7 +27,7 @@ export class Critters {
     bm.onBeforeCompile = (sh) => {
       sh.uniforms.uTime = this.uTime;
       sh.vertexShader = 'uniform float uTime;\nattribute float aPhase;\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
-        float flap = (sin(uTime * 22.0 + aPhase * 6.283) * 0.5 + 0.5) * 1.25 + 0.1;
+        float flap = (sin(uTime * 22.0 + aPhase * 6.283) * 0.5 + 0.5) * 1.05 - 0.15;
         float side = uv.x, r = abs(transformed.x);
         transformed.x = side * r * cos(flap);
         transformed.y = r * sin(flap);`);
@@ -100,7 +100,7 @@ export class Critters {
       this.q.setFromEuler(this.e.set(0, b.yaw, 0));
       this.m.compose(this.v.set(b.x, b.y, b.z), this.q, this.one);
       this.butterflies.setMatrixAt(n, this.m);
-      this.phase.array[n] = settled ? 0.75 : (i * 0.37) % 1; // wings held up while resting
+      this.phase.array[n] = settled ? 0.25 : (i * 0.37) % 1; // wings held open while resting
       n++;
     }
     this.butterflies.count = n;
