@@ -1,6 +1,6 @@
 // Export every region of the game in a form Unreal Engine 5 can import:
-//   node tools/unreal/export-world.mjs [regionId ...]
-// For each region, export/unreal/<region>/ receives:
+//   node tools/unreal/export-world.mjs [regionId ...]   (or double-click Export-Unreal-Windows.bat / Export-Unreal-Mac.command)
+// For each region, unreal-export/<region>/ receives:
 //   heightmap.png / heightmap.r16  16-bit landscape heightmap, resampled to a valid Landscape size
 //   weight_<layer>.png             8-bit paint layers at the same resolution (grass, road, field, town, woods, wet, rock)
 //   trees.csv, placements.csv      every tree, rock, building, scanned prop and named spot in Unreal coordinates
@@ -13,19 +13,25 @@ import { spawn, spawnSync } from 'child_process';
 import fs from 'fs';
 import zlib from 'zlib';
 
-const OUT = 'export/unreal';
+const OUT = 'unreal-export';
+const WIN = process.platform === 'win32';
 const port = 5100 + Math.floor(Math.random() * 800);
 const snap = `node_modules/.ue-export-${port}`;
-spawnSync('npx', ['vite', 'build', '--outDir', snap, '--emptyOutDir'], { stdio: 'ignore' });
-const server = spawn('npx', ['vite', 'preview', '--outDir', snap, '--port', String(port), '--strictPort'], { stdio: ['ignore', 'pipe', 'pipe'], detached: true });
-// stop the whole npx > vite process group, then drop the snapshot
-process.on('exit', () => { try { process.kill(-server.pid); } catch {} try { fs.rmSync(snap, { recursive: true, force: true }); } catch {} });
+console.log('Building the game (about a minute)…');
+spawnSync('npx', ['vite', 'build', '--outDir', snap, '--emptyOutDir'], { stdio: 'ignore', shell: WIN });
+const server = spawn('npx', ['vite', 'preview', '--outDir', snap, '--port', String(port), '--strictPort'], { stdio: ['ignore', 'pipe', 'pipe'], detached: !WIN, shell: WIN });
+// stop the whole npx > vite process tree, then drop the snapshot
+process.on('exit', () => {
+  try { if (WIN) spawnSync('taskkill', ['/pid', String(server.pid), '/T', '/F'], { stdio: 'ignore' }); else process.kill(-server.pid); } catch {}
+  try { fs.rmSync(snap, { recursive: true, force: true }); } catch {}
+});
 await new Promise((res) => { server.stdout.on('data', (d) => { if (String(d).includes('Local')) res(); }); setTimeout(res, 10000); });
 
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
 const page = await browser.newPage({ viewport: { width: 640, height: 360 } });
 page.on('pageerror', (e) => console.log('PAGEERROR', e.message));
 await page.goto(`http://127.0.0.1:${port}/?play&q=3&msaa=0`);
+console.log('Loading the game in a hidden browser (a few minutes)…');
 await page.waitForFunction(() => window.__game && window.__game.ready && window.__game.state === 'play', null, { timeout: 900000, polling: 1000 });
 await page.evaluate(() => { const g = window.__game; g.params.set('frames', String(g.frames + 1)); });
 const regions = process.argv.slice(2).length ? process.argv.slice(2) : ['zhuo', 'guangzong', 'hulao', 'xuzhou', 'chibi', 'xuchang'];
@@ -139,4 +145,5 @@ Then run tools/unreal/import_world.py in the editor (Tools > Execute Python Scri
   console.log(`  ${R}x${R} landscape, ${trees.length} trees, ${place.length} placements -> ${dir}`);
 }
 await browser.close();
+console.log(`\nDone. The files are in the "${OUT}" folder.`);
 process.exit(0);

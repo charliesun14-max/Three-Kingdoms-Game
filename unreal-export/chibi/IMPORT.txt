@@ -1,0 +1,8 @@
+Region chibi (The Red Cliffs, Yangtze River)
+Landscape mode > New > Import from File: heightmap.png (or heightmap.r16)
+  Resolution         1009 x 1009   (game grid 801 x 801 at 2 m, resampled)
+  Location           X -80000  Y -80000  Z 4846.6
+  Scale              X 158.7302  Y 158.7302  Z 20.9
+  Height range       -2.76 m .. 99.70 m
+Layers: add weight-blended paint layers grass, road, field, town, woods, wet, rock and import weight_<layer>.png into each.
+Then run tools/unreal/import_world.py in the editor (Tools > Execute Python Script) for trees and placements.

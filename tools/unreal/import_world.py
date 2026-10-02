@@ -3,7 +3,7 @@
 Tools > Execute Python Script... and pick this file (Python Editor Script Plugin must be enabled).
 It asks nothing: edit the three settings below first.
 
-  REGION_DIR  folder written by the exporter, e.g. C:/Projects/Mandate/export/unreal/zhuo
+  REGION_DIR  folder written by the exporter, e.g. C:/Projects/Mandate/unreal-export/zhuo
   ASSET_MAP   JSON mapping game names to Unreal assets (see asset_map.example.json next to this file)
   MAX_TREES   trees are spawned as individual actors; above a few thousand use the PCG route in
               docs/UNREAL_MIGRATION.md instead (it reads trees.csv as a DataTable) and set this to 0.
@@ -15,7 +15,7 @@ import json
 import os
 import unreal
 
-REGION_DIR = r"C:/Projects/Mandate/export/unreal/zhuo"
+REGION_DIR = r"C:/Projects/Mandate/unreal-export/zhuo"
 ASSET_MAP = os.path.join(os.path.dirname(__file__), "asset_map.json")
 MAX_TREES = 3000
 

@@ -73,7 +73,7 @@ node tools/unreal/export-world.mjs            # all story regions
 node tools/unreal/export-world.mjs zhuo       # or just one
 ```
 
-Each `export/unreal/<region>/` folder holds:
+Each `unreal-export/<region>/` folder holds:
 
 - `heightmap.png` and `heightmap.r16`, already resampled to a size Unreal accepts.
 - Seven paint layers: grass, road, field, town, woods, wet and rock.

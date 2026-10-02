@@ -1,0 +1,8 @@
+Region xuchang (Xuchang, Seat of the Han Court)
+Landscape mode > New > Import from File: heightmap.png (or heightmap.r16)
+  Resolution         1009 x 1009   (game grid 701 x 701 at 2 m, resampled)
+  Location           X -70000  Y -70000  Z 4651.4
+  Scale              X 138.8889  Y 138.8889  Z 16.09
+  Height range       7.29 m .. 85.74 m
+Layers: add weight-blended paint layers grass, road, field, town, woods, wet, rock and import weight_<layer>.png into each.
+Then run tools/unreal/import_world.py in the editor (Tools > Execute Python Script) for trees and placements.

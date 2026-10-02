@@ -1,0 +1,8 @@
+Region guangzong (Guangzong, Julu Commandery)
+Landscape mode > New > Import from File: heightmap.png (or heightmap.r16)
+  Resolution         1009 x 1009   (game grid 601 x 601 at 2 m, resampled)
+  Location           X -60000  Y -60000  Z 4543.3
+  Scale              X 119.0476  Y 119.0476  Z 16.34
+  Height range       5.59 m .. 85.28 m
+Layers: add weight-blended paint layers grass, road, field, town, woods, wet, rock and import weight_<layer>.png into each.
+Then run tools/unreal/import_world.py in the editor (Tools > Execute Python Script) for trees and placements.
